@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Registration{% endblock %}
+
+{% block content %}
+<h1>Registration</h1>
+
+<form action="." method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <fieldset>
+        {{ form.username.errors }}
+        <p>{{ form.username.label_tag }}{{ form.username }}</p>
+    </fieldset>
+    <fieldset>
+        {{ form.email.errors }}
+        <p>{{ form.email.label_tag }}{{ form.email }}</p>
+        {{ form.email_repeat.errors }}
+        <p>{{ form.email_repeat.label_tag }}{{ form.email_repeat }}</p>
+
+        {{ form.password.errors }}
+        <p>{{ form.password.label_tag }}{{ form.password }}</p>
+        {{ form.password_repeat.errors }}
+        <p>{{ form.password_repeat.label_tag }}{{ form.password_repeat }}</p>
+    </fieldset>
+    <fieldset>
+        {{ form.first_name.errors }}
+        <p>{{ form.first_name.label_tag }}{{ form.first_name }}</p>
+
+        {{ form.last_name.errors }}
+        <p>{{ form.last_name.label_tag }}{{ form.last_name }}</p>
+
+        {{ form.short_info.errors }}
+        <p>{{ form.short_info.label_tag }}{{ form.short_info }}</p>
+    </fieldset>
+
+    <p>
+        <button type="submit">Create account</button>
+    </p>
+</form>
+</div>
+{% endblock %}
+

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}brigitte{% endblock %}</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/style.css" type="text/css" media="all" />
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="header">
+    {% block header %}
+        <h1>brigitte</h1>
+        <div class="login">
+            {% if request.user.is_authenticated %}
+                Welcome back, {{ request.user.username }}<br />
+                <a href="{% url accounts_profile_change %}">&raquo; Edit profile</a> -
+                <a href="{% url auth_logout %}">&raquo; Logout</a>
+            {% else %}
+                <a href="{% url auth_login %}">&raquo; Login</a> -
+                <a href="{% url registration %}">&raquo; Register</a>
+            {% endif %}
+        </div>
+    {% endblock %}
+        <div class="clear"></div>
+    </div>
+    <div class="content">
+    {% block content %}
+    {% endblock %}
+        <div class="clear"></div>
+    </div>
+    <div class="footer">
+    {% block footer %}
+    {% endblock %}
+    </div>
+</body>
+</html>

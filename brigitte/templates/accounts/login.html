@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<h1>Login</h1>
+
+<form action="." method="post">
+    {% csrf_token %}
+    <fieldset>
+        {{ form.as_p }}
+        <p><label>&nbsp;</label><button type="submit">Login</button></p>
+        <p>
+            <a href="{% url registration %}" style="font-weight:bold">&raquo; Register</a><br />
+            <a href="{% url auth_password_reset %}">&raquo; No Password? Reset your password here.</a>
+    </fieldset>
+</form>
+{% endblock %}
