@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 from brigitte.accounts.forms import RegistrationForm, FullProfileForm
 from brigitte.accounts.forms import ChangeEmailForm
@@ -42,6 +44,7 @@ def profile_change(request):
         form = FullProfileForm(request.POST, instance=request.user.get_profile())
         if form.is_valid():
             profile = form.save()
+            messages.success(request, _('Profile updated.'))
             return redirect('accounts_profile_change')
     else:
         form = FullProfileForm(instance=request.user.get_profile(),
@@ -68,15 +71,18 @@ def email_change_requested(request):
 
 @login_required
 def email_change_approve(request, token, code):
-    verification = get_object_or_404(
-        EmailVerification,
-        token=token,
-        code=code,
-        user=request.user,
-        is_expired=False
-    )
-    verification.is_approved = True
-    verification.save()
+    try:
+        verification = EmailVerification.objects.get(
+            token=token,
+            code=code,
+            user=request.user,
+            is_expired=False
+        )
+        verification.is_approved = True
+        verification.save()
+        messages.success(request, _('E-Mail changed to %s') % verification.new_email)
+    except EmailVerification.DoesNotExist:
+        messages.error(request, _('E-Mail could not be changed. Invalid link.'))
 
     return redirect('accounts_profile')
 
