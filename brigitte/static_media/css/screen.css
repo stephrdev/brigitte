@@ -1,0 +1,117 @@
+body {
+    font-family: sans-serif;
+    background-color: #141616;
+    color: #d4d4d4;
+    font-size: 12px;
+}
+a {
+    color: #A4D43D;
+}
+a:hover {
+    text-decoration: none;
+}
+#container {
+    padding: 10px;
+}
+#header a {
+    text-decoration: none;
+}
+#header h1 {
+    font-weight: normal;
+    font-size: 20px;
+    color: #ffffff;
+    margin: 5px 20px;
+}
+#header h1 span {
+    color: #A4D43D;
+    font-weight: bold;
+    font-size: 24px;
+}
+#headernav ul {
+    float: right;
+}
+#headernav li {
+    float: left;
+    border-right: 1px solid #cccccc;
+    padding: 2px 5px;
+}
+#headernav li:last-child {
+    border-right: 0;
+    padding-right: 0px;
+}
+#headernav div {
+    padding-top:10px;
+    padding-bottom:4px;
+    float: right;
+}
+#headerdelim {
+    border-top: 1px dashed #d4d4d4;
+}
+#content {
+    padding-top: 10px;
+    line-height: 1.4em;
+}
+#content h1 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+.form fieldset {
+    border: 1px solid #3F423E;
+    margin-bottom: 10px;
+    padding: 10px;
+}
+.form label {
+    padding-top: 10px;
+    width: 180px;
+    display: block;
+    float: left;
+}
+.form input, .form textarea {
+    margin: 2px;
+    padding: 5px;
+    border: 1px solid #3F423E;
+    font-size: 16px;
+    width: 400px;
+    background-color: #2D2F2C;
+    color: #ffffff;
+}
+.form textarea {
+    height: 110px;
+}
+.form input:focus, .form textarea:focus {
+    background-color: #3B3E3A;
+}
+.form ul.errorlist {
+    color: #E3345F;
+    padding-left: 182px;
+    margin: 4px 0px;
+}
+.form button {
+    color: #A4D43D;
+    border: 1px solid #3F423E;
+    font-size: 16px;
+    background-color: #3B3E3A;
+}
+.form .submitrow {
+    border: 0px;
+    padding: 0px 11px;
+}
+#messages .message {
+    margin: 10px 20px;
+    padding: 5px;
+}
+#messages .message .close {
+    float: right;
+}
+#messages .success {
+    color: #A4D43D;
+    border: 1px dashed #A4D43D;
+}
+#messages .error {
+    color: #E3345F;
+    border: 1px dashed #E3345F;
+}
+#messages .error a {
+    color: #E3345F;
+}
+

@@ -3,5 +3,7 @@
 {% block title %}Welcome back{% endblock %}
 
 {% block content %}
-<h1>Welcome back, {{ request.user.username }}</h1>
+    <div class="grid_16" id="content">
+        <h1>Welcome back, {{ request.user.username }}</h1>
+    </div>
 {% endblock %}

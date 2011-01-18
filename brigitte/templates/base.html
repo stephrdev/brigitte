@@ -4,35 +4,41 @@
     <title>{% block title %}brigitte{% endblock %}</title>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/style.css" type="text/css" media="all" />
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/reset.css" type="text/css" />
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/960.css" type="text/css" />
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/screen.css" type="text/css" />
 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <div class="header">
-    {% block header %}
-        <h1>brigitte</h1>
-        <div class="login">
-            {% if request.user.is_authenticated %}
-                Welcome back, {{ request.user.username }}<br />
-                <a href="{% url accounts_profile_change %}">&raquo; Edit profile</a> -
-                <a href="{% url auth_logout %}">&raquo; Logout</a>
-            {% else %}
-                <a href="{% url auth_login %}">&raquo; Login</a> -
-                <a href="{% url registration %}">&raquo; Register</a>
-            {% endif %}
+    <div class="container_16" id="container">
+        <div class="grid_10" id="header">
+            <a href="/"><h1>bri<span>git</span>te</h1></a>
         </div>
-    {% endblock %}
+        <div class="grid_6" id="headernav">
+        {% if request.user.is_authenticated %}
+            <ul>
+                <li><a href="{% url accounts_profile_change %}">Edit profile</a></li>
+                <li><a href="{% url auth_logout %}">Logout</a></li>
+            </ul>
+            <div class="clear"></div>
+            <div>Welcome back, <strong>{{ request.user.username }}</strong></div>
+        {% else %}
+            <ul>
+                <li><a href="{% url registration %}">Register</a></li>
+                <li><a href="{% url auth_login %}">Login</a></li>
+            </ul>
+        {% endif %}
+        </div>
         <div class="clear"></div>
-    </div>
-    <div class="content">
-    {% block content %}
-    {% endblock %}
+        <div class="grid_16" id="headerdelim"></div>
+        {% include "snippets/messages.html" %}
+        {% block content %}
+        {% endblock %}
         <div class="clear"></div>
-    </div>
-    <div class="footer">
-    {% block footer %}
-    {% endblock %}
+        {% block footer %}
+        {% endblock %}
     </div>
 </body>
 </html>
