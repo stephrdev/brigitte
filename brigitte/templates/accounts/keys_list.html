@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome back{% endblock %}
+
+{% block content %}
+    <div class="grid_16" id="content">
+        <h1>Your SSH Public Keys</h1>
+        <p style="margin-bottom:10px">
+            <a href="{% url accounts_keys_add %}">To add a new key, click here.</a>
+        </p>
+        <table>
+            <thead>
+            <tr>
+                <th>Description</th>
+                <th>Key</td>
+                <th>Read access</th>
+                <th>Write access</th>
+                <th>&nbsp;</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for key in keys %}
+                <tr>
+                    <td>{{ key.description }}</td>
+                    <td>{{ key.short_key }}</td>
+                    <td>{{ key.can_read_html }}</td>
+                    <td>{{ key.can_write_html }}</td>
+                    <td>
+                        <a href="{% url accounts_keys_change key.pk %}">Edit</a>
+                        <a href="{% url accounts_keys_delete key.pk %}">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Change key{% endblock %}
+
+{% block content %}
+    <div class="grid_16" id="content">
+        <h1>Change key</h1>
+
+        <form action="." method="post" class="form">
+            {% csrf_token %}
+            <fieldset>
+                {{ form.as_p }}
+            </fieldset>
+            <fieldset class="submitrow">
+                <p><label>&nbsp;</label><button type="submit">Save key</button></p>
+            </fieldset>
+        </form>
+    </div>
+{% endblock %}
+

@@ -5,8 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
 from brigitte.accounts.forms import RegistrationForm, FullProfileForm
-from brigitte.accounts.forms import ChangeEmailForm
+from brigitte.accounts.forms import ChangeEmailForm, SshPublicKeyForm
 from brigitte.accounts.models import RegistrationProfile, EmailVerification
+from brigitte.accounts.models import SshPublicKey
 
 @login_required
 def profile(request):
@@ -85,4 +86,51 @@ def email_change_approve(request, token, code):
         messages.error(request, _('E-Mail could not be changed. Invalid link.'))
 
     return redirect('accounts_profile')
+
+@login_required
+def keys_list(request):
+    return render(request, 'accounts/keys_list.html', {
+        'keys': request.user.sshpublickey_set.all(),
+    })
+
+@login_required
+def keys_change(request, pk):
+    key = get_object_or_404(SshPublicKey, pk=pk, user=request.user)
+
+    if request.method == 'POST':
+        form = SshPublicKeyForm(request.POST, instance=key)
+        if form.is_valid():
+            key = form.save()
+            messages.success(request, _('Key updated.'))
+            return redirect('accounts_keys_list')
+    else:
+        form = SshPublicKeyForm(instance=key)
+
+    return render(request, 'accounts/keys_change.html', {'form': form})
+
+@login_required
+def keys_add(request):
+    if request.method == 'POST':
+        form = SshPublicKeyForm(request.POST)
+        if form.is_valid():
+            key = form.save(commit=False)
+            key.user = request.user
+            key.save()
+            messages.success(request, _('Key added.'))
+            return redirect('accounts_keys_list')
+    else:
+        form = SshPublicKeyForm()
+
+    return render(request, 'accounts/keys_add.html', {'form': form})
+
+@login_required
+def keys_delete(request, pk):
+    try:
+        key = SshPublicKey.objects.get(pk=pk, user=request.user)
+        key.delete()
+        messages.success(request, _('Key deleted.'))
+        return redirect('accounts_keys_list')
+    except SshPublicKey.DoesNotExist:
+        messages.error(request, _('Key not found.'))
+        return redirect('accounts_keys_list')
 

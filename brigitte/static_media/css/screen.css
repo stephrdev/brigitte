@@ -66,7 +66,7 @@ a:hover {
     display: block;
     float: left;
 }
-.form input, .form textarea {
+.form input, .form textarea, .form select {
     margin: 2px;
     padding: 5px;
     border: 1px solid #3F423E;
@@ -78,7 +78,7 @@ a:hover {
 .form textarea {
     height: 110px;
 }
-.form input:focus, .form textarea:focus {
+.form input:focus, .form textarea:focus, .form select:focus {
     background-color: #3B3E3A;
 }
 .form ul.errorlist {
@@ -95,6 +95,14 @@ a:hover {
 .form .submitrow {
     border: 0px;
     padding: 0px 11px;
+}
+.form input[type=checkbox] {
+    width: auto;
+    margin: 10px;
+}
+.form textarea#id_key {
+    font-family: monospace;
+    font-size:10px;
 }
 #messages .message {
     margin: 10px 20px;
@@ -114,4 +122,26 @@ a:hover {
 #messages .error a {
     color: #E3345F;
 }
+
+table {
+    border-collapse: collapse;
+    border: 1px solid #3F423E;
+}
+td, th {
+    border: 1px solid #3F423E;
+    padding: .4em;
+    text-align: left;
+}
+thead th {
+    border: 1px solid #3F423E;
+    font-weight: bold;
+    white-space: nowrap;
+}
+tbody th {
+    white-space: nowrap;
+}
+tbody tr:hover {
+    background-color: #2D2F2C;
+}
+
 

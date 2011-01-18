@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 
-from brigitte.accounts.models import Profile
+from brigitte.accounts.models import Profile, SshPublicKey
 from brigitte.accounts.models import EmailVerification, RegistrationProfile
 
 admin.site.unregister(User)
@@ -13,8 +13,12 @@ class ProfileInline(admin.StackedInline):
     extra = 1
     max_num = 1
 
+class SshPublicKeyInline(admin.TabularInline):
+    model = SshPublicKey
+    extra = 1
+
 class UserProfileAdmin(UserAdmin):
-    inlines = [ProfileInline,]
+    inlines = [ProfileInline, SshPublicKeyInline]
 
 admin.site.register(User, UserProfileAdmin)
 

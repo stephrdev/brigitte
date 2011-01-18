@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 
-from brigitte.accounts.models import Profile
+from brigitte.accounts.models import Profile, SshPublicKey
 from brigitte.accounts.models import EmailVerification, RegistrationProfile
 
 class ProfileForm(forms.ModelForm):
@@ -142,4 +142,9 @@ class ChangeEmailForm(forms.Form):
         )
 
         return verification
+
+class SshPublicKeyForm(forms.ModelForm):
+    class Meta:
+        model = SshPublicKey
+        exclude = ('user',)
 
