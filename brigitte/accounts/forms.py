@@ -16,15 +16,15 @@ class ProfileForm(forms.ModelForm):
         exclude = ('user',)
 
 class FullProfileForm(ProfileForm):
-    first_name = forms.CharField(label=_('First name'), required=True)
-    last_name = forms.CharField(label=_('Last name'), required=True)
+    first_name = forms.CharField(label=_('First name'), required=False)
+    last_name = forms.CharField(label=_('Last name'), required=False)
 
     def __init__(self, *args, **kwargs):
         super(FullProfileForm, self).__init__(*args, **kwargs)
         self.fields.keyOrder = [
-            'short_info',
             'first_name',
             'last_name',
+            'short_info',
         ]
 
     def save(self, *args, **kwargs):
@@ -46,8 +46,8 @@ class RegistrationForm(forms.Form):
     password_repeat = forms.CharField(label=_('Password (again)'),
         widget=forms.PasswordInput(render_value=False))
 
-    first_name = forms.CharField(label=_('First name'), required=True)
-    last_name = forms.CharField(label=_('Last name'), required=True)
+    first_name = forms.CharField(label=_('First name'), required=False)
+    last_name = forms.CharField(label=_('Last name'), required=False)
 
     short_info = forms.CharField(label=_('Short info'), required=False,
         widget=forms.Textarea)
