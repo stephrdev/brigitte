@@ -76,6 +76,7 @@ INSTALLED_APPS = (
     'south',
 
     'brigitte.accounts',
+    'brigitte.repositories',
 )
 
 TEMPLATE_LOADERS = (

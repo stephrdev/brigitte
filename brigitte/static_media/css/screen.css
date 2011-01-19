@@ -144,4 +144,70 @@ tbody tr:hover {
     background-color: #2D2F2C;
 }
 
+#repository_list table {
+    margin-top:10px;
+    width:100%;
+}
 
+#repository_list th {
+    background:#789A29;
+    color:#000;
+}
+
+#recent_commits table {
+    margin-top:10px;
+    border:0px;
+}
+#recent_commits td {
+    vertical-align: middle;
+    border:0px;
+}
+
+#recent_commits tr {
+    border:1px solid #333;
+}
+
+
+#recent_commits h1 {
+font-size:20px;
+}
+
+#recent_commits h2 {
+font-size:18px;
+}
+
+#summary_description {
+    line-height:1.4em;
+}
+
+.commit_info_table {
+    width:130px;
+    float:left;
+}
+
+.commit_info_table table,td,tr {
+    border:0 !important;
+}
+
+.commit_info_table td {
+    vertical-align:top !important;
+}
+
+.summary_commit {
+    border:1px solid #3F423E;
+    background:#1C1E1C;
+    margin-bottom:10px;
+}
+
+.summary_commit_info {
+    padding:10px;
+    width:808px;
+    vertical-align:middle;
+    float:left;
+}
+.summary_commit_info img {
+    border:1px solid #000;
+    vertical-align:middle;
+    margin:3px;
+    margin-right:10px"
+}

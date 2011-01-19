@@ -7,6 +7,7 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     (r'^accounts/', include('brigitte.accounts.urls')),
+    (r'^r/', include('brigitte.repositories.urls')),
     (r'^admin/', include(admin.site.urls)),
 )
 

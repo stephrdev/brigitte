@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome back{% endblock %}
+
+{% block content %}
+<div class="grid_16" id="repository_list">
+    <table border=1>
+        <tr>
+            <th>Project</th>
+            <th>Message</th>
+            <th>Timesince</th>
+            <th>Author</th>
+        </tr>
+    {% for repo in repository_list %}
+        <tr>
+            <td>{{ repo.title }}</td>
+            <td>{{ repo.last_commit.short_msg }}</td>
+            <td>{{ repo.last_commit.ago }}</td>
+            <td>{{ repo.last_commit.author }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+</div>
+{% endblock %}
