@@ -1,3 +1,4 @@
 -e git://github.com/django/django.git#egg=Django
 South==0.7.3
 pygments==1.4
+lxml==2.3beta1
