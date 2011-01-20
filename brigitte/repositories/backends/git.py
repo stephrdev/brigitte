@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
-from subprocess import Popen, PIPE
 from lxml import etree
 from datetime import datetime
 
 from brigitte.repositories.backends.base import BaseCommit, BaseRepo
 
 class Repo(BaseRepo):
-    def syswrapper(self, cmd):
-        raw = Popen(cmd, stdout=PIPE)
-        output = raw.communicate()[0]
-        return output
-
     def get_recent_commits(self, sha=None, count=10):
         if sha == None:
             sha = 'HEAD'
@@ -88,11 +82,17 @@ class Commit(BaseCommit):
     def changed_files(self):
         cmd = ['git',
             '--git-dir=%s' % self.path,
-            'diff-tree',
-            '-p',
+            'diff',
+            str(self.parents[0]),
             str(self.id),
             '--name-status']
-        return self.syswrapper(cmd)
+
+        diff_output = self.syswrapper(cmd)
+        files = []
+        for line in [l for l in diff_output.split('\n') if len(l) > 0]:
+            files.append(line.split('\t'))
+
+        return files
 
     @property
     def diff(self):
@@ -100,6 +100,7 @@ class Commit(BaseCommit):
             '--git-dir=%s' % self.path,
             'diff-tree',
             '-p',
+            str(self.parents[0]),
             str(self.id)]
         return self.syswrapper(cmd)
 
