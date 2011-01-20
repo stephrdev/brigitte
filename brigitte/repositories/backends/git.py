@@ -79,15 +79,22 @@ class Commit(BaseCommit):
         return [parent[:7] for parent in self.parents]
 
     @property
+    def both_parents(self):
+        return [(parent[:7], parent) for parent in self.parents]
+
+    @property
     def changed_files(self):
         cmd = ['git',
             '--git-dir=%s' % self.path,
-            'diff',
+            'log',
+            '-1',
+            '--numstat',
+            '--pretty=format:',
             str(self.parents[0]),
             str(self.id),
-            '--name-status']
+        ]
 
-        diff_output = self.syswrapper(cmd)
+        diff_output = self.syswrapper(cmd).strip()
         files = []
         for line in [l for l in diff_output.split('\n') if len(l) > 0]:
             files.append(line.split('\t'))
