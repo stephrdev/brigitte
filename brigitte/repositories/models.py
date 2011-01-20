@@ -20,9 +20,8 @@ class Repository(models.Model):
             self._repo_obj = Repo(self.path)
         return self._repo_obj
 
-    @property
-    def recent_commits(self):
-        return self._repo.get_recent_commits(None, 10)
+    def recent_commits(self, count=10):
+        return self._repo.get_recent_commits(None, count)
 
     @property
     def last_commit(self):

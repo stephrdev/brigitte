@@ -49,7 +49,8 @@ class Repo(BaseRepo):
             for commit in log.iterchildren():
                 c = {}
                 for field in commit.iterchildren():
-                    c[field.tag] = field.text.strip()
+                    if field.text:
+                        c[field.tag] = field.text.strip()
                 commits.append(Commit(self.path, c))
         except:
             pass
@@ -90,7 +91,6 @@ class Commit(BaseCommit):
             '-1',
             '--numstat',
             '--pretty=format:',
-            str(self.parents[0]),
             str(self.id),
         ]
 
@@ -107,7 +107,6 @@ class Commit(BaseCommit):
             '--git-dir=%s' % self.path,
             'diff-tree',
             '-p',
-            str(self.parents[0]),
             str(self.id)]
         return self.syswrapper(cmd)
 
