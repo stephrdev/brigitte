@@ -1,25 +1,16 @@
-from django.template.context import RequestContext
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render, get_object_or_404
+
 from brigitte.repositories.models import Repository
 
-def list(request, template_name='repositories/repository_list.html'):
-    template_context = {
+def repositories_list(request, template_name=''):
+    return render(request, 'repositories/repository_list.html', {
         'repository_list': Repository.objects.all(),
-    }
+    })
 
-    return render_to_response(
-        template_name,
-        template_context,
-        RequestContext(request)
-    )
+def repositories_summary(request, user, slug, template_name=''):
+    repo = get_object_or_404(Repository, user__username=user, slug=slug)
 
-def summary(request, slug, template_name='repositories/repository_summary.html'):
-    template_context = {
-        'repository_summary': get_object_or_404(Repository, slug=slug),
-    }
+    return render(request, 'repositories/repository_summary.html', {
+        'repository': repo,
+    })
 
-    return render_to_response(
-        template_name,
-        template_context,
-        RequestContext(request)
-    )

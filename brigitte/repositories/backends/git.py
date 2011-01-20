@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
 from subprocess import Popen, PIPE
 from lxml import etree
-import json
-from cStringIO import StringIO
+from datetime import datetime
 
-class Repo:
-    def __init__(self, path):
-        self.path = path
+from brigitte.repositories.backends.base import BaseCommit, BaseRepo
 
-
+class Repo(BaseRepo):
     def syswrapper(self, cmd):
         raw = Popen(cmd, stdout=PIPE)
         output = raw.communicate()[0]
         return output
 
-
-    def recent_commits(self, sha=None, count=10):
+    def get_recent_commits(self, sha=None, count=10):
         if sha == None:
             sha = 'HEAD'
 
@@ -44,8 +40,10 @@ class Repo:
                     <tree>%T</tree>\
                     <short_tree>%t</short_tree>\
                     <msg><![CDATA[%B]]></msg>\
-                </commit>', sha, '-'+str(count)
-                ]
+                </commit>',
+            sha,
+            '-'+str(count)
+        ]
 
         commits = []
         try:
@@ -57,40 +55,54 @@ class Repo:
             for commit in log.iterchildren():
                 c = {}
                 for field in commit.iterchildren():
-
                     c[field.tag] = field.text.strip()
-                commits.append(Commit(c))
+                commits.append(Commit(self.path, c))
         except:
             pass
 
         return commits
 
+    def get_commit(self, sha):
+        try:
+            return self.get_recent_commits(sha, 1)[0]
+        except IndexError:
+            pass
+        return None
 
-    def commit_files(self, id):
-        cmd = ['git',
-            '--git-dir=%s' % self.path,
-            'diff-tree',
-            '-p',
-            str(id),
-            '--name-status']
+    def get_last_commit(self):
+        return self.get_commit(None)
 
-        return self.syswrapper(cmd)
+class Commit(BaseCommit):
+    def __repr__(self):
+        return '<Commit: %s>' % self.id
 
-
-    def commit_diff(self, id):
-        cmd = ['git',
-            '--git-dir=%s' % self.path,
-            'diff-tree',
-            '-p',
-            str(id)]
-
-        return self.syswrapper(cmd)
-
-
-
-class Commit:
-    def __init__(self, inp):
-        self.__dict__.update(**dict([(str(k), v) for k,v in inp.items()]))
-
+    @property
     def parents(self):
         return self.parent.split(' ')
+
+    @property
+    def short_parents(self):
+        return [parent[:7] for parent in self.parents]
+
+    @property
+    def changed_files(self):
+        cmd = ['git',
+            '--git-dir=%s' % self.path,
+            'diff-tree',
+            '-p',
+            str(self.id),
+            '--name-status']
+        return self.syswrapper(cmd)
+
+    @property
+    def diff(self):
+        cmd = ['git',
+            '--git-dir=%s' % self.path,
+            'diff-tree',
+            '-p',
+            str(self.id)]
+        return self.syswrapper(cmd)
+
+    @property
+    def commit_date(self):
+        return datetime.fromtimestamp(float(self.timestamp))

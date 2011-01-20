@@ -3,22 +3,26 @@
 {% block title %}Welcome back{% endblock %}
 
 {% block content %}
-<div class="grid_16" id="repository_list">
+<div class="grid_16" id="repo-list">
     <table border=1>
+        <thead>
         <tr>
             <th>Project</th>
-            <th>Message</th>
-            <th>Timesince</th>
-            <th>Author</th>
+            <th>Last commit</th>
+            <th>Last updated</th>
+            <th>Owner</th>
         </tr>
-    {% for repo in repository_list %}
+        </thead>
+        <tbody>
+        {% for repo in repository_list %}
         <tr>
-            <td>{{ repo.title }}</td>
-            <td>{{ repo.last_commit.short_msg }}</td>
-            <td>{{ repo.last_commit.ago }}</td>
-            <td>{{ repo.last_commit.author }}</td>
+            <td><a href="{% url repositories_summary repo.user.username repo.slug %}">{{ repo.title }}</a></td>
+            <td>{{ repo.last_commit.short_msg }} (by {{ repo.last_commit.author }})</td>
+            <td>{{ repo.last_commit.commit_date }}</td>
+            <td>{{ repo.user }}</td>
         </tr>
-    {% endfor %}
+        {% endfor %}
+        </tbody>
     </table>
 </div>
 {% endblock %}

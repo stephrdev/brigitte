@@ -1,33 +1,45 @@
 {% extends "base.html" %}
-{% load gravatar truncate %}
+{% load gravatar_tags %}
 {% block title %}Welcome back{% endblock %}
 
 {% block content %}
-<div class="grid_16" id="recent_commits">
-    <br />
-    <h1>{{ repository_summary.title }}</h1>
-    <br />
-    <div id="summary_description">{{ repository_summary.description|linebreaks }}</div>
-    <br />
-    <br />
-    <h2>Recent commits</h2>
-    <br />
+<div class="grid_16 content" id="repo-summary">
+    <h1>{{ repository.title }}</h1>
 
-    {% for commit in repository_summary.recent_commits %}
-    <div class="summary_commit">
-        <div>
-            <div class="summary_commit_info">
-                <img src="{% avatar commit.committer_mail 40 "g" %}">
-                <i><a href="">{{ commit.committer }}</a> committed {{ commit.ago }}.</i>
-                <br />
-                <p style="margin:5px;"><a href="">{{ commit.msg }}</a></p>
+    <div class="repo-description">{{ repository.description|linebreaks }}</div>
+
+    <h2>Recent commits</h2>
+
+    {% for commit in repository.recent_commits %}
+    <div class="recent-commits">
+        <div class="commit">
+            <div class="commit-summary">
+                <p><a href="">{{ commit.msg }}</a></p>
+                <hr />
+                <p>
+                    <img src="{% avatar commit.committer_mail 40 "g" %}">
+                    <i><a href="">{{ commit.committer }}</a> committed {{ commit.ago }}.</i><br />
+                </p>
             </div>
 
-            <div class="commit_info_table">
-                <table style="">
-                    <tr><td>Commit:</td><td> <a href="{{ commit.id }}">{{ commit.short_id }}</a></td></tr>
-                    <tr><td>Parents:</td><td>{% for parent in commit.parents %}<a href="{{ parent }}">{{ parent|truncate }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}<br /><br /></td></tr>
-                    <tr><td>Tree:</td><td> <a href="{{ commit.tree }}">{{ commit.short_tree }}</a></td></tr>
+            <div class="commit-info">
+                <table>
+                    <tr>
+                        <td>Commit:</td>
+                        <td><a href="{{ commit.id }}">{{ commit.short_id }}</a></td>
+                    </tr>
+                    <tr>
+                        <td>Parents:</td>
+                        <td>
+                            {% for parent in commit.short_parents %}
+                                <a href="{{ parent }}">{{ parent }}</a><br />
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Tree:</td>
+                        <td><a href="{{ commit.tree }}">{{ commit.short_tree }}</a></td>
+                    </tr>
                 </table>
             </div>
             <div style="clear:both"></div>
@@ -35,10 +47,5 @@
     </div>
     {% endfor %}
 </div>
-
-
-
-
-
 
 {% endblock %}

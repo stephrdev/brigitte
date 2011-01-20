@@ -47,11 +47,11 @@ a:hover {
 #headerdelim {
     border-top: 1px dashed #d4d4d4;
 }
-#content {
+.content {
     padding-top: 10px;
     line-height: 1.4em;
 }
-#content h1 {
+.content h1 {
     font-size: 18px;
     margin-bottom: 10px;
 }
@@ -136,6 +136,8 @@ thead th {
     border: 1px solid #3F423E;
     font-weight: bold;
     white-space: nowrap;
+    background-color: #A4D43D;
+    color: #000000;
 }
 tbody th {
     white-space: nowrap;
@@ -144,70 +146,74 @@ tbody tr:hover {
     background-color: #2D2F2C;
 }
 
-#repository_list table {
-    margin-top:10px;
-    width:100%;
+#repo-list table {
+    margin-top: 10px;
+    width: 100%;
 }
 
-#repository_list th {
-    background:#789A29;
-    color:#000;
+#repo-list th {
+    /*background: #789A29;
+    color: #000;*/
 }
 
-#recent_commits table {
-    margin-top:10px;
-    border:0px;
+#repo-summary table {
+    margin-top: 10px;
+    border: 0px;
 }
-#recent_commits td {
+#repo-summary td {
     vertical-align: middle;
-    border:0px;
+    border: 0px;
+}
+#repo-summary tr {
+    border: 1px solid #333;
 }
 
-#recent_commits tr {
-    border:1px solid #333;
+#repo-summary h2 {
+    font-size: 16px;
+    padding-bottom: 10px;
 }
 
-
-#recent_commits h1 {
-font-size:20px;
+#repo-summary .repo-description {
+    margin-top:10px;
+    margin-bottom: 10px;
 }
 
-#recent_commits h2 {
-font-size:18px;
-}
-
-#summary_description {
-    line-height:1.4em;
-}
-
-.commit_info_table {
+.recent-commits .commit-info {
     width:130px;
     float:left;
 }
-
+/*
 .commit_info_table table,td,tr {
     border:0 !important;
 }
-
-.commit_info_table td {
-    vertical-align:top !important;
+*/
+.recent-commits .commit-info td {
+    vertical-align: top; /* !important;*/
+}
+.recent-commits .commit hr {
+    border: 0;
+    border-top: 1px solid #333;
+}
+.recent-commits .commit {
+    border: 1px solid #3F423E;
+    background: #1C1E1C;
+    margin-bottom: 10px;
 }
 
-.summary_commit {
-    border:1px solid #3F423E;
-    background:#1C1E1C;
-    margin-bottom:10px;
-}
-
-.summary_commit_info {
-    padding:10px;
-    width:808px;
-    vertical-align:middle;
+.recent-commits .commit-summary {
+    padding: 10px;
+    width: 808px;
+    vertical-align: middle;
     float:left;
 }
-.summary_commit_info img {
+.recent-commits .commit-summary img {
     border:1px solid #000;
     vertical-align:middle;
     margin:3px;
-    margin-right:10px"
+    margin-right:10px;
 }
+
+.recent-commits .commit-sumary p {
+    margin: 5px;
+}
+

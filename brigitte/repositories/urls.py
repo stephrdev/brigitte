@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import *
 
 urlpatterns = patterns('brigitte.repositories.views',
-        url(r'^$', 'list', name='repository_list'),
-        url(r'^(?P<slug>[\w-]+)/$', 'summary', name='repository_summary'),
+        url(r'^$', 'repositories_list', name='repositories_list'),
+        url(r'^(?P<user>[\w-]+)/(?P<slug>[\w-]+)/$', 'repositories_summary', name='repositories_summary'),
 )
 

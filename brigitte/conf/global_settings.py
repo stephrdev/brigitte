@@ -75,6 +75,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'south',
 
+    'brigitte.utils',
     'brigitte.accounts',
     'brigitte.repositories',
 )
