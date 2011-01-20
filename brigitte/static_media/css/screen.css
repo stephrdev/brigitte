@@ -178,42 +178,57 @@ tbody tr:hover {
     margin-bottom: 10px;
 }
 
-.recent-commits .commit-info {
+.commit .commit-info {
     width:130px;
     float:left;
 }
-/*
-.commit_info_table table,td,tr {
-    border:0 !important;
-}
-*/
-.recent-commits .commit-info td {
+.commit .commit-info td {
     vertical-align: top; /* !important;*/
 }
-.recent-commits .commit hr {
+.commit hr, .changed-files hr {
     border: 0;
     border-top: 1px solid #333;
 }
-.recent-commits .commit {
+.commit, .changed-files, .commit-diff {
     border: 1px solid #3F423E;
     background: #1C1E1C;
     margin-bottom: 10px;
 }
 
-.recent-commits .commit-summary {
+.commit .commit-summary {
     padding: 10px;
     width: 808px;
     vertical-align: middle;
     float:left;
 }
-.recent-commits .commit-summary img {
+.changed-files {
+    padding: 10px;
+}
+.changed-files .changed-file {
+    float: left;
+    width: 808px;
+}
+.changed-files .changed-lines {
+    text-align: right;
+}
+.commit .commit-summary img {
     border:1px solid #000;
     vertical-align:middle;
     margin:3px;
     margin-right:10px;
 }
 
-.recent-commits .commit-sumary p {
+.commit .commit-sumary p {
     margin: 5px;
 }
 
+.changed-lines .added {
+    color: #A4D43D;
+}
+.changed-lines .removed {
+    color: #E3345F;
+}
+.commit-diff pre {
+    margin: 5px;
+    overflow-x: scroll;
+}

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Welcome back{% endblock %}
+{% block title %}Repositories{% endblock %}
 
 {% block content %}
 <div class="grid_16" id="repo-list">
@@ -17,7 +17,7 @@
         {% for repo in repository_list %}
         <tr>
             <td><a href="{% url repositories_summary repo.user.username repo.slug %}">{{ repo.title }}</a></td>
-            <td>{{ repo.last_commit.short_msg }} (by {{ repo.last_commit.author }})</td>
+            <td><a href="{% url repositories_commit repo.user.username repo.slug repo.last_commit.id %}">{{ repo.last_commit.short_msg }} (by {{ repo.last_commit.author }})</a></td>
             <td>{{ repo.last_commit.commit_date }}</td>
             <td>{{ repo.user }}</td>
         </tr>

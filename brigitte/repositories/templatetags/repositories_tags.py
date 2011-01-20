@@ -1,5 +1,5 @@
 from django import template
-from brigitte.repositories import pygmentize
+from brigitte.repositories.utils import pygmentize
 
 register = template.Library()
 

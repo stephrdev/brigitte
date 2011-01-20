@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load gravatar_tags %}
-{% block title %}Welcome back{% endblock %}
+{% block title %}Repository: {{ repository.title }}{% endblock %}
 
 {% block content %}
 <div class="grid_16 content" id="repo-summary">
@@ -14,11 +14,11 @@
     <div class="recent-commits">
         <div class="commit">
             <div class="commit-summary">
-                <p><a href="">{{ commit.msg }}</a></p>
+                <p><a href="{% url repositories_commit repository.user.username repository.slug commit.id %}">{{ commit.msg }}</a></p>
                 <hr />
                 <p>
                     <img src="{% avatar commit.committer_mail 40 "g" %}">
-                    <i><a href="">{{ commit.committer }}</a> committed {{ commit.ago }}.</i><br />
+                    <i><a href="#">{{ commit.committer }}</a> committed {{ commit.ago }}.</i><br />
                 </p>
             </div>
 
@@ -26,19 +26,19 @@
                 <table>
                     <tr>
                         <td>Commit:</td>
-                        <td><a href="{{ commit.id }}">{{ commit.short_id }}</a></td>
+                        <td><a href="{% url repositories_commit repository.user.username repository.slug commit.id %}">{{ commit.short_id }}</a></td>
                     </tr>
                     <tr>
                         <td>Parents:</td>
                         <td>
-                            {% for parent in commit.short_parents %}
-                                <a href="{{ parent }}">{{ parent }}</a><br />
+                            {% for short_parent, parent in commit.both_parents %}
+                                <a href="{% url repositories_commit repository.user.username repository.slug parent %}">{{ short_parent }}</a><br />
                             {% endfor %}
                         </td>
                     </tr>
                     <tr>
                         <td>Tree:</td>
-                        <td><a href="{{ commit.tree }}">{{ commit.short_tree }}</a></td>
+                        <td><a href="#">{{ commit.short_tree }}</a></td>
                     </tr>
                 </table>
             </div>
