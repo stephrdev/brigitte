@@ -174,7 +174,11 @@ tbody tr:hover {
 }
 
 #repo-summary .repo-description {
-    margin-top:10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.repo-tags {
     margin-bottom: 10px;
 }
 
@@ -230,5 +234,5 @@ tbody tr:hover {
 }
 .commit-diff pre {
     margin: 5px;
-    overflow-x: scroll;
+    overflow-x: auto;
 }

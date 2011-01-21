@@ -27,6 +27,10 @@ class Repository(models.Model):
     def last_commit(self):
         return self._repo.get_last_commit()
 
+    @property
+    def get_tags(self):
+        return self._repo.get_tags()
+
     def get_commit(self, sha):
         return self._repo.get_commit(sha)
 

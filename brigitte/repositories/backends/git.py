@@ -2,7 +2,7 @@
 from lxml import etree
 from datetime import datetime
 
-from brigitte.repositories.backends.base import BaseCommit, BaseRepo
+from brigitte.repositories.backends.base import BaseCommit, BaseRepo, BaseTag
 
 class Repo(BaseRepo):
     def get_recent_commits(self, sha=None, count=10):
@@ -66,6 +66,24 @@ class Repo(BaseRepo):
 
     def get_last_commit(self):
         return self.get_commit(None)
+
+    def get_tags(self):
+        cmd = ['git',
+            '--git-dir=%s' % self.path,
+            'tag']
+        tags = self.syswrapper(cmd).strip().split('\n')
+        tags.reverse()
+        outp = []
+        for tag in tags:
+            if len(tag) > 0:
+                outp.append(Tag(self.path, tag))
+        return outp
+
+
+class Tag(BaseTag):
+    def __repr__(self):
+        return '<Tag: %s>' % self.name
+
 
 class Commit(BaseCommit):
     def __repr__(self):

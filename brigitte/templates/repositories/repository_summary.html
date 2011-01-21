@@ -4,6 +4,17 @@
 
 {% block content %}
 <div class="grid_16 content" id="repo-summary">
+    {% if repository.get_tags %}
+    <div class="repo-tags">
+    Tags:
+    <select>
+            <option></option>
+            {% for tag in repository.get_tags %}
+            <option>{{ tag.name }}</option>
+            {% endfor %}
+    </select>
+    </div>
+    {% endif %}
     <h1>{{ repository.title }}</h1>
 
     <div class="repo-description">{{ repository.description|linebreaks }}</div>

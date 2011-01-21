@@ -11,6 +11,18 @@ class BaseRepo:
     def __init__(self, path):
         self.path = path
 
+class BaseTag:
+    def syswrapper(self, cmd):
+        raw = Popen(cmd, stdout=PIPE)
+        output = raw.communicate()[0]
+        return output
+
+    path = None
+
+    def __init__(self, path, name):
+        self.path = path
+        self.name = name
+
 class BaseCommit:
     def syswrapper(self, cmd):
         raw = Popen(cmd, stdout=PIPE)

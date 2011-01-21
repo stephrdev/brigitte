@@ -27,3 +27,6 @@ def repositories_commit(request, user, slug, sha):
         'commit': commit,
     })
 
+def repositories_tree(request, user, slug, tag):
+    pass
+
