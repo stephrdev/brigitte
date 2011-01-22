@@ -2,10 +2,13 @@
 
 {% block content %}
 <div class="grid_8 push_4">
-{% for entry in lstree %}
+{% if lstree == 'No files ...' %}
+No files ...
+{% endif %}
 
+{% for entry in lstree %}
 {% if entry.type == 'tree' %}
-    <a href="{% url repositories_subtree repository.user.username repository.slug commit.id entry.path %}">{{ entry.path }}</a><br />
+    <a href="{% url repositories_tree repository.user.username repository.slug commit.id entry.path %}">{{ entry.path }}</a><br />
 {% endif %}
 
 {% if entry.type == 'blob' %}
