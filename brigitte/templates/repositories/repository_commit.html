@@ -14,7 +14,6 @@
             <p>{{ commit.msg }}</p>
             <hr />
             <p>
-
                 <img src="{% avatar commit.committer_mail 40 "g" %}">
                 <i><a href="">{{ commit.committer }}</a> committed {{ commit.ago }}.</i><br />
             </p>
@@ -35,7 +34,7 @@
                 </tr>
                 <tr>
                     <td>Tree:</td>
-                    <td><a href="{% url repositories_tree repository.user.username repository.slug commit.id %}">{{ commit.short_tree }}</a></td>
+                    <td><a href="{% url repositories_commit_tree_root repository.user.username repository.slug commit.id %}">{{ commit.short_tree }}</a></td>
                 </tr>
             </table>
         </div>

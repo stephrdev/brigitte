@@ -135,10 +135,11 @@ class Commit(BaseCommit):
             "(?P<rights>\d*)\s(?P<type>[a-z]*)"\
             "\s(?P<sha>\w*)\s*(?P<size>[0-9 -]*)\s*(?P<path>.+)")
 
-        if path == None:
+        if not path:
             path = ''
         else:
-            path = path+'/'
+            if not path[-1] == '/':
+                path = path+'/'
 
         cmd = ['git',
             '--git-dir=%s' % self.path,
@@ -154,18 +155,24 @@ class Commit(BaseCommit):
                 for treefile in outp.strip().split('\n'):
                     r = regex.search(treefile)
                     tfile = r.groupdict()
+                    tfile['name'] = tfile['path'].rsplit('/', 1)[-1]
+                    if tfile['type'] == 'tree':
+                        tfile['path'] += '/'
                     treedir.append(tfile)
-                return treedir
+                return {
+                    'path': path,
+                    'tree': treedir
+                }
             else:
-                return 'No files ...'
+                return None
         except:
             return None
 
-    def get_filecontent(self, sha):
+    def get_file(self, path):
         cmd = ['git',
             '--git-dir=%s' % self.path,
             'show',
-            sha]
+            '%s:%s' % (self.id, path)]
 
         try:
             outp = self.syswrapper(cmd)

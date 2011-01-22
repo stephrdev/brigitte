@@ -27,37 +27,32 @@ def repositories_commit(request, user, slug, sha):
         'commit': commit,
     })
 
-def repositories_tree(request, user, slug, sha, path=None):
+def repositories_commit_tree(request, user, slug, sha, path=None):
     repo = get_object_or_404(Repository, user__username=user, slug=slug)
     commit = repo.get_commit(sha)
 
     if not commit:
         raise Http404
 
-    lstree = commit.get_tree(path)
-    if lstree is None:
-        raise Http404
+    if not path or path[-1] == '/':
+        tree = commit.get_tree(path)
+        if tree is None:
+            raise Http404
 
+        return render(request, 'repositories/repository_tree.html', {
+            'repository': repo,
+            'commit': commit,
+            'tree': tree,
+        })
 
-    return render(request, 'repositories/repository_tree.html', {
-        'repository': repo,
-        'commit': commit,
-        'lstree': lstree,
-    })
+    else:
+        file_blob = commit.get_file(path)
+        if file_blob is None:
+            raise Http404
 
-def repositories_file(request, user, slug, sha, filesha):
-    repo = get_object_or_404(Repository, user__username=user, slug=slug)
-    commit = repo.get_commit(sha)
+        return render(request, 'repositories/repository_file.html', {
+            'repository': repo,
+            'commit': commit,
+            'file': file_blob,
+        })
 
-    if not commit:
-        raise Http404
-
-    filecontent = commit.get_filecontent(filesha)
-    if filecontent is None:
-        raise Http404
-
-    return render(request, 'repositories/repository_file.html', {
-        'repository': repo,
-        'commit': commit,
-        'filecontent': filecontent,
-    })
