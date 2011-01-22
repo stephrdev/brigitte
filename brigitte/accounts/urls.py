@@ -13,10 +13,11 @@ urlpatterns = patterns('brigitte.accounts.views',
         name='accounts_email_change_requested'),
     url(r'^email/approve/(?P<token>[0-9A-Za-z-]+)/(?P<code>[0-9A-Za-z-]+)/$',
         'email_change_approve', name='accounts_email_change_approve'),
+
+    url(r'^keys/$', 'keys_list', name='accounts_keys_list'),
+    url(r'^keys/add/$', 'keys_add', name='accounts_keys_add'),
     url(r'^keys/(?P<pk>\d+)/$', 'keys_change', name='accounts_keys_change'),
     url(r'^keys/(?P<pk>\d+)/delete/$', 'keys_delete', name='accounts_keys_delete'),
-    url(r'^keys/add/$', 'keys_add', name='accounts_keys_add'),
-    url(r'^keys/$', 'keys_list', name='accounts_keys_list'),
 )
 
 urlpatterns += patterns('django.contrib.auth.views',

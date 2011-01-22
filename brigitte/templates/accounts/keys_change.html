@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Change key{% endblock %}
+{% block title %}Change public key{% endblock %}
 
 {% block content %}
     <div class="grid_16 content">
-        <h1>Change key</h1>
+        <h1>Change public key</h1>
 
         <form action="." method="post" class="form">
             {% csrf_token %}
@@ -12,7 +12,7 @@
                 {{ form.as_p }}
             </fieldset>
             <fieldset class="submitrow">
-                <p><label>&nbsp;</label><button type="submit">Save key</button></p>
+                <p><label>&nbsp;</label><button type="submit">Save public key</button></p>
             </fieldset>
         </form>
     </div>

@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Welcome back{% endblock %}
+{% block title %}Manage public keys{% endblock %}
 
 {% block content %}
     <div class="grid_16 content">
-        <h1>Your SSH Public Keys</h1>
+        <h1>Manage public keys</h1>
         <p style="margin-bottom:10px">
-            <a href="{% url accounts_keys_add %}">To add a new key, click here.</a>
+            <a href="{% url accounts_keys_add %}">To add a new public key, click here.</a>
         </p>
         <table>
             <thead>

@@ -94,21 +94,6 @@ def keys_list(request):
     })
 
 @login_required
-def keys_change(request, pk):
-    key = get_object_or_404(SshPublicKey, pk=pk, user=request.user)
-
-    if request.method == 'POST':
-        form = SshPublicKeyForm(request.POST, instance=key)
-        if form.is_valid():
-            key = form.save()
-            messages.success(request, _('Key updated.'))
-            return redirect('accounts_keys_list')
-    else:
-        form = SshPublicKeyForm(instance=key)
-
-    return render(request, 'accounts/keys_change.html', {'form': form})
-
-@login_required
 def keys_add(request):
     if request.method == 'POST':
         form = SshPublicKeyForm(request.POST)
@@ -122,6 +107,21 @@ def keys_add(request):
         form = SshPublicKeyForm()
 
     return render(request, 'accounts/keys_add.html', {'form': form})
+
+@login_required
+def keys_change(request, pk):
+    key = get_object_or_404(SshPublicKey, pk=pk, user=request.user)
+
+    if request.method == 'POST':
+        form = SshPublicKeyForm(request.POST, instance=key)
+        if form.is_valid():
+            key = form.save()
+            messages.success(request, _('Key updated.'))
+            return redirect('accounts_keys_list')
+    else:
+        form = SshPublicKeyForm(instance=key)
+
+    return render(request, 'accounts/keys_change.html', {'form': form})
 
 @login_required
 def keys_delete(request, pk):
