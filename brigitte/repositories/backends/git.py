@@ -80,6 +80,13 @@ class Repo(BaseRepo):
                 outp.append(Tag(self.path, tag))
         return outp
 
+    def init_repo(self):
+        cmd = ['git',
+               'init',
+               '--bare',
+               self.path]
+        self.syswrapper(cmd)
+        return True
 
 class Tag(BaseTag):
     def __repr__(self):
@@ -170,6 +177,7 @@ class Commit(BaseCommit):
         cmd = ['git',
             '--git-dir=%s' % self.path,
             'show',
+            '--exit-code',
             '%s:%s' % (self.id, path)]
 
         try:

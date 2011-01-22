@@ -1,9 +1,13 @@
 from subprocess import Popen, PIPE
 
+class ShellCommandException(Exception): pass
+
 class BaseRepo:
     def syswrapper(self, cmd):
-        raw = Popen(cmd, stdout=PIPE)
-        output = raw.communicate()[0]
+        raw = Popen(cmd, stdout=PIPE, stderr=PIPE)
+        output, err = raw.communicate()
+        if err:
+            raise ShellCommandException(err)
         return output
 
     path = None
@@ -25,8 +29,10 @@ class BaseTag:
 
 class BaseCommit:
     def syswrapper(self, cmd):
-        raw = Popen(cmd, stdout=PIPE)
-        output = raw.communicate()[0]
+        raw = Popen(cmd, stdout=PIPE, stderr=PIPE)
+        output, err = raw.communicate()
+        if err:
+            raise ShellCommandException(err)
         return output
 
     path = None
