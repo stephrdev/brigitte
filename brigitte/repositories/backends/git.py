@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import re
 from lxml import etree
 from datetime import datetime
 
@@ -127,6 +128,50 @@ class Commit(BaseCommit):
             '-p',
             str(self.id)]
         return self.syswrapper(cmd)
+
+
+    def get_tree(self, path):
+        regex = re.compile(
+            "(?P<rights>\d*)\s(?P<type>[a-z]*)"\
+            "\s(?P<sha>\w*)\s*(?P<size>[0-9 -]*)\s*(?P<path>.+)")
+
+        if path == None:
+            path = ''
+        else:
+            path = path+'/'
+
+        cmd = ['git',
+            '--git-dir=%s' % self.path,
+            'ls-tree',
+            '-l',
+            str(self.id),
+            path]
+
+        try:
+            treedir = []
+            outp = self.syswrapper(cmd)
+            if outp.strip():
+                for treefile in outp.strip().split('\n'):
+                    r = regex.search(treefile)
+                    tfile = r.groupdict()
+                    treedir.append(tfile)
+                return treedir
+            else:
+                return 'No files ...'
+        except:
+            return None
+
+    def get_filecontent(self, sha):
+        cmd = ['git',
+            '--git-dir=%s' % self.path,
+            'show',
+            sha]
+
+        try:
+            outp = self.syswrapper(cmd)
+            return outp
+        except:
+            return None
 
     @property
     def commit_date(self):

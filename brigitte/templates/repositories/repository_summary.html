@@ -49,7 +49,7 @@
                     </tr>
                     <tr>
                         <td>Tree:</td>
-                        <td><a href="#">{{ commit.short_tree }}</a></td>
+                        <td><a href="{% url repositories_tree repository.user.username repository.slug commit.id %}">{{ commit.short_tree }}</a></td>
                     </tr>
                 </table>
             </div>
