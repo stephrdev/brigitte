@@ -10,6 +10,8 @@ from django.contrib.sites.models import Site
 from brigitte.accounts.models import Profile, SshPublicKey
 from brigitte.accounts.models import EmailVerification, RegistrationProfile
 
+import struct, base64
+
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
@@ -148,3 +150,20 @@ class SshPublicKeyForm(forms.ModelForm):
         model = SshPublicKey
         exclude = ('user',)
 
+    def valid_ssh_key(self, pub):
+        """ Returns True or False """
+        try:
+            ktype, key_string, comment = pub.split()
+            data = base64.decodestring(key_string)
+            int_len = 4
+            str_len = struct.unpack('>I', data[:int_len])[0]
+            return data[int_len:int_len+str_len] == ktype
+        except:
+            return False
+
+    def clean(self):
+        cleaned_data = self.cleaned_data
+        if not self.valid_ssh_key(cleaned_data['key']):
+            raise forms.ValidationError(
+                _('Publickey is not valid!'))
+        return cleaned_data
