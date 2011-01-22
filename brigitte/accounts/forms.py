@@ -150,20 +150,19 @@ class SshPublicKeyForm(forms.ModelForm):
         model = SshPublicKey
         exclude = ('user',)
 
-    def valid_ssh_key(self, pub):
-        """ Returns True or False """
+    def clean_key(self):
         try:
-            ktype, key_string, comment = pub.split()
+            key = self.cleaned_data['key']
+            ktype, key_string, comment = key.split()
             data = base64.decodestring(key_string)
             int_len = 4
             str_len = struct.unpack('>I', data[:int_len])[0]
-            return data[int_len:int_len+str_len] == ktype
-        except:
-            return False
 
-    def clean(self):
-        cleaned_data = self.cleaned_data
-        if not self.valid_ssh_key(cleaned_data['key']):
-            raise forms.ValidationError(
-                _('Publickey is not valid!'))
-        return cleaned_data
+            if data[int_len:int_len+str_len] == ktype:
+                return key
+        except:
+            pass
+
+        raise forms.ValidationError(
+            _(u'The provided key is not valid. Please supply a valid key.'))
+
