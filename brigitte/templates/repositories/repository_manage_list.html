@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Manage repositories{% endblock %}
+
+{% block content %}
+<div class="grid_16 content" id="repo-list">
+    <h1>Manage repositories</h1>
+
+    <p><a href="{% url repositories_manage_add %}">To add a new repository, click here.</a></p>
+
+    <table border=1>
+        <thead>
+        <tr>
+            <th>Repository</th>
+            <th>Owner</th>
+            <th>Manage</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for repo in repository_list %}
+        <tr>
+            <td><a href="{% url repositories_manage_change repo.user.username repo.slug %}">{{ repo.title }}</a></td>
+            <td>{{ repo.user }}</td>
+            <td><a href="{% url repositories_manage_change repo.user.username repo.slug %}">Change</a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

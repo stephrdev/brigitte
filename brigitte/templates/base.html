@@ -25,8 +25,9 @@
         <div class="grid_6" id="headernav">
         {% if request.user.is_authenticated %}
             <ul>
+                <li><a href="{% url repositories_manage_list %}">Manage repositories</a></li>
                 <li><a href="{% url accounts_profile_change %}">Edit profile</a></li>
-                <li><a href="{% url accounts_keys_list %}">Edit ssh keys</a></li>
+                <li><a href="{% url accounts_keys_list %}">Manage public keys</a></li>
                 <li><a href="{% url auth_logout %}">Logout</a></li>
             </ul>
             <div class="clear"></div>

@@ -3,7 +3,9 @@
 {% block title %}Repositories{% endblock %}
 
 {% block content %}
-<div class="grid_16" id="repo-list">
+<div class="grid_16 content" id="repo-list">
+    <h1>Repositories</h1>
+
     <table border=1>
         <thead>
         <tr>
@@ -17,8 +19,13 @@
         {% for repo in repository_list %}
         <tr>
             <td><a href="{% url repositories_summary repo.user.username repo.slug %}">{{ repo.title }}</a></td>
+            {% if repo.last_commit %}
             <td><a href="{% url repositories_commit repo.user.username repo.slug repo.last_commit.id %}">{{ repo.last_commit.short_msg }} (by {{ repo.last_commit.author }})</a></td>
             <td>{{ repo.last_commit.commit_date }}</td>
+            {% else %}
+            <td>Empty repository</td>
+            <td>No commits</td>
+            {% endif %}
             <td>{{ repo.user }}</td>
         </tr>
         {% endfor %}

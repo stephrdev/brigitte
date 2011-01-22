@@ -6,13 +6,22 @@ from django.contrib.auth.models import User
 
 from brigitte.repositories.backends.git import Repo
 
-BRIGITTE_GIT_BASE_PATH = getattr(settings, 'BRIGITTE_GIT_BASE_PATH', 'git_repositories')
+BRIGITTE_GIT_BASE_PATH = getattr(settings,
+                                 'BRIGITTE_GIT_BASE_PATH',
+                                 'git_repositories')
+
+class RepositoryManager(models.Manager):
+    def manageable_repositories(self, user):
+        return [ru.repo for ru in user.repositoryuser_set.filter(
+            can_admin=True)]
 
 class Repository(models.Model):
     user = models.ForeignKey(User, verbose_name=_('User'))
     slug = models.SlugField(_('Slug'), max_length=255, blank=False)
     title = models.CharField(_('Title'), max_length=255)
     description = models.TextField(_('Description'), blank=True)
+
+    objects = RepositoryManager()
 
     def __unicode__(self):
         return self.title
@@ -43,6 +52,16 @@ class Repository(models.Model):
 
     def get_commit(self, sha):
         return self._repo.get_commit(sha)
+
+    def user_is_admin(self, user):
+        return self.repositoryuser_set.filter(
+            user=user,
+            can_admin=True
+        ).exists()
+
+    @property
+    def alterable_users(self):
+        return self.repositoryuser_set.exclude(user=self.user)
 
     def save(self, *args, **kwargs):
         if not self.pk:
