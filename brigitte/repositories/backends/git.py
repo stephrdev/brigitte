@@ -159,12 +159,10 @@ class Commit(BaseCommit):
                     if tfile['type'] == 'tree':
                         tfile['path'] += '/'
                     treedir.append(tfile)
-                return {
-                    'path': path,
-                    'tree': treedir
-                }
-            else:
-                return None
+            return {
+                'path': path,
+                'tree': treedir
+            }
         except:
             return None
 
