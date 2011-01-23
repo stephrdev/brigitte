@@ -126,6 +126,9 @@ a:hover {
 table {
     border-collapse: collapse;
     border: 1px solid #3F423E;
+    width: 100%;
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
 td, th {
     border: 1px solid #3F423E;
@@ -169,22 +172,30 @@ tbody tr:hover {
 }
 
 #repo-summary h2 {
-    font-size: 16px;
-    padding-bottom: 10px;
+    font-size: 14px;
+    padding-top: 10px;
 }
-
+#repo-summary h3 {
+    padding-top: 10px;
+}
 #repo-summary .repo-description {
     margin-top: 10px;
     margin-bottom: 10px;
 }
-
+.repo-facts i {
+    display: block;
+    float: left;
+    width: 100px;
+}
 .repo-tags {
     margin-bottom: 10px;
 }
-
 .commit .commit-info {
     width:130px;
     float:left;
+}
+.commit .commit-info p {
+    padding: 10px;
 }
 .commit .commit-info td {
     vertical-align: top; /* !important;*/
@@ -202,8 +213,10 @@ tbody tr:hover {
 .commit .commit-summary {
     padding: 10px;
     width: 808px;
-    vertical-align: middle;
     float:left;
+}
+.commit .commit-summary img {
+    float: left;
 }
 .changed-files {
     padding: 10px;
@@ -237,10 +250,6 @@ tbody tr:hover {
     overflow-x: auto;
 }
 
-.treeview table {
-    width:100%;
-}
-
 .treeview tr {
     height:40px;
 }
@@ -261,4 +270,17 @@ tbody tr:hover {
 
 .treeview .backlink {
     margin-left:50px;
+}
+.pagination {
+    padding-bottom: 3px;
+}
+.pagination a {
+    padding: 5px;
+    color: #A4D43D;
+}
+.pagination a.next-page {
+    float: right;
+}
+.pagination a.prev-page {
+    float: left;
 }

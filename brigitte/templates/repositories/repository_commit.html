@@ -4,42 +4,11 @@
 {% block title %}Repository: {{ repository.title }} - {{ commit.id }}{% endblock %}
 
 {% block content %}
-<div class="grid_16 content" id="repo-summary">
-    <h1>{{ repository.title }}</h1>
+<div class="grid_16 content" id="repo-commit">
+    <h1><a href="{% url repositories_summary repository.user.username repository.slug %}">{{ repository.title }}</a> - Commit {{ commit.id }}</h1>
 
-    <h2>Commit {{ commit.id }}</h2>
+    {% include "repositories/snippet_commit.html" %}
 
-    <div class="commit">
-        <div class="commit-summary">
-            <p>{{ commit.msg }}</p>
-            <hr />
-            <p>
-                <img src="{% avatar commit.committer_mail 40 "g" %}">
-                <i><a href="">{{ commit.committer }}</a> committed {{ commit.ago }}.</i><br />
-            </p>
-        </div>
-        <div class="commit-info">
-            <table>
-                <tr>
-                    <td>Commit:</td>
-                    <td>{{ commit.short_id }}</td>
-                </tr>
-                <tr>
-                    <td>Parents:</td>
-                    <td>
-                    {% for short_parent, parent in commit.both_parents %}
-                        <a href="{% url repositories_commit repository.user.username repository.slug parent %}">{{ short_parent }}</a><br />
-                    {% endfor %}
-                    </td>
-                </tr>
-                <tr>
-                    <td>Tree:</td>
-                    <td><a href="{% url repositories_commit_tree_root repository.user.username repository.slug commit.id %}">{{ commit.short_tree }}</a></td>
-                </tr>
-            </table>
-        </div>
-        <div style="clear:both"></div>
-    </div>
     <div class="changed-files">
         {% for added,removed,filename in commit.changed_files %}
         <div>
