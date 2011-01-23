@@ -107,6 +107,6 @@ ACCOUNT_ACTIVATION_DAYS = 7
 
 FILETYPE_MAP = {
     'default': 'file.png',
-    'py': 'python.png',
+    'py': 'py.png',
     'c': 'c.png',
     }
