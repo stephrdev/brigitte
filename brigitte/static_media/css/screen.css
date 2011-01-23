@@ -236,3 +236,29 @@ tbody tr:hover {
     margin: 5px;
     overflow-x: auto;
 }
+
+.treeview table {
+    width:100%;
+}
+
+.treeview tr {
+    height:40px;
+}
+
+.treeview span {
+    margin-left:26px;
+    margin-right:14px;
+}
+
+.treeview td {
+    vertical-align:middle;
+}
+
+.treeview img {
+    margin-left:20px;
+    margin-right:10px
+}
+
+.treeview .backlink {
+    margin-left:50px;
+}

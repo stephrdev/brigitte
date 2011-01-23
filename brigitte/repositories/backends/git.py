@@ -2,8 +2,11 @@
 import re
 from lxml import etree
 from datetime import datetime
+from django.conf import settings
 
 from brigitte.repositories.backends.base import BaseCommit, BaseRepo, BaseTag
+
+FILETYPE_MAP = getattr(settings, 'FILETYPE_MAP', {})
 
 class Repo(BaseRepo):
     def get_recent_commits(self, sha=None, count=10):
@@ -155,6 +158,8 @@ class Commit(BaseCommit):
             str(self.id),
             path]
 
+
+        fileregex = re.compile("\.\w+")
         try:
             treedir = []
             outp = self.syswrapper(cmd)
@@ -165,6 +170,18 @@ class Commit(BaseCommit):
                     tfile['name'] = tfile['path'].rsplit('/', 1)[-1]
                     if tfile['type'] == 'tree':
                         tfile['path'] += '/'
+                    else:
+                        if not fileregex.match(tfile['name']):
+                            if '.' in tfile['name']:
+                                tfile['suffix'] = tfile['name'].rsplit('.', 1)[-1]
+                                tfile['mime_image'] = FILETYPE_MAP.get(tfile['suffix'], FILETYPE_MAP['default'])
+                            else:
+                                tfile['suffix'] = ''
+                                tfile['mime_image'] = FILETYPE_MAP['default']
+                        else:
+                            tfile['suffix'] = ''
+                            tfile['mime_image'] = FILETYPE_MAP['default']
+
                     treedir.append(tfile)
             return {
                 'path': path,

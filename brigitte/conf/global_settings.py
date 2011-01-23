@@ -105,3 +105,8 @@ LOGIN_REDIRECT_URL = '/accounts/'
 
 ACCOUNT_ACTIVATION_DAYS = 7
 
+FILETYPE_MAP = {
+    'default': 'file.png',
+    'py': 'python.png',
+    'c': 'c.png',
+    }
