@@ -54,12 +54,20 @@ class Repository(models.Model):
         return self._repo.get_last_commit()
 
     @property
-    def get_tags(self):
+    def tags(self):
         return self._repo.get_tags()
 
     @property
-    def get_branches(self):
+    def branches(self):
         return self._repo.get_branches()
+
+    @property
+    def push_url(self):
+        return 'TBD'
+
+    @property
+    def pull_url(self):
+        return 'TBD'
 
     def get_commit(self, sha):
         return self._repo.get_commit(sha)
