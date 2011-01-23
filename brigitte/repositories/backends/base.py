@@ -21,10 +21,10 @@ class BaseTag:
         output = raw.communicate()[0]
         return output
 
-    path = None
+    repo = None
 
-    def __init__(self, path, name):
-        self.path = path
+    def __init__(self, repo, name):
+        self.repo = repo
         self.name = name
 
 class BaseBranch:
@@ -33,10 +33,10 @@ class BaseBranch:
         output = raw.communicate()[0]
         return output
 
-    path = None
+    repo = None
 
-    def __init__(self, path, name, is_master):
-        self.path = path
+    def __init__(self, repo, name, is_master):
+        self.repo = repo
         self.name = name
         self.is_master = is_master
 
@@ -48,9 +48,9 @@ class BaseCommit:
             raise ShellCommandException(err)
         return output
 
-    path = None
+    repo = None
 
-    def __init__(self, path, inp):
-        self.path = path
+    def __init__(self, repo, inp):
+        self.repo = repo
         self.__dict__.update(**dict([(str(k), v) for k,v in inp.items()]))
 

@@ -59,7 +59,7 @@ class Repo(BaseRepo):
                 for field in commit.iterchildren():
                     if field.text:
                         c[field.tag] = field.text.strip()
-                commits.append(Commit(self.path, c))
+                commits.append(Commit(self, c))
         except:
             pass
 
@@ -84,7 +84,7 @@ class Repo(BaseRepo):
         outp = []
         for tag in tags:
             if len(tag) > 0:
-                outp.append(Tag(self.path, tag))
+                outp.append(Tag(self, tag))
         return outp
 
     def get_branches(self):
@@ -95,7 +95,7 @@ class Repo(BaseRepo):
         branches = regex.findall(self.syswrapper(cmd))
         outp = []
         for branch in branches:
-                outp.append(Branch(self.path, branch[1].strip(), branch[0] == '*'))
+                outp.append(Branch(self, branch[1].strip(), branch[0] == '*'))
         return outp
 
     def init_repo(self):
@@ -110,10 +110,23 @@ class Tag(BaseTag):
     def __repr__(self):
         return '<Tag: %s>' % self.name
 
+    @property
+    def last_commit(self):
+        try:
+            return self.repo.get_commit_list(branchtag=self.name, count=1)[0]
+        except:
+            return None
+
 class Branch(BaseBranch):
     def __repr__(self):
         return '<Branch: %s>' % self.name
 
+    @property
+    def last_commit(self):
+        try:
+            return self.repo.get_commit_list(branchtag=self.name, count=1)[0]
+        except:
+            return None
 
 class Commit(BaseCommit):
     def __repr__(self):
@@ -134,7 +147,7 @@ class Commit(BaseCommit):
     @property
     def changed_files(self):
         cmd = ['git',
-            '--git-dir=%s' % self.path,
+            '--git-dir=%s' % self.repo.path,
             'log',
             '-1',
             '--numstat',
@@ -152,7 +165,7 @@ class Commit(BaseCommit):
     @property
     def diff(self):
         cmd = ['git',
-            '--git-dir=%s' % self.path,
+            '--git-dir=%s' % self.repo.path,
             'diff-tree',
             '-p',
             str(self.id)]
@@ -171,7 +184,7 @@ class Commit(BaseCommit):
                 path = path+'/'
 
         cmd = ['git',
-            '--git-dir=%s' % self.path,
+            '--git-dir=%s' % self.repo.path,
             'ls-tree',
             '-l',
             str(self.id),
@@ -211,7 +224,7 @@ class Commit(BaseCommit):
 
     def get_file(self, path):
         cmd = ['git',
-            '--git-dir=%s' % self.path,
+            '--git-dir=%s' % self.repo.path,
             'show',
             '--exit-code',
             '%s:%s' % (self.id, path)]
