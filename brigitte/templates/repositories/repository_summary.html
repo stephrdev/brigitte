@@ -71,14 +71,17 @@
                 </thead>
                 <tbody>
                     {% for tag in repository.tags %}
-                    <tr>
-                        <td><strong><a href="{% url repositories_commits repository.user.username repository.slug tag.name %}">{{ tag.name }}</a></strong></td>
-                        <td>{{ tag.last_commit.commit_date }}</td>
-                        <td>
-                            <a href="{% url repositories_commits repository.user.username repository.slug tag.name %}">Commits</a>
-                            <a href="{% url repositories_commit_tree_root repository.user.username repository.slug tag.last_commit.id %}">Tree</a>
-                        </td>
-                    </tr>
+                        {% if tag.last_commit %}
+                        <tr>
+                            <td><strong><a href="{% url repositories_commits repository.user.username repository.slug tag.name %}">{{ tag.name }}</a></strong></td>
+                            <td>{{ tag.last_commit.commit_date }}</td>
+                            <td>
+                                <a href="{% url repositories_commits repository.user.username repository.slug tag.name %}">Commits</a>
+                                <a href="{% url repositories_commit_tree_root repository.user.username repository.slug tag.last_commit.id %}">Tree</a>
+                            </td>
+                        </tr>
+                        {% endif %}
+
                     {% endfor %}
                 </tbody>
             </table>
