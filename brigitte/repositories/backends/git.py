@@ -112,10 +112,13 @@ class Tag(BaseTag):
 
     @property
     def last_commit(self):
-        try:
-            return self.repo.get_commit_list(branchtag=self.name, count=1)[0]
-        except:
-            return None
+        if not hasattr(self, '_last_commit'):
+            try:
+                self._last_commit = self.repo.get_commit_list(
+                    branchtag=self.name, count=1)[0]
+            except:
+                self._last_commit = None
+        return self._last_commit
 
 class Branch(BaseBranch):
     def __repr__(self):
@@ -123,10 +126,13 @@ class Branch(BaseBranch):
 
     @property
     def last_commit(self):
-        try:
-            return self.repo.get_commit_list(branchtag=self.name, count=1)[0]
-        except:
-            return None
+        if not hasattr(self, '_last_commit'):
+            try:
+                self._last_commit = self.repo.get_commit_list(
+                    branchtag=self.name, count=1)[0]
+            except:
+                self._last_commit = None
+        return self._last_commit
 
 class Commit(BaseCommit):
     def __repr__(self):
@@ -238,3 +244,4 @@ class Commit(BaseCommit):
     @property
     def commit_date(self):
         return datetime.fromtimestamp(float(self.timestamp))
+

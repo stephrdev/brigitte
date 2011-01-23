@@ -51,15 +51,21 @@ class Repository(models.Model):
 
     @property
     def last_commit(self):
-        return self._repo.get_last_commit()
+        if not hasattr(self, '_last_commit'):
+            self._last_commit = self._repo.get_last_commit()
+        return self._last_commit
 
     @property
     def tags(self):
-        return self._repo.get_tags()
+        if not hasattr(self, '_tags'):
+            self._tags = self._repo.get_tags()
+        return self._tags
 
     @property
     def branches(self):
-        return self._repo.get_branches()
+        if not hasattr(self, '_branches'):
+            self._branches = self._repo.get_branches()
+        return self._branches
 
     @property
     def push_url(self):
