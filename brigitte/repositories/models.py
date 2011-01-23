@@ -34,6 +34,13 @@ class Repository(models.Model):
             '%s.git' % self.slug)
 
     @property
+    def short_path(self):
+        return '%s/%s.git' % (
+            self.user.username,
+            self.slug
+        )
+
+    @property
     def _repo(self):
         if not hasattr(self, '_repo_obj'):
             self._repo_obj = Repo(self.path)
