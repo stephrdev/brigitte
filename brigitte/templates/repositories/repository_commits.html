@@ -14,76 +14,49 @@
         });
     });
 </script>
-<div class="grid_16 content" id="repo-summary">
-    {% if repository.get_tags %}
-    <div class="repo-tags" style="float:left">
-    Tags:
-    <select id="tags">
-            <option></option>
-            {% for tag in repository.get_tags %}
-            <option {% if tag.name == branchtag %}selected="selected"{% endif %}>{{ tag.name }}</option>
-            {% endfor %}
-    </select>
+<div class="grid_16 content" id="repo-commits">
+    <h1>{{ repository.title }} - {{ branchtag }}</h1>
+    <div class="grid_8">
+        {% if repository.branches %}
+            <div class="repo-branches">
+                Branches:
+                <select name="branches" id="branches">
+                    <option value="">--------</option>
+                    {% for branch in repository.branches %}
+                    <option value="{{ branch.name }}"{% if branch.name == branchtag %} selected="selected"{% endif %}>{{ branch.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        {% endif %}
     </div>
-    {% endif %}
-    {% if repository.get_branches %}
-    <div class="repo-branches">
-    Branches:
-    <select id="branches">
-        <option></option>
-        {% for branch in repository.get_branches %}
-        <option{% if branch.name == branchtag %} selected="selected"{% endif %}>{{ branch.name }}</option>
-        {% endfor %}
-    </select>
+    <div class="grid_8">
+        {% if repository.tags %}
+            <div class="repo-tags">
+                Tags:
+                <select name="branches" id="tags">
+                    <option value="">--------</option>
+                    {% for tag in repository.tags %}
+                    <option value="{{ tag.name }}"{% if tag.name == branchtag %} selected="selected"{% endif %}>{{ tag.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        {% endif %}
     </div>
-    {% endif %}
+    <div class="pagination">
+        {% if prev_page %}<a class="prev-page" href="?page={{ prev_page }}">prev page</a>{% endif %}
+        <a class="next-page" href="?page={{ next_page }}">next page</a>
+        <div style="clear:both"></div>
+    </div>
 
-    <div style="clear:both"></div>
-
-    <h1>{{ repository.title }}</h1>
-
-    <h2>Recent commits</h2>
-    {% if prev_page %}<a href="?page={{ prev_page }}">prev page</a>{% endif %}
-    <a href="?page={{ next_page }}">next page</a>
-
-    {% for commit in commits %}
     <div class="recent-commits">
-        <div class="commit">
-            <div class="commit-summary">
-                <p><a href="{% url repositories_commit repository.user.username repository.slug commit.id %}">{{ commit.msg }}</a></p>
-                <hr />
-                <p>
-                    <img src="{% avatar commit.committer_mail 40 "g" %}">
-                    <i><a href="#">{{ commit.committer }}</a> committed {{ commit.ago }}.</i><br />
-                </p>
-            </div>
-
-            <div class="commit-info">
-                <table>
-                    <tr>
-                        <td>Commit:</td>
-                        <td><a href="{% url repositories_commit repository.user.username repository.slug commit.id %}">{{ commit.short_id }}</a></td>
-                    </tr>
-                    <tr>
-                        <td>Parents:</td>
-                        <td>
-                            {% for short_parent, parent in commit.both_parents %}
-                                <a href="{% url repositories_commit repository.user.username repository.slug parent %}">{{ short_parent }}</a><br />
-                            {% endfor %}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Tree:</td>
-                        <td><a href="{% url repositories_commit_tree_root repository.user.username repository.slug commit.id %}">{{ commit.short_tree }}</a></td>
-                    </tr>
-                </table>
-            </div>
-            <div style="clear:both"></div>
-        </div>
-    </div>
+    {% for commit in commits %}
+        {% include "repositories/snippet_commit.html" %}
     {% endfor %}
+    </div>
+    <div class="pagination">
+        {% if prev_page %}<a class="prev-page" href="?page={{ prev_page }}">prev page</a>{% endif %}
+        <a class="next-page" href="?page={{ next_page }}">next page</a>
+        <div style="clear:both"></div>
+    </div>
 </div>
-{% if prev_page %}<a href="?page={{ prev_page }}">prev page</a>{% endif %}
-<a href="?page={{ next_page }}">next page</a>
-
 {% endblock %}
