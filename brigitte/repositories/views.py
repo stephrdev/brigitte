@@ -105,6 +105,24 @@ def repositories_summary(request, user, slug):
         'repository': repo,
     })
 
+
+def repositories_commits(request, user, slug, branchtag):
+    count = 10
+    page = int(request.GET.get('page', 1))
+    skip = (page * count) - count
+    if skip < 0:
+        skip = 0
+    repo = get_object_or_404(Repository, user__username=user, slug=slug)
+    commits = repo.get_commit_list(count=count, skip=skip, branchtag=branchtag)
+    return render(request, 'repositories/repository_commits.html', {
+        'repository': repo,
+        'commits': commits,
+        'branchtag': branchtag,
+        'next_page': page + 1,
+        'prev_page': page - 1,
+    })
+
+
 def repositories_commit(request, user, slug, sha):
     repo = get_object_or_404(Repository, user__username=user, slug=slug)
     commit = repo.get_commit(sha)

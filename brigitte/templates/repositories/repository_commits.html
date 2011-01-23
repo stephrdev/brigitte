@@ -21,31 +21,32 @@
     <select id="tags">
             <option></option>
             {% for tag in repository.get_tags %}
-            <option>{{ tag.name }}</option>
+            <option {% if tag.name == branchtag %}selected="selected"{% endif %}>{{ tag.name }}</option>
             {% endfor %}
     </select>
     </div>
     {% endif %}
-
     {% if repository.get_branches %}
     <div class="repo-branches">
     Branches:
     <select id="branches">
-            {% for branch in repository.get_branches %}
-            <option{% if branch.is_master %} selected="selected"{% endif %}>{{ branch.name }}</option>
-            {% endfor %}
+        <option></option>
+        {% for branch in repository.get_branches %}
+        <option{% if branch.name == branchtag %} selected="selected"{% endif %}>{{ branch.name }}</option>
+        {% endfor %}
     </select>
     </div>
     {% endif %}
+
     <div style="clear:both"></div>
 
     <h1>{{ repository.title }}</h1>
 
-    <div class="repo-description">{{ repository.description|linebreaks }}</div>
-
     <h2>Recent commits</h2>
+    {% if prev_page %}<a href="?page={{ prev_page }}">prev page</a>{% endif %}
+    <a href="?page={{ next_page }}">next page</a>
 
-    {% for commit in repository.recent_commits %}
+    {% for commit in commits %}
     <div class="recent-commits">
         <div class="commit">
             <div class="commit-summary">
@@ -82,5 +83,7 @@
     </div>
     {% endfor %}
 </div>
+{% if prev_page %}<a href="?page={{ prev_page }}">prev page</a>{% endif %}
+<a href="?page={{ next_page }}">next page</a>
 
 {% endblock %}

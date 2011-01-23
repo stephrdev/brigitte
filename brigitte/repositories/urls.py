@@ -17,6 +17,9 @@ urlpatterns = patterns('brigitte.repositories.views',
     url(r'^(?P<user>[\w-]+)/(?P<slug>[\w-]+)/commit/(?P<sha>[\w-]+)/$',
         'repositories_commit', name='repositories_commit'),
 
+    url(r'^(?P<user>[\w-]+)/(?P<slug>[\w-]+)/commits/(?P<branchtag>.+)$',
+        'repositories_commits', name='repositories_commits'),
+
     url(r'^(?P<user>[\w-]+)/(?P<slug>[\w-]+)/commit/(?P<sha>[\w-]+)/tree/(?P<path>.+)$',
         'repositories_commit_tree', name='repositories_commit_tree'),
     url(r'^(?P<user>[\w-]+)/(?P<slug>[\w-]+)/commit/(?P<sha>[\w-]+)/tree/$',

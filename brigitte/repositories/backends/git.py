@@ -4,14 +4,17 @@ from lxml import etree
 from datetime import datetime
 from django.conf import settings
 
-from brigitte.repositories.backends.base import BaseCommit, BaseRepo, BaseTag
+from brigitte.repositories.backends.base import BaseCommit, BaseRepo, BaseTag, BaseBranch
 
 FILETYPE_MAP = getattr(settings, 'FILETYPE_MAP', {})
 
 class Repo(BaseRepo):
     def get_recent_commits(self, sha=None, count=10):
+        return self.get_commit_list(sha,count)
+
+    def get_commit_list(self, sha=None, count=10, skip=0, branchtag=None):
         if sha == None:
-            sha = 'HEAD'
+            sha = branchtag if branchtag else 'HEAD'
 
         cmd = ['git',
             '--git-dir=%s' % self.path,
@@ -39,8 +42,9 @@ class Repo(BaseRepo):
                     <short_tree>%t</short_tree>\
                     <msg><![CDATA[%B]]></msg>\
                 </commit>',
+            '--skip='+str(skip),
+            '-'+str(count),
             sha,
-            '-'+str(count)
         ]
 
         commits = []
@@ -83,6 +87,17 @@ class Repo(BaseRepo):
                 outp.append(Tag(self.path, tag))
         return outp
 
+    def get_branches(self):
+        cmd = ['git',
+            '--git-dir=%s' % self.path,
+            'branch']
+        regex = re.compile("^(?P<type>\s|\*) (?P<name>.+)$",re.MULTILINE)
+        branches = regex.findall(self.syswrapper(cmd))
+        outp = []
+        for branch in branches:
+                outp.append(Branch(self.path, branch[1].strip(), branch[0] == '*'))
+        return outp
+
     def init_repo(self):
         cmd = ['git',
                'init',
@@ -94,6 +109,10 @@ class Repo(BaseRepo):
 class Tag(BaseTag):
     def __repr__(self):
         return '<Tag: %s>' % self.name
+
+class Branch(BaseBranch):
+    def __repr__(self):
+        return '<Branch: %s>' % self.name
 
 
 class Commit(BaseCommit):

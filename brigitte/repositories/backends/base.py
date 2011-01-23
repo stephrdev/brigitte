@@ -27,6 +27,19 @@ class BaseTag:
         self.path = path
         self.name = name
 
+class BaseBranch:
+    def syswrapper(self, cmd):
+        raw = Popen(cmd, stdout=PIPE)
+        output = raw.communicate()[0]
+        return output
+
+    path = None
+
+    def __init__(self, path, name, is_master):
+        self.path = path
+        self.name = name
+        self.is_master = is_master
+
 class BaseCommit:
     def syswrapper(self, cmd):
         raw = Popen(cmd, stdout=PIPE, stderr=PIPE)

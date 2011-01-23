@@ -57,8 +57,15 @@ class Repository(models.Model):
     def get_tags(self):
         return self._repo.get_tags()
 
+    @property
+    def get_branches(self):
+        return self._repo.get_branches()
+
     def get_commit(self, sha):
         return self._repo.get_commit(sha)
+
+    def get_commit_list(self, count=10, skip=0, branchtag=None):
+        return self._repo.get_commit_list(sha=None, count=count, skip=skip, branchtag=branchtag)
 
     def user_is_admin(self, user):
         return self.repositoryuser_set.filter(
