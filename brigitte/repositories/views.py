@@ -8,6 +8,7 @@ from django.template.defaultfilters import slugify
 
 from brigitte.repositories.models import Repository
 from brigitte.repositories.forms import RepositoryForm, RepositoryUserFormSet
+from brigitte.repositories.utils import pygmentize, build_path_breadcrumb
 
 @login_required
 def repositories_manage_list(request):
@@ -151,6 +152,7 @@ def repositories_commit_tree(request, user, slug, sha, path=None):
             'repository': repo,
             'commit': commit,
             'tree': tree,
+            'breadcrumb': build_path_breadcrumb(path)
         })
 
     else:
@@ -158,9 +160,15 @@ def repositories_commit_tree(request, user, slug, sha, path=None):
         if file_blob is None:
             raise Http404
 
+        file_blob_pygmentized = pygmentize(path.rsplit('.', 1)[-1], file_blob)
+
         return render(request, 'repositories/repository_file.html', {
             'repository': repo,
             'commit': commit,
-            'file': file_blob,
+            'file_path': path,
+            'file_blob': file_blob,
+            'file_lines': range(1, file_blob.count('\n') + 1),
+            'file_blob_pygmentized': file_blob_pygmentized,
+            'breadcrumb': build_path_breadcrumb(path)
         })
 
