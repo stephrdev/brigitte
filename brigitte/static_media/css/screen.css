@@ -287,3 +287,12 @@ tbody tr:hover {
 table.users {
     width: auto;
 }
+span.folder {
+    padding: 0px 5px;
+    background-color: #ffffff;
+    color: #000000;
+}
+pre.lines {
+    float: left;
+    border-right: 1px solid #A4D43D;
+}

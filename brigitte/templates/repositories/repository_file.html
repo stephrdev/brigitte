@@ -1,13 +1,26 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="grid_16">
-<pre class="brush: py">
-{{ file }}
-</pre>
+{% block title %}{{ repository.title }} - {{ commit.short_id }} - Blob: /{{ file_path }}{% endblock %}
 
-<script type="text/javascript">
-     SyntaxHighlighter.all()
-</script>
+{% block content %}
+<div class="grid_16 content" id="repo-commit">
+    <h1><a href="{% url repositories_summary repository.user.username repository.slug %}">{{ repository.title }}</a> - {{ commit.short_id }} - Blob: /{{ file_path }}</h1>
+
+    {% include "repositories/snippet_commit.html" %}
+
+    <h2>/ {% for link in breadcrumb %}
+        {% if not forloop.last %}
+        <a href="{% url repositories_commit_tree repository.user.username repository.slug commit.id link.path %}/">{{ link.name }}</a> /
+        {% else %}
+        {{ link.name }}
+        {% endif %}
+    {% endfor %}</h2>
+
+    <div class="commit-diff">
+        <pre class="lines">{% for line in file_lines %}<a href="#L{{ line }}">{{ line }}</a>
+{% endfor %}</pre>
+        <pre class="diff">{{ file_blob_pygmentized }}</pre>
+    </div>
 </div>
 {% endblock %}
+
