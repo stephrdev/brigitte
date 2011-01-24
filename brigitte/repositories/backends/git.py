@@ -221,6 +221,7 @@ class Commit(BaseCommit):
                             tfile['mime_image'] = FILETYPE_MAP['default']
 
                     treedir.append(tfile)
+            treedir.sort(lambda x,y: cmp(y['type'], x['type']))
             return {
                 'path': path,
                 'tree': treedir
