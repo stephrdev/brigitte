@@ -284,3 +284,6 @@ tbody tr:hover {
 .pagination a.prev-page {
     float: left;
 }
+table.users {
+    width: auto;
+}
