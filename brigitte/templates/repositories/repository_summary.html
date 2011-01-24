@@ -9,11 +9,15 @@
 
     <ul class="repo-facts">
         <li><i>Owner:</i> {{ repository.user.username }} ({{ repository.user.email }})</li>
+        {% if repository.last_commit %}
         <li><i>Last change:</i> <a href="{% url repositories_commit repository.user.username repository.slug repository.last_commit.id %}">{{ repository.last_commit.commit_date }}</a></li>
+        {% endif %}
         <li><i>Pull URL</i> {{ repository.pull_url }}</li>
         <li><i>Push URL</i> {{ repository.push_url }}</li>
     </ul>
     <div style="clear:both"></div>
+
+    {% if repository.last_commit %}
 
     <h2>Recent commits</h2>
 
@@ -87,5 +91,8 @@
             </table>
         </div>
     </div>
+    {% else %}
+    <h2>This repository is empty. Feel free to push some commits.</h2>
+    {% endif %}
 </div>
 {% endblock %}
