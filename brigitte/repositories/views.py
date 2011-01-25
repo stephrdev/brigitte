@@ -136,6 +136,21 @@ def repositories_commit(request, user, slug, sha):
         'commit': commit,
     })
 
+def repositories_commit_archive(request, user, slug, sha):
+    repo = get_object_or_404(Repository, user__username=user, slug=slug)
+    commit = repo.get_commit(sha)
+
+    try:
+        archive = commit.get_archive()
+        response = HttpResponse(archive['archive'].getvalue(),
+            mimetype='application/zip')
+        response['Content-Disposition'] = \
+            'attachment; filename="%s-%s.zip"' \
+                % (repo.slug, archive['archivename'])
+        return response
+    except:
+        raise Http404
+
 def repositories_commit_tree(request, user, slug, sha, path=None):
     repo = get_object_or_404(Repository, user__username=user, slug=slug)
     commit = repo.get_commit(sha)

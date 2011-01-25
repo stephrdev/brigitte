@@ -82,6 +82,7 @@
                             <td>
                                 <a href="{% url repositories_commits repository.user.username repository.slug tag.name %}">Commits</a>
                                 <a href="{% url repositories_commit_tree_root repository.user.username repository.slug tag.last_commit.id %}">Tree</a>
+                                <a href="{% url repositories_commit_archive repository.user.username repository.slug tag.last_commit.id %}">Archive</a>
                             </td>
                         </tr>
                         {% endif %}
