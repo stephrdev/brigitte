@@ -43,7 +43,7 @@ class Repository(models.Model):
     @property
     def _repo(self):
         if not hasattr(self, '_repo_obj'):
-            self._repo_obj = Repo(self.path)
+            self._repo_obj = Repo(self)
         return self._repo_obj
 
     def recent_commits(self, count=10):

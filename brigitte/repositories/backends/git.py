@@ -3,7 +3,7 @@ import re
 from lxml import etree
 from datetime import datetime
 from django.conf import settings
-
+import cStringIO
 from brigitte.repositories.backends.base import BaseCommit, BaseRepo, BaseTag, BaseBranch
 
 FILETYPE_MAP = getattr(settings, 'FILETYPE_MAP', {})
@@ -176,6 +176,35 @@ class Commit(BaseCommit):
             '-p',
             str(self.id)]
         return self.syswrapper(cmd)
+
+    def get_archive(self):
+
+        cmd1 = ['git',
+            '--git-dir=%s' % self.repo.path,
+            'describe',
+            '--tags',
+            '--abbrev=7',
+            self.id]
+
+        try:
+            archivename = self.syswrapper(cmd1).strip().replace('-g', '-')
+        except:
+            archivename = self.id[:7]
+
+        cmd2 = ['git',
+            '--git-dir=%s' % self.repo.path,
+            'archive',
+            '--format=zip',
+            '--prefix=%s-%s/' % (self.repo.repo.slug, archivename),
+            '%s^{tree}' % self.id,
+            ]
+
+        try:
+            archive = cStringIO.StringIO()
+            archive.write(self.syswrapper(cmd2))
+            return {'archive': archive, 'archivename': archivename}
+        except:
+            return None
 
 
     def get_tree(self, path):

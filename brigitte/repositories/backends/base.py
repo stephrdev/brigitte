@@ -12,8 +12,12 @@ class BaseRepo:
 
     path = None
 
-    def __init__(self, path):
-        self.path = path
+    def __init__(self, repo):
+        self.repo = repo
+
+    @property
+    def path(self):
+        return self.repo.path
 
 class BaseTag:
     def syswrapper(self, cmd):

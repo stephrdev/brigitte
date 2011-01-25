@@ -36,6 +36,10 @@
                 <td>Tree:</td>
                 <td><a href="{% url repositories_commit_tree_root repository.user.username repository.slug commit.id %}">{{ commit.short_tree }}</a></td>
             </tr>
+            <tr>
+                <td>Archive:</td>
+                <td><a href="{% url repositories_commit_archive repository.user.username repository.slug commit.id %}">{{ commit.short_id }}</a></td>
+            </tr>
         </table>
     </div>
     <div style="clear:both"></div>
