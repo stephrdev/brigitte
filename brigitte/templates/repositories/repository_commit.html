@@ -22,9 +22,17 @@
         {% if not forloop.last %}<hr />{% endif %}
         {% endfor %}
     </div>
-    <div class="commit-diff">
-        <pre class="diff">{{ commit.diff|pygmentize_diff }}</pre>
+    {% for diff in commit.extended_diffs %}
+        <a name="{{ diff.filename }}"></a>        <h2>{{ diff.filename }}</h2>
+        <div class="commit-diff">
+            <pre class="lines">{% for line1, line2 in diff.line_numbers %}<a id="LL{{ line1 }}" href="#LL{{ line1 }}">{{ line1 }}</a> 
+{% endfor %}</pre>
+            <pre class="lines">{% for line1, line2 in diff.line_numbers %}<a id="LR{{ line2 }}" href="#LR{{ line2 }}">{{ line2 }}</a> 
+{% endfor %}</pre>
+            <pre class="diff">{{ diff.diff|pygmentize_diff }}</pre>
+            <div style="clear:both"></div>
         </div>
+    {% endfor %}
     </div>
 </div>
 

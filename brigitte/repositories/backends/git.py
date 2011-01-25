@@ -242,6 +242,87 @@ class Commit(BaseCommit):
         except:
             return None
 
+    def get_file_diff(self, path):
+        cmd = ['git',
+            '--git-dir=%s' % self.repo.path,
+            'diff',
+            '--exit-code',
+            '%s~1' % self.id,
+            self.id,
+            '--',
+            path]
+
+        try:
+            outp = self.syswrapper(cmd)
+            return outp
+        except:
+            return None
+
+    def get_diff_files(self, path):
+        try:
+            cmd = ['git',
+                '--git-dir=%s' % self.repo.path,
+                'show',
+                '--exit-code',
+                '%s~1:%s' % (self.id, path)]
+            old_file = self.syswrapper(cmd)
+
+            cmd[-1] = '%s:%s' % (self.id, path)
+            new_file = self.syswrapper(cmd)
+
+            return (old_file, new_file)
+
+        except:
+            return None
+
+    def get_file_diff_line_numbers(self, path):
+        diff = (self.get_file_diff(path) or '').split('\n')
+
+        lines = []
+        line1 = 0
+        line2 = 0
+        hunk_started = False
+
+        hunk_re = re.compile(r'@@ -(\d+),(\d+) \+(\d+),(\d+) @@')
+        for line in diff:
+            if line.startswith('@@'):
+                params = hunk_re.match(line).groups()
+                lines.append(('..', '..'))
+                line1 = int(params[0])
+                line2 = int(params[2])
+                hunk_started = True
+            else:
+                if line.startswith('-') and not line.startswith('---'):
+                    lines.append((line1, ''))
+                    line1 += 1
+
+                elif line.startswith('+') and not line.startswith('+++'):
+                    lines.append(('', line2))
+                    line2 += 1
+                else:
+                    if not hunk_started:
+                        lines.append(('', ''))
+                    else:
+                        lines.append((line1, line2))
+                        line1 += 1
+                        line2 += 1
+        return lines
+
+    @property
+    def extended_diffs(self):
+        in_files = self.changed_files
+
+        out_files = []
+
+        for blob_id, size, filename in in_files:
+            out_files.append({
+                'filename': filename,
+                'diff': self.get_file_diff(filename),
+                'line_numbers': self.get_file_diff_line_numbers(filename),
+            })
+
+        return out_files
+
     @property
     def commit_date(self):
         return datetime.fromtimestamp(float(self.timestamp))
