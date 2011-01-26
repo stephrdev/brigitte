@@ -1,9 +1,10 @@
 {% extends "base.html" %}
-{% load gravatar_tags repositories_tags %}
+{% load cache gravatar_tags repositories_tags %}
 
 {% block title %}Repository: {{ repository.title }} - {{ commit.id }}{% endblock %}
 
 {% block content %}
+{% cache 2592000 "repo_commit" commit.id %}
 <div class="grid_16 content" id="repo-commit">
     <h1><a href="{% url repositories_summary repository.user.username repository.slug %}">{{ repository.title }}</a> - Commit {{ commit.id }}</h1>
 
@@ -35,6 +36,6 @@
     {% endfor %}
     </div>
 </div>
-
+{% endcache %}
 {% endblock %}
 
