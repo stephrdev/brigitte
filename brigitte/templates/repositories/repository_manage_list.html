@@ -13,6 +13,7 @@
         <tr>
             <th>Repository</th>
             <th>Owner</th>
+            <th>Private</th>
             <th>Manage</th>
         </tr>
         </thead>
@@ -21,6 +22,7 @@
         <tr>
             <td><a href="{% url repositories_manage_change repo.user.username repo.slug %}">{{ repo.title }}</a></td>
             <td>{{ repo.user }}</td>
+            <td>{{repo.is_private_html }}</td>
             <td><a href="{% url repositories_manage_change repo.user.username repo.slug %}">Change</a></td>
         </tr>
         {% endfor %}

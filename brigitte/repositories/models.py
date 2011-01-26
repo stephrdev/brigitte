@@ -3,6 +3,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
+from django.utils.safestring import mark_safe
 
 from brigitte.repositories.backends.git import Repo
 
@@ -15,16 +16,30 @@ class RepositoryManager(models.Manager):
         return [ru.repo for ru in user.repositoryuser_set.filter(
             can_admin=True)]
 
+    def public_repositories(self):
+        return super(RepositoryManager, self).get_query_set().filter(private=False)
+
+    def accessible_repositories(self, user):
+        pass
+
 class Repository(models.Model):
     user = models.ForeignKey(User, verbose_name=_('User'))
     slug = models.SlugField(_('Slug'), max_length=255, blank=False)
     title = models.CharField(_('Title'), max_length=255)
     description = models.TextField(_('Description'), blank=True)
+    private = models.BooleanField(_('Private'), default=False)
 
     objects = RepositoryManager()
 
     def __unicode__(self):
         return self.title
+
+    @property
+    def is_private_html(self):
+        if self.private:
+            return mark_safe('&#10004;')
+        else:
+            return mark_safe('&#10008;')
 
     @property
     def path(self):
