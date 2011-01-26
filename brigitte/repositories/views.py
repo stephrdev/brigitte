@@ -18,6 +18,14 @@ def repositories_manage_list(request):
     })
 
 @login_required
+def repositories_user(request, user):
+    user = get_object_or_404(User, username=user)
+    return render(request, 'repositories/repository_user.html', {
+        'user': user,
+        'repositories': user.repository_set.public_repositories(),
+    })
+
+@login_required
 def repositories_manage_change(request, user, slug):
     repo = get_object_or_404(Repository, user__username=user, slug=slug)
     if not repo.user_is_admin(request.user):
@@ -96,7 +104,7 @@ def repositories_manage_add(request):
 
 def repositories_list(request):
     return render(request, 'repositories/repository_list.html', {
-        'repository_list': Repository.objects.all(),
+        'repository_list': Repository.objects.public_repositories(),
     })
 
 def repositories_summary(request, user, slug):

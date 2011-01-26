@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }}{% endblock %}
+
+{% block content %}
+    <div class="grid_6 content">
+        <table>
+            <tr><th>Projectname</th><th>Last commit</th></tr>
+        {% for repository in repositories %}
+            {% if repository.last_commit %}
+            <tr><td><a href="{% url repositories_summary user.username repository.slug %}">{{ repository.title }}</a></td>
+                <td><a href="{% url repositories_commit user.username repository.slug repository.last_commit.id %}">{{ repository.last_commit.commit_date }}</a></td></tr>
+            {% else %}
+            <tr><td><a href="{% url repositories_summary user.username repository.slug %}">{{ repository.title }}</a></td>
+                <td>No commits</td></tr>
+            {% endif %}
+        {% endfor %}
+        </table>
+    </div>
+    <div class="grid_10 user">
+        <div class="short_info">
+            <h2>{{ user.username }} (TBD: Realname)</h2>
+            <p>{{ user.get_profile.short_info }}</p>
+        </div>
+
+        <div class="timeline">
+            <h2>Timeline:</h2>
+            <p>
+                TBD
+             </p>
+        </div>
+    </div>
+{% endblock %}
+
+
+url(r'^(?P<user>[\w-]+)/(?P<slug>[\w-]+)/commit/(?P<sha>[\w-]+)/$',
+    'repositories_commit', name='repositories_commit'),
