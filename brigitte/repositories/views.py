@@ -183,7 +183,6 @@ def repositories_commit_tree(request, user, slug, sha, path=None):
         if file_obj is None:
             raise Http404
 
-        print file_obj.content
         file_blob_pygmentized = pygmentize(
             path.rsplit('.', 1)[-1], file_obj.content)
 
