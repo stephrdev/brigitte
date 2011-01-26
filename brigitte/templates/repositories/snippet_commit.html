@@ -2,11 +2,11 @@
 <div class="commit">
     <div class="commit-summary">
         <p>
-            <strong><a href="{% url repositories_commit repository.user.username repository.slug commit.id %}">{{ commit.short_msg }}</a></strong><br />
+            <strong><a href="{% url repositories_commit repository.user.username repository.slug commit.id %}">{{ commit.short_message }}</a></strong><br />
         </p>
         <hr />
         <p>
-            {{ commit.msg|linebreaks }}
+            {{ commit.message|linebreaks }}
         </p>
         <hr />
         <p>
@@ -27,7 +27,7 @@
             <tr>
                 <td>Parents:</td>
                 <td>
-                    {% for short_parent, parent in commit.both_parents %}
+                    {% for short_parent, parent in commit.short_long_parents %}
                         <a href="{% url repositories_commit repository.user.username repository.slug parent %}">{{ short_parent }}</a><br />
                     {% endfor %}
                 </td>

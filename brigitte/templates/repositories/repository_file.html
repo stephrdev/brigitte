@@ -17,7 +17,7 @@
     {% endfor %}</h2>
 
     <div class="commit-diff">
-        <pre class="lines">{% for line in file_lines %}<a href="#L{{ line }}">{{ line }}</a>
+        <pre class="lines">{% for line in file_lines %}<a id="L{{ line }}" href="#L{{ line }}">{{ line }}</a>
 {% endfor %}</pre>
         <pre class="diff">{{ file_blob_pygmentized }}</pre>
     </div>

@@ -20,7 +20,7 @@
         <tr>
             <td><a href="{% url repositories_summary repo.user.username repo.slug %}">{{ repo.title }}</a></td>
             {% if repo.last_commit %}
-            <td><a href="{% url repositories_commit repo.user.username repo.slug repo.last_commit.id %}">{{ repo.last_commit.short_msg }} (by {{ repo.last_commit.author }})</a></td>
+            <td><a href="{% url repositories_commit repo.user.username repo.slug repo.last_commit.id %}">{{ repo.last_commit.short_message }} (by {{ repo.last_commit.author }})</a></td>
             <td>{{ repo.last_commit.commit_date }}</td>
             {% else %}
             <td>Empty repository</td>

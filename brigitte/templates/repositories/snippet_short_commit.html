@@ -1,6 +1,6 @@
 <tr>
     <td>{{ commit.commit_date }}</td>
-    <td><a href="{% url repositories_commit repository.user.username repository.slug commit.id %}">{{ commit.short_msg }}</a></td>
+    <td><a href="{% url repositories_commit repository.user.username repository.slug commit.id %}">{{ commit.short_message }}</a></td>
     <td>{{ commit.committer }}</td>
     <td><a href="{% url repositories_commit repository.user.username repository.slug commit.id %}">{{ commit.short_id }}</a></td>
 </tr>
