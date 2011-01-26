@@ -169,10 +169,13 @@ class BaseCommit(ShellMixin):
 
 class BaseTag(ShellMixin):
     repo = None
+    name = None
+    id = None
 
-    def __init__(self, repo, name):
+    def __init__(self, repo, name, id):
         self.repo = repo
         self.name = name
+        self.id = id
 
     def __repr__(self):
         return u'<Tag: %s>' % self.name
@@ -184,10 +187,14 @@ class BaseTag(ShellMixin):
 
 class BaseBranch(ShellMixin):
     repo = None
+    name = None
+    id = None
+    is_master = False
 
-    def __init__(self, repo, name, is_master):
+    def __init__(self, repo, name, id, is_master):
         self.repo = repo
         self.name = name
+        self.id = id
         self.is_master = is_master
 
     def __repr__(self):

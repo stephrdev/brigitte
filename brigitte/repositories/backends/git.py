@@ -8,6 +8,8 @@ from brigitte.repositories.backends.base import BaseRepo, BaseCommit
 from brigitte.repositories.backends.base import BaseTag, BaseBranch
 from brigitte.repositories.backends.base import BaseFile, BaseTree
 
+from django.core.cache import cache
+
 FILETYPE_MAP = getattr(settings, 'FILETYPE_MAP', {})
 
 BRANCHES_RE = re.compile("^(?P<type>\s|\*) (?P<name>.+)$", re.MULTILINE)
@@ -23,26 +25,28 @@ class Repo(BaseRepo):
 
     @property
     def tags(self):
-        cmd = 'git --git-dir=%s tag' % self.path
+        cmd = 'git --git-dir=%s show-ref --tags' % self.path
         tags = self.exec_command(cmd).split('\n')
         tags.reverse()
 
         tag_list = []
-        for tag in [tag for tag in tags if len(tag) > 0]:
-            tag_list.append(Tag(self, tag))
+        for sha, tag in [tag.split(' ') for tag in tags if len(tag) > 0]:
+            tag = tag.split('/', 2)[-1]
+            tag_list.append(Tag(self, tag, sha))
 
         return tag_list
 
     @property
     def branches(self):
-        cmd = 'git --git-dir=%s branch' % self.path
+        cmd = 'git --git-dir=%s show-ref --heads' % self.path
 
-        branches = BRANCHES_RE.findall(self.exec_command(cmd))
+        branches = self.exec_command(cmd).split('\n')
 
         branch_list = []
-        for branch in branches:
+        for sha, branch in [branch.split(' ') for branch in branches if len(branch) > 0]:
+            branch = branch.split('/', 2)[-1]
             branch_list.append(
-                Branch(self, branch[1].strip(), branch[0] == '*'))
+                Branch(self, branch, sha, False))
 
         return branch_list
 
@@ -298,8 +302,7 @@ class Tag(BaseTag):
     def last_commit(self):
         if not hasattr(self, '_last_commit'):
             try:
-                self._last_commit = self.repo._get_commit_list(
-                    count=1, head=self.name)[0]
+                self._last_commit = self.repo.get_commit(self.id)
             except:
                 self._last_commit = None
         return self._last_commit
@@ -309,8 +312,7 @@ class Branch(BaseBranch):
     def last_commit(self):
         if not hasattr(self, '_last_commit'):
             try:
-                self._last_commit = self.repo._get_commit_list(
-                    count=1, head=self.name)[0]
+                self._last_commit = self.repo.get_commit(self.id)
             except:
                 self._last_commit = None
         return self._last_commit

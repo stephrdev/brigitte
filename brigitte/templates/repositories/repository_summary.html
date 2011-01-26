@@ -1,7 +1,9 @@
 {% extends "base.html" %}
+{% load cache %}
 {% block title %}Repository: {{ repository.title }}{% endblock %}
 
 {% block content %}
+{% cache 2592000 "repo_summary" repository.last_commit.id %}
 <div class="grid_16 content" id="repo-summary">
     <h1>{{ repository.title }}</h1>
 
@@ -96,4 +98,5 @@
     <h2>This repository is empty. Feel free to push some commits.</h2>
     {% endif %}
 </div>
+{% endcache %}
 {% endblock %}
