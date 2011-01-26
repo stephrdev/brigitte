@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import re
-from lxml import etree
 from datetime import datetime
 from django.conf import settings
 import cStringIO
@@ -8,7 +7,28 @@ from brigitte.repositories.backends.base import BaseRepo, BaseCommit
 from brigitte.repositories.backends.base import BaseTag, BaseBranch
 from brigitte.repositories.backends.base import BaseFile, BaseTree
 
-from django.core.cache import cache
+try:
+    from lxml import etree
+
+    def parse_log_xml(raw_log):
+        log = etree.XML(raw_log)
+        for commit in log.iterchildren():
+            c = {}
+            for field in commit.iterchildren():
+                if field.text:
+                    c[field.tag] = field.text.strip()
+            yield c
+except ImportError:
+    import xml.etree.ElementTree as ET
+
+    def parse_log_xml(raw_log):
+        log = ET.fromstring(raw_log)
+        for commit in log.findall('commit'):
+            c = {}
+            for key in commit:
+                if key.text:
+                    c[key.tag] = key.text
+            yield c
 
 FILETYPE_MAP = getattr(settings, 'FILETYPE_MAP', {})
 
@@ -82,14 +102,8 @@ class Repo(BaseRepo):
             raw_log = '<?xml version="1.0" encoding="UTF-8"?>\
                 <log>%s</log>' % self.exec_command(cmd)
 
-            log = etree.XML(raw_log)
-
-            for commit in log.iterchildren():
-                c = {}
-                for field in commit.iterchildren():
-                    if field.text:
-                        c[field.tag] = field.text.strip()
-                commits.append(Commit(self, c))
+            for commit in parse_log_xml(raw_log):
+                commits.append(Commit(self, commit))
         except:
             pass
 
