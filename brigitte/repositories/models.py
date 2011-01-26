@@ -47,24 +47,24 @@ class Repository(models.Model):
         return self._repo_obj
 
     def recent_commits(self, count=10):
-        return self._repo.get_recent_commits(None, count)
+        return self._repo.get_commits(count=count)
 
     @property
     def last_commit(self):
         if not hasattr(self, '_last_commit'):
-            self._last_commit = self._repo.get_last_commit()
+            self._last_commit = self._repo.last_commit
         return self._last_commit
 
     @property
     def tags(self):
         if not hasattr(self, '_tags'):
-            self._tags = self._repo.get_tags()
+            self._tags = self._repo.tags
         return self._tags
 
     @property
     def branches(self):
         if not hasattr(self, '_branches'):
-            self._branches = self._repo.get_branches()
+            self._branches = self._repo.branches
         return self._branches
 
     @property
@@ -78,8 +78,8 @@ class Repository(models.Model):
     def get_commit(self, sha):
         return self._repo.get_commit(sha)
 
-    def get_commit_list(self, count=10, skip=0, branchtag=None):
-        return self._repo.get_commit_list(sha=None, count=count, skip=skip, branchtag=branchtag)
+    def get_commits(self, count=10, skip=0, head=None):
+        return self._repo.get_commits(count=count, skip=skip, head=head)
 
     def user_is_admin(self, user):
         return self.repositoryuser_set.filter(

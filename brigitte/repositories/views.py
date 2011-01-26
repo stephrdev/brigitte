@@ -114,7 +114,7 @@ def repositories_commits(request, user, slug, branchtag):
     if skip < 0:
         skip = 0
     repo = get_object_or_404(Repository, user__username=user, slug=slug)
-    commits = repo.get_commit_list(count=count, skip=skip, branchtag=branchtag)
+    commits = repo.get_commits(count=count, skip=skip, head=branchtag)
     return render(request, 'repositories/repository_commits.html', {
         'repository': repo,
         'commits': commits,
@@ -142,11 +142,11 @@ def repositories_commit_archive(request, user, slug, sha):
 
     try:
         archive = commit.get_archive()
-        response = HttpResponse(archive['archive'].getvalue(),
-            mimetype='application/zip')
+        response = HttpResponse(archive['data'].getvalue(),
+            mimetype=archive['mime'])
         response['Content-Disposition'] = \
             'attachment; filename="%s-%s.zip"' \
-                % (repo.slug, archive['archivename'])
+                % (repo.slug, archive['filename'])
         return response
     except:
         raise Http404
@@ -171,18 +171,20 @@ def repositories_commit_tree(request, user, slug, sha, path=None):
         })
 
     else:
-        file_blob = commit.get_file(path)
-        if file_blob is None:
+        file_obj = commit.get_file(path)
+        if file_obj is None:
             raise Http404
 
-        file_blob_pygmentized = pygmentize(path.rsplit('.', 1)[-1], file_blob)
+        print file_obj.content
+        file_blob_pygmentized = pygmentize(
+            path.rsplit('.', 1)[-1], file_obj.content)
 
         return render(request, 'repositories/repository_file.html', {
             'repository': repo,
             'commit': commit,
             'file_path': path,
-            'file_blob': file_blob,
-            'file_lines': range(1, file_blob.count('\n') + 1),
+            'file_obj': file_obj,
+            'file_lines': range(1, file_obj.content.count('\n') + 1),
             'file_blob_pygmentized': file_blob_pygmentized,
             'breadcrumb': build_path_breadcrumb(path)
         })

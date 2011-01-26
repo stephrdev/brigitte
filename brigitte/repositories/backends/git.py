@@ -4,17 +4,51 @@ from lxml import etree
 from datetime import datetime
 from django.conf import settings
 import cStringIO
-from brigitte.repositories.backends.base import BaseCommit, BaseRepo, BaseTag, BaseBranch
+from brigitte.repositories.backends.base import BaseRepo, BaseCommit
+from brigitte.repositories.backends.base import BaseTag, BaseBranch
+from brigitte.repositories.backends.base import BaseFile, BaseTree
 
 FILETYPE_MAP = getattr(settings, 'FILETYPE_MAP', {})
 
-class Repo(BaseRepo):
-    def get_recent_commits(self, sha=None, count=10):
-        return self.get_commit_list(sha,count)
+BRANCHES_RE = re.compile("^(?P<type>\s|\*) (?P<name>.+)$", re.MULTILINE)
 
-    def get_commit_list(self, sha=None, count=10, skip=0, branchtag=None):
+TREE_RE = re.compile(
+    "(?P<rights>\d*)\s(?P<type>[a-z]*)"\
+    "\s(?P<sha>\w*)\s*(?P<size>[0-9 -]*)\s*(?P<path>.+)")
+
+FILE_RE = re.compile("\.\w+")
+HUNK_RE = re.compile(r'@@ -(\d+),(\d+) \+(\d+),(\d+) @@')
+
+class Repo(BaseRepo):
+
+    @property
+    def tags(self):
+        cmd = 'git --git-dir=%s tag' % self.path
+        tags = self.exec_command(cmd).split('\n')
+        tags.reverse()
+
+        tag_list = []
+        for tag in [tag for tag in tags if len(tag) > 0]:
+            tag_list.append(Tag(self, tag))
+
+        return tag_list
+
+    @property
+    def branches(self):
+        cmd = 'git --git-dir=%s branch' % self.path
+
+        branches = BRANCHES_RE.findall(self.exec_command(cmd))
+
+        branch_list = []
+        for branch in branches:
+            branch_list.append(
+                Branch(self, branch[1].strip(), branch[0] == '*'))
+
+        return branch_list
+
+    def _get_commit_list(self, sha=None, count=10, skip=0, head=None):
         if sha == None:
-            sha = branchtag if branchtag else 'HEAD'
+            sha = head if head else 'HEAD'
 
         cmd = ['git',
             '--git-dir=%s' % self.path,
@@ -23,36 +57,28 @@ class Repo(BaseRepo):
             '--raw',
             '--pretty=format:\
                 <commit>\
-                    <timestamp>%ct</timestamp>\
-                    <ago>%cr</ago>\
-                    <short_msg><![CDATA[%s]]></short_msg>\
+                    <id>%H</id>\
+                    <tree>%T</tree>\
+                    <parent>%P</parent>\
+                    <short_message><![CDATA[%s]]></short_message>\
+                    <message><![CDATA[%B]]></message>\
+                    <author><![CDATA[%an]]></author>\
+                    <author_mail><![CDATA[%ae]]></author_mail>\
                     <committer><![CDATA[%cn]]></committer>\
                     <committer_mail><![CDATA[%ce]]></committer_mail>\
-                    <committer_time_iso>%cd</committer_time_iso>\
-                    <committer_timestamp>%ct</committer_timestamp>\
-                    <author><![CDATA[%an]]></author><author_mail>\
-                    <![CDATA[%ae]]></author_mail>\
-                    <author_time_iso>%ad</author_time_iso>\
-                    <author_timestamp>%at</author_timestamp>\
-                    <id>%H</id>\
-                    <short_id>%h</short_id>\
-                    <parent>%P</parent>\
-                    <short_parent>%p</short_parent>\
-                    <tree>%T</tree>\
-                    <short_tree>%t</short_tree>\
-                    <msg><![CDATA[%B]]></msg>\
+                    <timestamp>%ct</timestamp>\
                 </commit>',
-            '--skip='+str(skip),
-            '-'+str(count),
+            '--skip=' + str(skip),
+            '-' + str(count),
             sha,
         ]
 
         commits = []
         try:
-            outp = '<?xml version="1.0" encoding="UTF-8"?><log>' \
-                + self.syswrapper(cmd) + '</log>'
+            raw_log = '<?xml version="1.0" encoding="UTF-8"?>\
+                <log>%s</log>' % self.exec_command(cmd)
 
-            log = etree.XML(outp)
+            log = etree.XML(raw_log)
 
             for commit in log.iterchildren():
                 c = {}
@@ -65,257 +91,158 @@ class Repo(BaseRepo):
 
         return commits
 
+    def get_commits(self, count=10, skip=0, head=None):
+        return self._get_commit_list(
+            sha=None, count=count, skip=skip, head=head)
+
     def get_commit(self, sha):
         try:
-            return self.get_recent_commits(sha, 1)[0]
+            return self._get_commit_list(sha=sha, count=1, skip=0)[0]
         except IndexError:
             pass
         return None
 
-    def get_last_commit(self):
+    @property
+    def last_commit(self):
         return self.get_commit(None)
 
-    def get_tags(self):
-        cmd = ['git',
-            '--git-dir=%s' % self.path,
-            'tag']
-        tags = self.syswrapper(cmd).strip().split('\n')
-        tags.reverse()
-        outp = []
-        for tag in tags:
-            if len(tag) > 0:
-                outp.append(Tag(self, tag))
-        return outp
-
-    def get_branches(self):
-        cmd = ['git',
-            '--git-dir=%s' % self.path,
-            'branch']
-        regex = re.compile("^(?P<type>\s|\*) (?P<name>.+)$",re.MULTILINE)
-        branches = regex.findall(self.syswrapper(cmd))
-        outp = []
-        for branch in branches:
-                outp.append(Branch(self, branch[1].strip(), branch[0] == '*'))
-        return outp
-
     def init_repo(self):
-        cmd = ['git',
-               'init',
-               '--bare',
-               self.path]
-        self.syswrapper(cmd)
+        cmd = 'git init --bare %s' % self.path
+        self.exec_command(cmd)
         return True
 
-class Tag(BaseTag):
-    def __repr__(self):
-        return '<Tag: %s>' % self.name
-
-    @property
-    def last_commit(self):
-        if not hasattr(self, '_last_commit'):
-            try:
-                self._last_commit = self.repo.get_commit_list(
-                    branchtag=self.name, count=1)[0]
-            except:
-                self._last_commit = None
-        return self._last_commit
-
-class Branch(BaseBranch):
-    def __repr__(self):
-        return '<Branch: %s>' % self.name
-
-    @property
-    def last_commit(self):
-        if not hasattr(self, '_last_commit'):
-            try:
-                self._last_commit = self.repo.get_commit_list(
-                    branchtag=self.name, count=1)[0]
-            except:
-                self._last_commit = None
-        return self._last_commit
-
 class Commit(BaseCommit):
-    def __repr__(self):
-        return '<Commit: %s>' % self.id
+    @property
+    def commit_date(self):
+        return datetime.fromtimestamp(float(self.timestamp))
 
     @property
     def parents(self):
         return self.parent.split(' ')
 
     @property
-    def short_parents(self):
-        return [parent[:7] for parent in self.parents]
-
-    @property
-    def both_parents(self):
+    def short_long_parents(self):
         return [(parent[:7], parent) for parent in self.parents]
 
-    @property
-    def changed_files(self):
-        cmd = ['git',
-            '--git-dir=%s' % self.repo.path,
-            'log',
-            '-1',
-            '--numstat',
-            '--pretty=format:',
-            str(self.id),
-        ]
-
-        diff_output = self.syswrapper(cmd).strip()
-        files = []
-        for line in [l for l in diff_output.split('\n') if len(l) > 0]:
-            files.append(line.split('\t'))
-
-        return files
-
-    @property
-    def diff(self):
-        cmd = ['git',
-            '--git-dir=%s' % self.repo.path,
-            'diff-tree',
-            '-p',
-            str(self.id)]
-        return self.syswrapper(cmd)
-
     def get_archive(self):
-
-        cmd1 = ['git',
-            '--git-dir=%s' % self.repo.path,
-            'describe',
-            '--tags',
-            '--abbrev=7',
-            self.id]
+        cmd1 = 'git --git-dir=%s describe --tags --abbrev=7 %s' % (
+            self.repo.path,
+            self.id
+        )
 
         try:
-            archivename = self.syswrapper(cmd1).strip().replace('-g', '-')
+            archive_name = self.exec_command_strip(cmd1).replace('-g', '-')
         except:
-            archivename = self.id[:7]
+            archive_name = self.id[:7]
 
-        cmd2 = ['git',
-            '--git-dir=%s' % self.repo.path,
-            'archive',
-            '--format=zip',
-            '--prefix=%s-%s/' % (self.repo.repo.slug, archivename),
-            '%s^{tree}' % self.id,
-            ]
+        cmd2 = 'git --git-dir=%s archive --format=zip --prefix=%s-%s/ %s^{tree}' % (
+            self.repo.path,
+            self.repo.repo.slug,
+            archive_name,
+            self.id,
+        )
 
         try:
             archive = cStringIO.StringIO()
-            archive.write(self.syswrapper(cmd2))
-            return {'archive': archive, 'archivename': archivename}
+            archive.write(self.exec_command(cmd2))
+            return {
+                'filename': archive_name,
+                'mime': 'application/zip',
+                'data': archive,
+            }
         except:
             return None
 
-
     def get_tree(self, path):
-        regex = re.compile(
-            "(?P<rights>\d*)\s(?P<type>[a-z]*)"\
-            "\s(?P<sha>\w*)\s*(?P<size>[0-9 -]*)\s*(?P<path>.+)")
-
         if not path:
             path = ''
         else:
             if not path[-1] == '/':
                 path = path+'/'
 
-        cmd = ['git',
-            '--git-dir=%s' % self.repo.path,
-            'ls-tree',
-            '-l',
+        cmd = 'git --git-dir=%s ls-tree -l %s %s' % (
+            self.repo.path,
             str(self.id),
-            path]
+            path
+        )
 
-
-        fileregex = re.compile("\.\w+")
         try:
-            treedir = []
-            outp = self.syswrapper(cmd)
-            if outp.strip():
-                for treefile in outp.strip().split('\n'):
-                    r = regex.search(treefile)
-                    tfile = r.groupdict()
-                    tfile['name'] = tfile['path'].rsplit('/', 1)[-1]
-                    if tfile['type'] == 'tree':
-                        tfile['path'] += '/'
+            tree_out = []
+            raw_tree = self.exec_command_strip(cmd)
+            if raw_tree:
+                for tree_file in raw_tree.split('\n'):
+                    line = TREE_RE.search(tree_file)
+                    line_file = line.groupdict()
+                    line_file['name'] = line_file['path'].rsplit('/', 1)[-1]
+                    if line_file['type'] == 'tree':
+                        line_file['path'] += '/'
                     else:
-                        if not fileregex.match(tfile['name']):
-                            if '.' in tfile['name']:
-                                tfile['suffix'] = tfile['name'].rsplit('.', 1)[-1]
-                                tfile['mime_image'] = FILETYPE_MAP.get(tfile['suffix'], FILETYPE_MAP['default'])
+                        if not FILE_RE.match(line_file['name']):
+                            if '.' in line_file['name']:
+                                line_file['suffix'] = line_file['name'].rsplit('.', 1)[-1]
+                                line_file['mime_image'] = FILETYPE_MAP.get(
+                                    line_file['suffix'], FILETYPE_MAP['default'])
                             else:
-                                tfile['suffix'] = ''
-                                tfile['mime_image'] = FILETYPE_MAP['default']
+                                line_file['suffix'] = ''
+                                line_file['mime_image'] = FILETYPE_MAP['default']
                         else:
-                            tfile['suffix'] = ''
-                            tfile['mime_image'] = FILETYPE_MAP['default']
+                            line_file['suffix'] = ''
+                            line_file['mime_image'] = FILETYPE_MAP['default']
 
-                    treedir.append(tfile)
-            treedir.sort(lambda x,y: cmp(y['type'], x['type']))
-            return {
-                'path': path,
-                'tree': treedir
-            }
+                    tree_out.append(line_file)
+
+            tree_out.sort(lambda x, y: cmp(y['type'], x['type']))
+
+            return Tree(self.repo, path, tree_out)
         except:
             return None
 
     def get_file(self, path):
-        cmd = ['git',
-            '--git-dir=%s' % self.repo.path,
-            'show',
-            '--exit-code',
-            '%s:%s' % (self.id, path)]
+        cmd = 'git --git-dir=%s show --exit-code %s:%s' % (
+            self.repo.path,
+            str(self.id),
+            path
+        )
 
         try:
-            outp = self.syswrapper(cmd)
-            return outp
+            raw_file = self.exec_command(cmd)
+            return File(self.repo, path, raw_file, None, None)
         except:
             return None
 
-    def get_file_diff(self, path):
-        cmd = ['git',
-            '--git-dir=%s' % self.repo.path,
-            'diff',
-            '--exit-code',
-            '%s~1' % self.id,
-            self.id,
-            '--',
-            path]
+    @property
+    def changed_files(self):
+        cmd = 'git --git-dir=%s log -1 --numstat --pretty=format: %s' % (
+            self.repo.path,
+            str(self.id)
+        )
 
-        try:
-            outp = self.syswrapper(cmd)
-            return outp
-        except:
-            return None
+        raw_changed_files = self.exec_command_strip(cmd)
+        files = []
+        for line in [l.split('\t') for l in raw_changed_files.split('\n') if len(l) > 0]:
+            files.append({'file': line[2],
+                          'lines_added': line[0],
+                          'lines_removed': line[1]})
 
-    def get_diff_files(self, path):
-        try:
-            cmd = ['git',
-                '--git-dir=%s' % self.repo.path,
-                'show',
-                '--exit-code',
-                '%s~1:%s' % (self.id, path)]
-            old_file = self.syswrapper(cmd)
+        return files
 
-            cmd[-1] = '%s:%s' % (self.id, path)
-            new_file = self.syswrapper(cmd)
+    @property
+    def commit_diff(self):
+        cmd = 'git --git-dir=%s diff-tree -p %s' % (
+            self.repo.path,
+            str(self.id)
+        )
+        return self.exec_command(cmd)
 
-            return (old_file, new_file)
-
-        except:
-            return None
-
-    def get_file_diff_line_numbers(self, path):
-        diff = (self.get_file_diff(path) or '').split('\n')
-
+    def _get_diff_line_numbers(self, diff):
         lines = []
         line1 = 0
         line2 = 0
         hunk_started = False
 
-        hunk_re = re.compile(r'@@ -(\d+),(\d+) \+(\d+),(\d+) @@')
-        for line in diff:
+        for line in diff.splitlines():
             if line.startswith('@@'):
-                params = hunk_re.match(line).groups()
+                params = HUNK_RE.match(line).groups()
                 lines.append(('..', '..'))
                 line1 = int(params[0])
                 line2 = int(params[2])
@@ -335,24 +262,62 @@ class Commit(BaseCommit):
                         lines.append((line1, line2))
                         line1 += 1
                         line2 += 1
+
         return lines
 
+    def get_file_diff(self, path):
+        cmd = 'git --git-dir=%s diff --exit-code %s~1 %s -- %s' % (
+            self.repo.path,
+            self.id,
+            self.id,
+            path
+        )
+
+        try:
+            diff = self.exec_command(cmd)
+            file_diff = {
+                'file': path,
+                'diff': diff,
+                'line_numbers': self._get_diff_line_numbers(diff)
+            }
+            return file_diff
+        except:
+            return None
+
     @property
-    def extended_diffs(self):
-        in_files = self.changed_files
+    def file_diffs(self):
+        diff_files = self.changed_files
 
-        out_files = []
+        for diff_file in diff_files:
+            diff_file.update(self.get_file_diff(diff_file['file']))
 
-        for blob_id, size, filename in in_files:
-            out_files.append({
-                'filename': filename,
-                'diff': self.get_file_diff(filename),
-                'line_numbers': self.get_file_diff_line_numbers(filename),
-            })
+        return diff_files
 
-        return out_files
-
+class Tag(BaseTag):
     @property
-    def commit_date(self):
-        return datetime.fromtimestamp(float(self.timestamp))
+    def last_commit(self):
+        if not hasattr(self, '_last_commit'):
+            try:
+                self._last_commit = self.repo._get_commit_list(
+                    count=1, head=self.name)[0]
+            except:
+                self._last_commit = None
+        return self._last_commit
+
+class Branch(BaseBranch):
+    @property
+    def last_commit(self):
+        if not hasattr(self, '_last_commit'):
+            try:
+                self._last_commit = self.repo._get_commit_list(
+                    count=1, head=self.name)[0]
+            except:
+                self._last_commit = None
+        return self._last_commit
+
+class Tree(BaseTree):
+    pass
+
+class File(BaseFile):
+    pass
 

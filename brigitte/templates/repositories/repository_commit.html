@@ -10,19 +10,19 @@
     {% include "repositories/snippet_commit.html" %}
 
     <div class="changed-files">
-        {% for added,removed,filename in commit.changed_files %}
+        {% for file in commit.changed_files %}
         <div>
-            <div class="changed-file"><a href="#{{ filename }}">{{ filename }}</a></div>
+            <div class="changed-file"><a href="#{{ file.file }}">{{ file.file }}</a></div>
             <div class="changed-lines">
-                <span class="added"><strong>{{ added }}</strong> added</span>
-                <span class="removed"><strong>{{ removed }}</strong> removed</span>
+                <span class="added"><strong>{{ file.lines_added }}</strong> added</span>
+                <span class="removed"><strong>{{ file.lines_removed }}</strong> removed</span>
             </div>
         </div>
         <div style="clear:both"></div>
         {% if not forloop.last %}<hr />{% endif %}
         {% endfor %}
     </div>
-    {% for diff in commit.extended_diffs %}
+    {% for diff in commit.file_diffs %}
         <a name="{{ diff.filename }}"></a>        <h2>{{ diff.filename }}</h2>
         <div class="commit-diff">
             <pre class="lines">{% for line1, line2 in diff.line_numbers %}<a id="LL{{ line1 }}" href="#LL{{ line1 }}">{{ line1 }}</a> 
