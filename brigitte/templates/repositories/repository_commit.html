@@ -24,7 +24,7 @@
         {% endfor %}
     </div>
     {% for diff in commit.file_diffs %}
-        <a name="{{ diff.filename }}"></a>        <h2>{{ diff.filename }}</h2>
+        <a name="{{ diff.file }}"></a>        <h2>{{ diff.file }}</h2>
         <div class="commit-diff">
             <pre class="lines">{% for line1, line2 in diff.line_numbers %}<a id="LL{{ line1 }}" href="#LL{{ line1 }}">{{ line1 }}</a> 
 {% endfor %}</pre>
