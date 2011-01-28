@@ -9,9 +9,13 @@ from brigitte.accounts.forms import ChangeEmailForm, SshPublicKeyForm
 from brigitte.accounts.models import RegistrationProfile, EmailVerification
 from brigitte.accounts.models import SshPublicKey
 
+from brigitte.repositories.models import Repository
+
 @login_required
 def profile(request):
-    return render(request, 'accounts/profile.html', {})
+    return render(request, 'accounts/profile.html', {
+        'repository_list': Repository.objects.available_repositories(request.user)
+    })
 
 def registration_activate(request, activation_key):
     activation_key = activation_key.lower()

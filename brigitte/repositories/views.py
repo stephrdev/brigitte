@@ -23,7 +23,7 @@ def repositories_user(request, user):
     user = get_object_or_404(User, username=user)
     return render(request, 'repositories/repository_user.html', {
         'user': user,
-        'repositories': user.repository_set.public_repositories(),
+        'repository_list': user.repository_set.public_repositories(),
     })
 
 @login_required

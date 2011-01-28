@@ -4,23 +4,37 @@
 {% block title %}{{ user.username }}{% endblock %}
 
 {% block content %}
-    <div class="grid_6 content">
+<div class="content user">
+    <div class="grid_16">
+        <a href="{% url repositories_user user.username %}"><h1>{{ user.username }}</h1></a>
+    </div>
+    <div class="grid_6">
+        <h2>Public repositories</h2>
         <table>
-            <tr><th>Projectname</th><th>Last commit</th></tr>
-        {% for repository in repositories %}
-            {% if repository.last_commit %}
-            <tr><td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
-                <td><a href="{% repo_url repositories_commit repository repository.last_commit.id %}">{{ repository.last_commit.commit_date }}</a></td></tr>
-            {% else %}
-            <tr><td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
-                <td>No commits</td></tr>
-            {% endif %}
-        {% endfor %}
+            <thead>
+                <th>Project</th>
+                <th>Last commit</th>
+            </thead>
+            <tbody>
+            {% for repository in repository_list %}
+                {% if repository.last_commit %}
+                <tr>
+                    <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
+                    <td><a href="{% repo_url repositories_commit repository repository.last_commit.id %}">{{ repository.last_commit.commit_date }}</a></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
+                    <td>No commits</td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+            </tbody>
         </table>
     </div>
-    <div class="grid_10 user">
+    <div class="grid_9 push_1">
         <div class="short_info">
-            <h2>{{ user.username }} (TBD: Realname)</h2>
+            <h2>{{ user.username }} {% if user.first_name %}({{ user.first_name }} {{ user.last_name }}){% endif %}</h2>
             <p>{{ user.get_profile.short_info }}</p>
         </div>
 
@@ -31,4 +45,5 @@
              </p>
         </div>
     </div>
+</div>
 {% endblock %}

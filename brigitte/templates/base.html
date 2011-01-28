@@ -15,12 +15,14 @@
 </head>
 <body>
     <div class="container_16" id="container">
-        <div class="grid_10" id="header">
+        <div class="grid_6" id="header">
             <a href="/"><h1>bri<span>git</span>te</h1></a>
         </div>
-        <div class="grid_6" id="headernav">
+        <div class="grid_10" id="headernav">
         {% if request.user.is_authenticated %}
             <ul>
+                <li><a href="{% url accounts_profile %}">Dashboard</a></li>
+                <li><a href="{% url repositories_user request.user.username %}">Public profile</a></li>
                 <li><a href="{% url repositories_manage_list %}">Manage repositories</a></li>
                 <li><a href="{% url accounts_profile_change %}">Edit profile</a></li>
                 <li><a href="{% url accounts_keys_list %}">Manage public keys</a></li>

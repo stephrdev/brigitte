@@ -1,9 +1,45 @@
 {% extends "base.html" %}
+{% load repositories_tags %}
 
-{% block title %}Welcome back{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
-    <div class="grid_16 content">
+<div class="content user">
+    <div class="grid_16">
         <h1>Welcome back, {{ request.user.username }}</h1>
     </div>
+    <div class="grid_6">
+        <h2>Your repositories</h2>
+        <table>
+            <thead>
+                <th>Project</th>
+                <th>Last commit</th>
+                <th>Write access</th>
+            </thead>
+            <tbody>
+            {% for repository in repository_list %}
+                <tr>
+                    {% if repository.last_commit %}
+                        <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
+                        <td><a href="{% repo_url repositories_commit repository repository.last_commit.id %}">{{ repository.last_commit.commit_date }}</a></td>
+                    {% else %}
+                        <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
+                        <td>No commits</td>
+                    {% endif %}
+                    <td>TBD</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <a href="{% url repositories_manage_add %}">Create a new repository</a>
+    </div>
+    <div class="grid_9 push_1">
+        <div class="timeline">
+            <h2>Timeline:</h2>
+            <p>
+                TBD
+             </p>
+        </div>
+    </div>
+</div>
 {% endblock %}
