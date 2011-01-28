@@ -1,17 +1,18 @@
 {% extends "base.html" %}
+{% load repositories_tags %}
 
 {% block title %}{{ repository.title }} - {{ commit.short_id }} - /{{ tree.path }}{% endblock %}
 
 {% block content %}
 <div class="grid_16 content" id="repo-commit">
-    <h1><a href="{% url repositories_summary repository.user.username repository.slug %}">{{ repository.title }}</a> - {{ commit.short_id }} - /{{ tree.path }}</h1>
+    <h1><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a> - {{ commit.short_id }} - /{{ tree.path }}</h1>
 
     {% include "repositories/snippet_commit.html" %}
 
     {% if not tree %}
         <h2>Tree is empty.</h2>
     {% else %}
-    <h2>/ {% for link in breadcrumb %}<a href="{% url repositories_commit_tree repository.user.username repository.slug commit.id link.path %}/">{{ link.name }}</a>{% if not forloop.last %} / {% endif %}{% endfor %}</h2>
+    <h2>/ {% for link in breadcrumb %}<a href="{% repo_url repositories_commit_tree repository commit.id link.path %}/">{{ link.name }}</a>{% if not forloop.last %} / {% endif %}{% endfor %}</h2>
         <table>
             {% if tree.path %}
             <tr>
@@ -23,13 +24,13 @@
             {% endif %}
             {% for entry in tree.tree %}
             <tr>
-                <td onclick="window.location.href='{% url repositories_commit_tree repository.user.username repository.slug commit.id entry.path %}'">
+                <td onclick="window.location.href='{% repo_url repositories_commit_tree repository commit.id entry.path %}'">
                     {% if entry.type == 'blob' %}
                         <img src="{{ STATIC_URL }}images/fileicons/{{ entry.mime_image }}" />
                     {% else %}
                         <span class="folder">+</span>
                     {% endif %}
-                    <a href="{% url repositories_commit_tree repository.user.username repository.slug commit.id entry.path %}">{{ entry.name }}</a>
+                    <a href="{% repo_url repositories_commit_tree repository commit.id entry.path %}">{{ entry.name }}</a>
                 </td>
             </tr>
             {% endfor %}

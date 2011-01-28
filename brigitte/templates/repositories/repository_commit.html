@@ -6,7 +6,7 @@
 {% block content %}
 {% cache 2592000 "repo_commit" commit.id %}
 <div class="grid_16 content" id="repo-commit">
-    <h1><a href="{% url repositories_summary repository.user.username repository.slug %}">{{ repository.title }}</a> - Commit {{ commit.id }}</h1>
+    <h1><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a> - Commit {{ commit.id }}</h1>
 
     {% include "repositories/snippet_commit.html" %}
 

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load repositories_tags %}
 
 {% block title %}Repositories{% endblock %}
 
@@ -18,9 +19,9 @@
         <tbody>
         {% for repo in repository_list %}
         <tr>
-            <td><a href="{% url repositories_summary repo.user.username repo.slug %}">{{ repo.title }}</a></td>
+            <td><a href="{% repo_url repositories_summary repo %}">{{ repo.title }}</a></td>
             {% if repo.last_commit %}
-            <td><a href="{% url repositories_commit repo.user.username repo.slug repo.last_commit.id %}">{{ repo.last_commit.short_message }} (by {{ repo.last_commit.author }})</a></td>
+            <td><a href="{% repo_url repositories_commit repo repo.last_commit.id %}">{{ repo.last_commit.short_message }} (by {{ repo.last_commit.author }})</a></td>
             <td>{{ repo.last_commit.commit_date }}</td>
             {% else %}
             <td>Empty repository</td>

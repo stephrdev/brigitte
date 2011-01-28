@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load repositories_tags %}
 
 {% block title %}Manage repositories{% endblock %}
 
@@ -20,10 +21,10 @@
         <tbody>
         {% for repo in repository_list %}
         <tr>
-            <td><a href="{% url repositories_manage_change repo.user.username repo.slug %}">{{ repo.title }}</a></td>
+            <td><a href="{% repo_url repositories_manage_change repo %}">{{ repo.title }}</a></td>
             <td>{{ repo.user }}</td>
             <td>{{repo.is_private_html }}</td>
-            <td><a href="{% url repositories_manage_change repo.user.username repo.slug %}">Change</a></td>
+            <td><a href="{% repo_url repositories_manage_change repo %}">Change</a></td>
         </tr>
         {% endfor %}
         </tbody>

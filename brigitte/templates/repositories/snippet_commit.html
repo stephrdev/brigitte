@@ -1,8 +1,8 @@
-{% load gravatar_tags %}
+{% load repositories_tags gravatar_tags %}
 <div class="commit">
     <div class="commit-summary">
         <p>
-            <strong><a href="{% url repositories_commit repository.user.username repository.slug commit.id %}">{{ commit.short_message }}</a></strong><br />
+            <strong><a href="{% repo_url repositories_commit repository commit.id %}">{{ commit.short_message }}</a></strong><br />
         </p>
         <hr />
         <p>
@@ -22,23 +22,23 @@
         <table>
             <tr>
                 <td>Commit:</td>
-                <td><a href="{% url repositories_commit repository.user.username repository.slug commit.id %}">{{ commit.short_id }}</a></td>
+                <td><a href="{% repo_url repositories_commit repository commit.id %}">{{ commit.short_id }}</a></td>
             </tr>
             <tr>
                 <td>Parents:</td>
                 <td>
                     {% for short_parent, parent in commit.short_long_parents %}
-                        <a href="{% url repositories_commit repository.user.username repository.slug parent %}">{{ short_parent }}</a><br />
+                        <a href="{% repo_url repositories_commit repository parent %}">{{ short_parent }}</a><br />
                     {% endfor %}
                 </td>
             </tr>
             <tr>
                 <td>Tree:</td>
-                <td><a href="{% url repositories_commit_tree_root repository.user.username repository.slug commit.id %}">{{ commit.short_tree }}</a></td>
+                <td><a href="{% repo_url repositories_commit_tree_root repository commit.id %}">{{ commit.short_tree }}</a></td>
             </tr>
             <tr>
                 <td>Archive:</td>
-                <td><a href="{% url repositories_commit_archive repository.user.username repository.slug commit.id %}">{{ commit.short_id }}</a></td>
+                <td><a href="{% repo_url repositories_commit_archive repository commit.id %}">{{ commit.short_id }}</a></td>
             </tr>
         </table>
     </div>
