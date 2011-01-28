@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.template.defaultfilters import slugify
 
+from brigitte.repositories.decorators import repository_view
 from brigitte.repositories.models import Repository
 from brigitte.repositories.forms import RepositoryForm, RepositoryUserFormSet
 from brigitte.repositories.utils import pygmentize, build_path_breadcrumb
@@ -26,11 +27,8 @@ def repositories_user(request, user):
     })
 
 @login_required
-def repositories_manage_change(request, user, slug):
-    repo = get_object_or_404(Repository, user__username=user, slug=slug)
-    if not repo.user_is_admin(request.user):
-        raise Http404
-
+@repository_view(can_admin=True)
+def repositories_manage_change(request, repo):
     if request.method == 'POST':
         if request.POST.get('method', None) == 'add_repouser':
             result = False
@@ -107,21 +105,20 @@ def repositories_list(request):
         'repository_list': Repository.objects.public_repositories(),
     })
 
-def repositories_summary(request, user, slug):
-    repo = get_object_or_404(Repository, user__username=user, slug=slug)
-
+@repository_view
+def repositories_summary(request, repo):
     return render(request, 'repositories/repository_summary.html', {
         'repository': repo,
     })
 
 
-def repositories_commits(request, user, slug, branchtag):
+@repository_view
+def repositories_commits(request, repo, branchtag):
     count = 10
     page = int(request.GET.get('page', 1))
     skip = (page * count) - count
     if skip < 0:
         skip = 0
-    repo = get_object_or_404(Repository, user__username=user, slug=slug)
     commits = repo.get_commits(count=count, skip=skip, head=branchtag)
     return render(request, 'repositories/repository_commits.html', {
         'repository': repo,
@@ -131,9 +128,8 @@ def repositories_commits(request, user, slug, branchtag):
         'prev_page': page - 1,
     })
 
-
-def repositories_commit(request, user, slug, sha):
-    repo = get_object_or_404(Repository, user__username=user, slug=slug)
+@repository_view
+def repositories_commit(request, repo, sha):
     commit = repo.get_commit(sha)
 
     if not commit:
@@ -144,8 +140,8 @@ def repositories_commit(request, user, slug, sha):
         'commit': commit,
     })
 
-def repositories_commit_archive(request, user, slug, sha):
-    repo = get_object_or_404(Repository, user__username=user, slug=slug)
+@repository_view
+def repositories_commit_archive(request, repo, sha):
     commit = repo.get_commit(sha)
 
     try:
@@ -159,8 +155,8 @@ def repositories_commit_archive(request, user, slug, sha):
     except:
         raise Http404
 
-def repositories_commit_tree(request, user, slug, sha, path=None):
-    repo = get_object_or_404(Repository, user__username=user, slug=slug)
+@repository_view
+def repositories_commit_tree(request, repo, sha, path=None):
     commit = repo.get_commit(sha)
 
     if not commit:

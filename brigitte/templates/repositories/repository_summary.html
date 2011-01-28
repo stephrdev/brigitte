@@ -3,7 +3,6 @@
 {% block title %}Repository: {{ repository.title }}{% endblock %}
 
 {% block content %}
-{% cache 2592000 "repo_summary" repository.last_commit.id %}
 <div class="grid_16 content" id="repo-summary">
     <h1>{{ repository.title }}</h1>
 
@@ -21,6 +20,7 @@
 
     {% if repository.last_commit %}
 
+    {% cache 2592000 "repo_summary" repository.last_commit.id %}
     <h2>Recent commits</h2>
 
     <div class="recent-commits">
@@ -94,9 +94,9 @@
             </table>
         </div>
     </div>
+    {% endcache %}
     {% else %}
     <h2>This repository is empty. Feel free to push some commits.</h2>
     {% endif %}
 </div>
-{% endcache %}
 {% endblock %}

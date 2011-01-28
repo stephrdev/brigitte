@@ -1,5 +1,6 @@
 import os
 from django.db import models
+from django.db.models import Q
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
@@ -13,14 +14,21 @@ BRIGITTE_GIT_BASE_PATH = getattr(settings,
 
 class RepositoryManager(models.Manager):
     def manageable_repositories(self, user):
-        return [ru.repo for ru in user.repositoryuser_set.filter(
-            can_admin=True)]
+        return super(RepositoryManager, self).get_query_set().filter(
+            pk__in=user.repositoryuser_set.filter(can_admin=True).values_list('repo_id', flat=True)
+        )
 
     def public_repositories(self):
         return super(RepositoryManager, self).get_query_set().filter(private=False)
 
-    def accessible_repositories(self, user):
-        pass
+    def available_repositories(self, user):
+        return super(RepositoryManager, self).get_query_set().filter(
+            Q(
+                Q(private=False)
+                |
+                Q(pk__in=user.repositoryuser_set.filter(can_read=True).values_list('repo_id', flat=True))
+            )
+        )
 
 class Repository(models.Model):
     user = models.ForeignKey(User, verbose_name=_('User'))
@@ -95,12 +103,6 @@ class Repository(models.Model):
 
     def get_commits(self, count=10, skip=0, head=None):
         return self._repo.get_commits(count=count, skip=skip, head=head)
-
-    def user_is_admin(self, user):
-        return self.repositoryuser_set.filter(
-            user=user,
-            can_admin=True
-        ).exists()
 
     @property
     def alterable_users(self):
