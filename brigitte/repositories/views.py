@@ -105,14 +105,14 @@ def repositories_list(request):
         'repository_list': Repository.objects.public_repositories(),
     })
 
-@repository_view
+@repository_view()
 def repositories_summary(request, repo):
     return render(request, 'repositories/repository_summary.html', {
         'repository': repo,
     })
 
 
-@repository_view
+@repository_view()
 def repositories_commits(request, repo, branchtag):
     count = 10
     page = int(request.GET.get('page', 1))
@@ -128,7 +128,7 @@ def repositories_commits(request, repo, branchtag):
         'prev_page': page - 1,
     })
 
-@repository_view
+@repository_view()
 def repositories_commit(request, repo, sha):
     commit = repo.get_commit(sha)
 
@@ -140,7 +140,7 @@ def repositories_commit(request, repo, sha):
         'commit': commit,
     })
 
-@repository_view
+@repository_view()
 def repositories_commit_archive(request, repo, sha):
     commit = repo.get_commit(sha)
 
@@ -155,7 +155,7 @@ def repositories_commit_archive(request, repo, sha):
     except:
         raise Http404
 
-@repository_view
+@repository_view()
 def repositories_commit_tree(request, repo, sha, path=None):
     commit = repo.get_commit(sha)
 
