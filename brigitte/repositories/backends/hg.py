@@ -32,7 +32,9 @@ except ImportError:
 
 FILETYPE_MAP = getattr(settings, 'FILETYPE_MAP', {})
 
-BRANCHES_RE = re.compile("^(?P<type>\s|\*) (?P<name>.+)$", re.MULTILINE)
+BRANCHES_RE = re.compile("^([\w\.]+)\s+(\d+):(\w+).$",re.MULTILINE)
+
+TAGS_RE = re.compile("^([\w\.]+)\s+(\d+):(\w+).$",re.MULTILINE)
 
 TREE_RE = re.compile(
     "(?P<rights>\d*)\s(?P<type>[a-z]*)"\
@@ -42,58 +44,61 @@ FILE_RE = re.compile("\.\w+")
 HUNK_RE = re.compile(r'@@ -(\d+),(\d+) \+(\d+),(\d+) @@')
 
 class Repo(BaseRepo):
-
     @property
     def tags(self):
-        cmd = 'git --git-dir=%s show-ref --tags' % self.path
-        tags = self.exec_command(cmd).split('\n')
-        tags.reverse()
+
+        cmd = 'hg --cwd %s tags' % self.path
+        tags = self.exec_command(cmd)
+        tags = TAGS_RE.findall(tags)
 
         tag_list = []
-        for sha, tag in [tag.split(' ') for tag in tags if len(tag) > 0]:
-            tag = tag.split('/', 2)[-1]
+        for tag, ignore, sha in tags:
             tag_list.append(Tag(self, tag, sha))
 
         return tag_list
 
     @property
     def branches(self):
-        cmd = 'git --git-dir=%s show-ref --heads' % self.path
-
-        branches = self.exec_command(cmd).split('\n')
+        cmd = 'hg --cwd %s branches' % self.path
+        branches = self.exec_command(cmd)
+        branches = BRANCHES_RE.findall(branches)
 
         branch_list = []
-        for sha, branch in [branch.split(' ') for branch in branches if len(branch) > 0]:
-            branch = branch.split('/', 2)[-1]
-            branch_list.append(
-                Branch(self, branch, sha, False))
+        for branch, ignore, sha in branches:
+            branch_list.append(Branch(self, branch, sha, False))
 
         return branch_list
 
     def _get_commit_list(self, sha=None, count=10, skip=0, head=None):
         if sha == None:
-            sha = head if head else 'HEAD'
+            if head and head <> 'default' and head <> 'tip':
+                raise NotImplementedError
+            sha = 'tip'
 
-        cmd = ['git',
-            '--git-dir=%s' % self.path,
+        skip += 1
+        count += skip - 1
+
+        if count > 1:
+            sha = '-%s:-%s' % (str(skip), str(count))
+
+        cmd = ['hg',
+            '--cwd',
+            self.path,
             'log',
-            '--no-color',
-            '--raw',
-            '--pretty=format:\
+
+            '--template="\
                 <commit>\
-                    <id>%H</id>\
-                    <tree>%T</tree>\
-                    <parent>%P</parent>\
-                    <short_message><![CDATA[%s]]></short_message>\
-                    <message><![CDATA[%B]]></message>\
-                    <author><![CDATA[%an]]></author>\
-                    <author_email><![CDATA[%ae]]></author_email>\
-                    <committer><![CDATA[%cn]]></committer>\
-                    <committer_email><![CDATA[%ce]]></committer_email>\
-                    <timestamp>%ct</timestamp>\
-                </commit>',
-            '--skip=' + str(skip),
-            '-' + str(count),
+                    <id>{node}</id>\
+                    <tree>{node}</tree>\
+                    <short_message><![CDATA[{desc|firstline}]]></short_message>\
+                    <message><![CDATA[{desc}]]></message>\
+                    <author><![CDATA[{author|person}]]></author>\
+                    <author_email><![CDATA[{author|email}]]></author_email>\
+                    <committer><![CDATA[{author|person}]]></committer>\
+                    <committer_email><![CDATA[{author|email}]]></committer_email>\
+                    <timestamp>{date}</timestamp>\
+                </commit>"',
+            '-r',
             sha,
         ]
 
@@ -105,7 +110,7 @@ class Repo(BaseRepo):
             for commit in parse_log_xml(raw_log):
                 commits.append(Commit(self, commit))
         except:
-            pass
+            raise
 
         return commits
 
@@ -125,14 +130,14 @@ class Repo(BaseRepo):
         return self.get_commit(None)
 
     def init_repo(self):
-        cmd = 'git init --bare %s --template=%s/%s' % (self.path, settings.PROJECT_ROOT, 'repo_templates/git/')
+        cmd = 'hg init %s' % (self.path)
         self.exec_command(cmd)
         return True
 
 class Commit(BaseCommit):
     @property
     def commit_date(self):
-        return datetime.fromtimestamp(float(self.timestamp))
+        return datetime.fromtimestamp(float(self.timestamp.split('.', 1)[0]))
 
     @property
     def parents(self):
@@ -143,20 +148,19 @@ class Commit(BaseCommit):
         return [(parent[:7], parent) for parent in self.parents]
 
     def get_archive(self):
-        cmd1 = 'git --git-dir=%s describe --tags --abbrev=7 %s' % (
-            self.repo.path,
-            self.id
-        )
+        #cmd1 = 'hg --git-dir=%s describe --tags --abbrev=7 %s' % (
+        #    self.repo.path,
+        #    self.id
+        #)
 
-        try:
-            archive_name = self.exec_command_strip(cmd1).replace('-g', '-')
-        except:
-            archive_name = self.id[:7]
+        #try:
+        #    archive_name = self.exec_command_strip(cmd1).replace('-g', '-')
+        #except:
 
-        cmd2 = 'git --git-dir=%s archive --format=zip --prefix=%s-%s/ %s^{tree}' % (
+        archive_name = self.id[:7]
+
+        cmd2 = 'hg --cwd %s archive -t zip -r %s -' % (
             self.repo.path,
-            self.repo.repo.slug,
-            archive_name,
             self.id,
         )
 
@@ -230,23 +234,23 @@ class Commit(BaseCommit):
 
     @property
     def changed_files(self):
-        cmd = 'git --git-dir=%s log -1 --numstat --pretty=format: %s' % (
+        cmd = 'hg --cwd %s status --change %s' % (
             self.repo.path,
             str(self.id)
         )
 
         raw_changed_files = self.exec_command_strip(cmd)
         files = []
-        for line in [l.split('\t') for l in raw_changed_files.split('\n') if len(l) > 0]:
-            files.append({'file': line[2],
-                          'lines_added': line[0],
-                          'lines_removed': line[1]})
+        for line in [l.split(' ') for l in raw_changed_files.split('\n') if len(l) > 0]:
+            files.append({'file': line[1],
+                          'lines_added': 1 if line[0] == 'A' else 1 if line[0] == 'M' else 0,
+                          'lines_removed':  1 if line[0] == 'R' else 1 if line[0] == 'M' else 0})
 
         return files
 
     @property
     def commit_diff(self):
-        cmd = 'git --git-dir=%s diff-tree -p %s' % (
+        cmd = 'hg --cwd %s diff -g -r %s' % (
             self.repo.path,
             str(self.id)
         )
@@ -284,13 +288,12 @@ class Commit(BaseCommit):
         return lines
 
     def get_file_diff(self, path):
-        cmd = 'git --git-dir=%s diff --exit-code %s~1 %s -- %s' % (
+        cmd = 'hg --cwd %s diff -g -c %s %s' % (
             self.repo.path,
-            self.id,
             self.id,
             path
         )
-
+        print cmd
         try:
             diff = self.exec_command(cmd)
             file_diff = {
