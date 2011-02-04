@@ -1,0 +1,85 @@
+brigitte - install docs
+=======================
+
+This is just one way to install and configure brigitte. Feel free to user
+other software (apache instead of nginx, postgres instead of mysql, ...).
+
+1. Requirements
+---------------
+
+- up and running mysql server (including db user and empty database)
+- up and running redis server (for caching and celery)
+- up and running nginx webserver (with uwsgi support)
+- up and running supervisor (for celery and uwsgi)
+
+- some packages (names are based on debian's apt-get)
+  - python-setuptools
+  - python-dev
+  - build-essential (for lxml)
+  - libxml2-dev
+  - libxslt-dev
+
+2. Prepare environment as root
+------------------------------
+
+- install pip and virtualenv:
+  - easy_install pip
+  - pip install virtualenv
+
+- download and install uwsgi
+  - cd /usr/src
+  - wget http://projects.unbit.it/downloads/uwsgi-0.9.6.7.tar.gz
+  - tar xzf uwsgi-0.9.6.7
+  - python setup.py install
+
+- add user for brigitte
+  - adduser brigitte
+
+2. Prepare environment as brigitte
+----------------------------------
+
+- create and activate virtualenv
+  - cd ~
+  - virtualenv env
+  - cd env
+  - . ./bin/activate
+  
+- install python redis bindings and django cache module for redis
+  - pip install redis
+  - pip install git+git://github.com/sebleier/django-redis-cache.git#egg=django-redis-cache
+
+3. Install and configure brigitte
+---------------------------------
+
+- install and configure brigitte
+  - mkdir src
+  - cd src
+  - git clone git://github.com/stephrdev/brigitte.git
+  - cd brigitte
+  - python setup.py develop
+  - pip install -r requirements.txt
+  - cd brigitte & add a settings.py
+    - cp conf/dev.sample.py settings.py
+    - edit settings.py
+  - manage.py syncdb
+  - manage.py migrate
+
+(you could now user manage.py runserver 0.0.0.0:8000 to check if everything
+works until now - database, python modules, etc....)
+
+4. Configure nginx, uwsgi and supervisor
+----------------------------------------
+
+- configure uwsgi and nginx
+  - mkdir ~/env/deploy (and cd)
+  - cp ../src/brigitte/docs/nginx.conf.sample nginx.conf
+  - cp ../src/brigitte/docs/wsgi.py.sample wsgi.py
+  - cp ../src/brigitte/docs/uwsgi.sample uwsgi
+  - edit files to fit your needs
+
+- activate your configs (as root)
+  - ln /home/brigitte/env/deploy/nginx.conf /etc/nginx/conf.d/brigitte.conf
+  - ln /home/brigitte/env/deploy/uwsgi /etc/supervisord/conf.d/uwsgi
+
+After restarting the servers, everything should work. *fingers crossed*
+

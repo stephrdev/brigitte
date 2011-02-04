@@ -1,0 +1,10 @@
+[program:uwsgi]
+command = /usr/bin/uwsgi -s 127.0.0.1:9001 -p 4 -L -M /home/brigitte/env -w wsgi
+directory = /home/brigitte/env/deploy
+redirect_stderr = true
+autostart= true
+autorestart = true
+priority=1
+user=brigitte
+group=brigitte
+
