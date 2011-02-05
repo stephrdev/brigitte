@@ -1,6 +1,8 @@
 from brigitte.repositories.models import Repository
 from brigitte.accounts.models import SshPublicKey
 
+from brigitte.repositories.backends.base import ShellMixin
+
 import os
 
 def generate_gitolite_conf(file_path):
@@ -25,7 +27,7 @@ def generate_gitolite_conf(file_path):
 
         if len(keys) > 0:
             lines.append('\n')
-            lines.append('repo\t%s\n' % repo.short_path)
+            lines.append('repo\t%s\n' % repo.short_path[:-4])
             lines.extend(keys)
 
     file_obj.writelines(lines)
@@ -34,11 +36,23 @@ def generate_gitolite_conf(file_path):
 def export_public_keys(keydir_path):
     for key in os.listdir(keydir_path):
         key_path = os.path.join(keydir_path, key)
-        if os.path.isfile(key_path):
+        if os.path.isfile(key_path) and key != 'gitolite.pub':
             os.unlink(key_path)
 
     for pubkey in SshPublicKey.objects.all():
         key_obj = open(os.path.join(keydir_path, 'key-%s.pub' % pubkey.pk), 'w')
         key_obj.write('%s\n' % pubkey.key)
         key_obj.close()
+
+def update_gitolite_repo(gitolite_path):
+    commands =  [
+        'git add .',
+        'git commit -m "updated." -a',
+        'git push',
+    ]
+
+    shell = ShellMixin()
+
+    for command in commands:
+        print shell.exec_command('/bin/sh -c cd %s; %s' % (gitolite_path, command))
 
