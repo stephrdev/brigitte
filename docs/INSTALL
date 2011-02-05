@@ -18,6 +18,7 @@ other software (apache instead of nginx, postgres instead of mysql, ...).
   - build-essential (for lxml)
   - libxml2-dev
   - libxslt-dev
+  - gettext
 
 2. Prepare environment as root
 ------------------------------
@@ -26,10 +27,16 @@ other software (apache instead of nginx, postgres instead of mysql, ...).
   - easy_install pip
   - pip install virtualenv
 
+- download and compile git
+  - cd /usr/src
+  - wget http://kernel.org/pub/software/scm/git/git-1.7.4.tar.gz
+  - tar xzf git-1.7.4.tar.gz and cd
+  - ./configure && make && make install
+
 - download and install uwsgi
   - cd /usr/src
   - wget http://projects.unbit.it/downloads/uwsgi-0.9.6.7.tar.gz
-  - tar xzf uwsgi-0.9.6.7
+  - tar xzf uwsgi-0.9.6.7 and cd
   - python setup.py install
 
 - add user for brigitte
@@ -82,4 +89,36 @@ works until now - database, python modules, etc....)
   - ln /home/brigitte/env/deploy/uwsgi /etc/supervisord/conf.d/uwsgi
 
 After restarting the servers, everything should work. *fingers crossed*
+
+5. Install and configure gitolite
+---------------------------------
+
+- as user brigitte
+  - ssh-keygen -t dsa -f ~/.ssh/gitolite
+  - ln -s ~/.ssh/gitolite ~/.ssh/id_dsa
+  - cp .ssh/gitolite.pub /tmp/gitolite.pub
+
+- as root
+  - adduser git
+  - usermod -G brigitte git
+
+- as user git
+  - cd ~
+  - git clone git://github.com/sitaramc/gitolite.git
+  - mkdir -p $HOME/bin $HOME/share/gitolite/conf $HOME/share/gitolite/hooks
+  - cd gitolite; src/gl-system-install $HOME/bin $HOME/share/gitolite/conf $HOME/share/gitolite/hooks
+  - cd ~
+  - export PATH=/home/git/bin:$PATH
+  - gl-setup /tmp/gitolite.pub
+    - when editing the config, change the umask:
+      - $REPO_UMASK = 0007;
+
+- as user brigitte
+  - rm /tmp/gitolite
+  - cd ~/env
+  - git clone git@localhost:gitolite-admin
+
+- update the settings.py
+  - BRIGITTE_GIT_BASE_PATH = '/home/git/repositories/'
+  - BRIGITTE_GIT_ADMIN_PATH = '/home/brigitte/env/gitolite-admin/'
 
