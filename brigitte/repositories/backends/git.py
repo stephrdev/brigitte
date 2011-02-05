@@ -18,6 +18,15 @@ try:
                 if field.text:
                     c[field.tag] = field.text.strip()
             yield c
+
+    def parse_single_xml(raw_log):
+        log = etree.XML(raw_log)
+        c = {}
+        for field in log.iterchildren():
+            if field.text:
+                c[field.tag] = field.text.strip()
+        return c
+
 except ImportError:
     import xml.etree.ElementTree as ET
 
@@ -29,6 +38,14 @@ except ImportError:
                 if key.text:
                     c[key.tag] = key.text
             yield c
+
+    def parse_single_xml(raw_log):
+        log = ET.fromstring(raw_log)
+        c = {}
+        for elem in list(log):
+            c[elem.tag] = elem.text
+        return c
+
 
 FILETYPE_MAP = getattr(settings, 'FILETYPE_MAP', {})
 
@@ -192,6 +209,7 @@ class Commit(BaseCommit):
                     line = TREE_RE.search(tree_file)
                     line_file = line.groupdict()
                     line_file['name'] = line_file['path'].rsplit('/', 1)[-1]
+
                     if line_file['type'] == 'tree':
                         line_file['path'] += '/'
                     else:
@@ -206,6 +224,57 @@ class Commit(BaseCommit):
                         else:
                             line_file['suffix'] = ''
                             line_file['mime_image'] = FILETYPE_MAP['default']
+
+                    try:
+                        cmd = ['git',
+                            '--git-dir=%s' % self.repo.path,
+                            'log',
+                            '-1',
+                            str(self.id),
+                            '--no-color',
+                            '--pretty=format:\
+                                <commit>\
+                                    <id>%H</id>\
+                                    <parent>%P</parent>\
+                                    <short_message><![CDATA[%s]]></short_message>\
+                                    <author><![CDATA[%an]]></author>\
+                                    <author_email><![CDATA[%ae]]></author_email>\
+                                    <committer><![CDATA[%cn]]></committer>\
+                                    <committer_email><![CDATA[%ce]]></committer_email>\
+                                    <timestamp>%ct</timestamp>\
+                                </commit>',
+                                '--',
+                                line_file['path'],
+                            ]
+
+                        line_file['info'] = parse_single_xml(self.exec_command(cmd))
+                        line_file['info']['commit_date'] = \
+                            datetime.fromtimestamp(float(line_file['info']['timestamp']))
+
+
+                    except:
+                        return None
+
+                    try:
+                        bytes = float(line_file['size'])
+
+                        if bytes >= 1099511627776:
+                            terabytes = bytes / 1099511627776
+                            size = '%.2f TB' % terabytes
+                        elif bytes >= 1073741824:
+                            gigabytes = bytes / 1073741824
+                            size = '%.2f GB' % gigabytes
+                        elif bytes >= 1048576:
+                            megabytes = bytes / 1048576
+                            size = '%.2f MB' % megabytes
+                        elif bytes >= 1024:
+                            kilobytes = bytes / 1024
+                            size = '%.2f KB' % kilobytes
+                        else:
+                            size = '%.2f Bytes' % bytes
+                        line_file['size'] = size
+                    except:
+                        line_file['size'] = '-'
 
                     tree_out.append(line_file)
 

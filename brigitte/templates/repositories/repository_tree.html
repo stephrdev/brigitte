@@ -20,6 +20,9 @@
                     <span class="folder">+</span>
                     <a href="../" class="backlink">..</a>
                 </td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
             {% endif %}
             {% for entry in tree.tree %}
@@ -32,10 +35,18 @@
                     {% endif %}
                     <a href="{% repo_url repositories_commit_tree repository commit.id entry.path %}">{{ entry.name }}</a>
                 </td>
+                <td>
+                    {{ entry.info.author }}
+                </td>
+                <td>
+                    <a href="{% repo_url repositories_commit repository entry.info.id %}">{{ entry.info.commit_date|timesince }}</a>
+                </td>
+                <td>
+                     {{ entry.size }}
+                </td>
             </tr>
             {% endfor %}
         </table>
     {% endif %}
 </div>
 {% endblock %}
-
