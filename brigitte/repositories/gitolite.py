@@ -47,12 +47,12 @@ def export_public_keys(keydir_path):
 def update_gitolite_repo(gitolite_path):
     commands =  [
         'git add .',
-        'git commit -m "updated." -a',
+        'git commit -m updated -a',
         'git push',
     ]
 
     shell = ShellMixin()
 
     for command in commands:
-        print shell.exec_command('/bin/sh -c cd %s; %s' % (gitolite_path, command))
+        print shell.exec_command('/bin/sh -c "cd %s; %s"' % (gitolite_path, command))
 
