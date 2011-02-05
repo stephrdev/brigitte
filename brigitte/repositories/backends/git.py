@@ -125,7 +125,7 @@ class Repo(BaseRepo):
         return self.get_commit(None)
 
     def init_repo(self):
-        cmd = 'git init -q --bare %s --template=%s/%s' % (self.path, settings.PROJECT_ROOT, 'repo_templates/git/')
+        cmd = 'git init -q --shared=0770 --bare %s --template=%s/%s' % (self.path, settings.PROJECT_ROOT, 'repo_templates/git/')
         self.exec_command(cmd)
         return True
 
