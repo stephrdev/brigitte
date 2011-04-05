@@ -74,6 +74,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'south',
+    'djcelery',
 
     'brigitte.utils',
     'brigitte.accounts',
@@ -188,4 +189,16 @@ FILETYPE_MAP = {
     'xpi': 'xpi.png',
     'xvid': 'xvid.png',
     'zip': 'zip.png'
-    }
+}
+
+import djcelery
+djcelery.setup_loader()
+
+CELERY_DEFAULT_QUEUE = 'tasks'
+CELERY_QUEUES = {
+    'tasks': {'exchange': 'tasks'},
+}
+
+CELERY_RESULT_BACKEND = 'database'
+
+CELERYD_CONCURRENCY = 1

@@ -10,6 +10,10 @@ from brigitte.repositories.decorators import repository_view
 from brigitte.repositories.models import Repository
 from brigitte.repositories.forms import RepositoryForm, RepositoryUserFormSet
 from brigitte.repositories.utils import pygmentize, build_path_breadcrumb
+from brigitte.repositories.utils import register_repository_update
+
+# FIXME !!
+from django.views.decorators.csrf import csrf_exempt
 
 @login_required
 def repositories_manage_list(request):
@@ -26,6 +30,8 @@ def repositories_user(request, user):
         'repository_list': user.repository_set.public_repositories(),
     })
 
+# FIXME !!
+@csrf_exempt
 @login_required
 @repository_view(can_admin=True)
 def repositories_manage_change(request, repo):
@@ -42,6 +48,7 @@ def repositories_manage_change(request, repo):
                     error_msg = 'User already added to repository'
                 else:
                     repo.repositoryuser_set.create(user=user)
+                    register_repository_update(user, 'changed', repo)
                     result = True
             except User.DoesNotExist:
                 error_msg ='Invalid email address'
@@ -49,9 +56,11 @@ def repositories_manage_change(request, repo):
             return HttpResponse('{"result": "%s", "error_msg": "%s"}' % (
                 int(result), error_msg)
             )
+
         repo_form = RepositoryForm(
             request.POST, instance=repo, prefix='repository')
         users_formset = RepositoryUserFormSet(request.POST, prefix='users')
+
         if repo_form.is_valid():
             repo_form.save()
 
@@ -61,6 +70,7 @@ def repositories_manage_change(request, repo):
                         instance.repo = repo
                     instance.save()
 
+            register_repository_update(request.user, 'changed', repo)
             messages.success(request, _('Repository updated.'))
             return redirect('repositories_manage_list')
     else:
@@ -91,6 +101,7 @@ def repositories_manage_add(request):
                 can_write=True,
                 can_admin=True
             )
+            register_repository_update(request.user, 'created', repo)
             messages.success(request, _('Repository added.'))
             return redirect('repositories_manage_list')
     else:

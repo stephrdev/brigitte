@@ -6,7 +6,13 @@ from pygments.util import ClassNotFound
 from django.utils.safestring import mark_safe
 from django.conf import settings
 
-from brigitte.repositories.gitolite import generate_gitolite_conf, export_public_keys, update_gitolite_repo
+from brigitte.repositories.gitolite import generate_gitolite_conf
+from brigitte.repositories.gitolite import export_public_keys
+from brigitte.repositories.gitolite import update_gitolite_repo
+
+from brigitte.repositories.models import Repository, RepositoryUpdate
+from brigitte.repositories.choices import REPO_UPDATES_DICT
+from brigitte.repositories.tasks import UpdateGitoliteTask
 
 class NakedHtmlFormatter(formatters.HtmlFormatter):
     def wrap(self, source, outfile):
@@ -48,6 +54,26 @@ def build_path_breadcrumb(path):
         })
     return links
 
+def register_repository_update(user, change, repo=None):
+    assert REPO_UPDATES_DICT.has_key(change), 'Invalid update type'
+
+    if repo:
+        RepositoryUpdate.objects.create(
+            user=user,
+            repo=repo,
+            repo_type='git',
+            update=change,
+        )
+    else:
+        for repo in Repository.objects.writeable_repositories(user):
+            RepositoryUpdate.objects.create(
+                user=user,
+                repo=repo,
+                repo_type='git',
+                update=change,
+            )
+
+    UpdateGitoliteTask.delay()
 
 def update_gitolite():
     BRIGITTE_GIT_ADMIN_PATH = getattr(settings,

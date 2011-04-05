@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from django.db import models
 from django.db.models import Q
 from django.conf import settings
@@ -8,6 +9,8 @@ from django.utils.safestring import mark_safe
 
 from brigitte.repositories.backends.git import Repo
 
+from brigitte.repositories.choices import REPO_TYPES, REPO_UPDATES
+
 BRIGITTE_GIT_BASE_PATH = getattr(settings,
                                  'BRIGITTE_GIT_BASE_PATH',
                                  'git_repositories')
@@ -16,6 +19,11 @@ class RepositoryManager(models.Manager):
     def manageable_repositories(self, user):
         return super(RepositoryManager, self).get_query_set().filter(
             pk__in=user.repositoryuser_set.filter(can_admin=True).values_list('repo_id', flat=True)
+        )
+
+    def writeable_repositories(self, user):
+        return super(RepositoryManager, self).get_query_set().filter(
+            pk__in=user.repositoryuser_set.filter(can_write=True).values_list('repo_id', flat=True)
         )
 
     def public_repositories(self):
@@ -148,4 +156,38 @@ class RepositoryUser(models.Model):
         unique_together = ('repo', 'user')
         verbose_name = _('Repository user')
         verbose_name_plural = _('Repository users')
+
+class RepositoryUpdateManager(models.Manager):
+    def pending_updates(self, user):
+        return super(RepositoryUpdateManager, self).get_query_set().filter(
+            is_exported=False
+        )
+
+class RepositoryUpdate(models.Model):
+    repo = models.ForeignKey(Repository, verbose_name=_('Repository'))
+    user = models.ForeignKey(User, verbose_name=_('User'))
+    repo_type = models.CharField(_('Type'), max_length=4, choices=REPO_TYPES)
+    update = models.CharField(_('Update'), max_length=64, choices=REPO_UPDATES)
+
+    updated = models.DateTimeField(_('Updated'), default=datetime.now)
+
+    is_exported = models.BooleanField(_('Is exported'), default=False)
+    exported = models.DateTimeField(_('Exported'), blank=True, null=True)
+
+    objects = RepositoryUpdateManager()
+
+    def __unicode__(self):
+        return '%s/%s %s: %s' % (self.repo,
+                                 self.user,
+                                 self.updated,
+                                 self.update)
+
+    def save(self, *args, **kwargs):
+        if self.is_exported and not self.exported:
+            self.exported = datetime.now()
+        super(RepositoryUpdate, self).save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = _('Repository update')
+        verbose_name_plural = _('Repository updates')
 

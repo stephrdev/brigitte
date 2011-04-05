@@ -10,6 +10,7 @@ from brigitte.accounts.models import RegistrationProfile, EmailVerification
 from brigitte.accounts.models import SshPublicKey
 
 from brigitte.repositories.models import Repository
+from brigitte.repositories.utils import register_repository_update
 
 @login_required
 def profile(request):
@@ -105,6 +106,7 @@ def keys_add(request):
             key = form.save(commit=False)
             key.user = request.user
             key.save()
+            register_repository_update(key.user, 'key_added')
             messages.success(request, _('Key added.'))
             return redirect('accounts_keys_list')
     else:
@@ -120,6 +122,7 @@ def keys_change(request, pk):
         form = SshPublicKeyForm(request.POST, instance=key)
         if form.is_valid():
             key = form.save()
+            register_repository_update(key.user, 'key_changed')
             messages.success(request, _('Key updated.'))
             return redirect('accounts_keys_list')
     else:
@@ -132,6 +135,7 @@ def keys_delete(request, pk):
     try:
         key = SshPublicKey.objects.get(pk=pk, user=request.user)
         key.delete()
+        register_repository_update(request.user, 'key_deleted')
         messages.success(request, _('Key deleted.'))
         return redirect('accounts_keys_list')
     except SshPublicKey.DoesNotExist:

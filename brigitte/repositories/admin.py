@@ -1,5 +1,6 @@
 from django.contrib import admin
 from brigitte.repositories.models import Repository, RepositoryUser
+from brigitte.repositories.models import RepositoryUpdate
 
 class RepositoryUserInline(admin.TabularInline):
     model = RepositoryUser
@@ -10,4 +11,11 @@ class RepositoryAdmin(admin.ModelAdmin):
     inlines = [RepositoryUserInline,]
 
 admin.site.register(Repository, RepositoryAdmin)
+
+class RepositoryUpdateAdmin(admin.ModelAdmin):
+    list_display = ('updated', 'update', 'repo', 'user', 'is_exported',
+                    'exported')
+    list_filter = ('updated', 'is_exported', 'exported', 'update')
+
+admin.site.register(RepositoryUpdate, RepositoryUpdateAdmin)
 
