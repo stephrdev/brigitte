@@ -82,11 +82,13 @@ works until now - database, python modules, etc....)
   - cp ../src/brigitte/docs/nginx.conf.sample nginx.conf
   - cp ../src/brigitte/docs/wsgi.py.sample wsgi.py
   - cp ../src/brigitte/docs/uwsgi.sample uwsgi
+  - cp ../src/brigitte/docs/celeryd.sample celeryd
   - edit files to fit your needs
 
 - activate your configs (as root)
   - ln /home/brigitte/env/deploy/nginx.conf /etc/nginx/conf.d/brigitte.conf
   - ln /home/brigitte/env/deploy/uwsgi /etc/supervisord/conf.d/uwsgi
+  - ln /home/brigitte/env/deploy/celeryd /etc/supervisord/conf.d/celeryd
 
 After restarting the servers, everything should work. *fingers crossed*
 
