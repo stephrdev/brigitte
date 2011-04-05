@@ -55,7 +55,7 @@ SITE_ID = 1
 ADMIN_MEDIA_PREFIX = '/admin_media/'
 
 STATIC_URL = '/static_media/'
-STATIC_ROOT = os.path.join(PROJECT_ROOT, 'deployed_static_media'),
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'deployed_static_media')
 
 STATICFILES_DIRS = (
     os.path.join(PROJECT_ROOT, 'static_media'),
@@ -73,6 +73,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.admin',
+    'django.contrib.staticfiles',
     'south',
     'djcelery',
 
