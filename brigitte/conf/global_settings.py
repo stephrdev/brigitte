@@ -55,9 +55,10 @@ SITE_ID = 1
 ADMIN_MEDIA_PREFIX = '/admin_media/'
 
 STATIC_URL = '/static_media/'
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'deployed_static_media'),
 
 STATICFILES_DIRS = (
-	os.path.join(PROJECT_ROOT, 'static_media'),
+    os.path.join(PROJECT_ROOT, 'static_media'),
 )
 
 ROOT_URLCONF = '%s.urls' % PROJECT_NAME
