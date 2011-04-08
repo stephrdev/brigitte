@@ -12,8 +12,6 @@ from brigitte.repositories.forms import RepositoryForm, RepositoryUserFormSet
 from brigitte.repositories.utils import pygmentize, build_path_breadcrumb
 from brigitte.repositories.utils import register_repository_update
 
-# FIXME !!
-from django.views.decorators.csrf import csrf_exempt
 
 @login_required
 def repositories_manage_list(request):
@@ -30,8 +28,6 @@ def repositories_user(request, user):
         'repository_list': user.repository_set.public_repositories(),
     })
 
-# FIXME !!
-@csrf_exempt
 @login_required
 @repository_view(can_admin=True)
 def repositories_manage_change(request, repo):

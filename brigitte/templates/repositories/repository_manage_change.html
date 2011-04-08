@@ -55,6 +55,7 @@
                                 $.post('.', {
                                     'method': 'add_repouser',
                                     'email': email,
+                                    'csrfmiddlewaretoken': '{{ csrf_token }}',
                                     }, function(data) {
                                         if(data.result != true) {
                                             return repouser_error(data.error_msg);
