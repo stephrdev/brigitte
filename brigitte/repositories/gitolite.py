@@ -54,5 +54,5 @@ def update_gitolite_repo(gitolite_path):
     shell = ShellMixin()
 
     for command in commands:
-        shell.exec_command(['/bin/sh', '-c', 'cd %s; %s' % (gitolite_path, command)])
+        shell.exec_command(['/bin/sh', '-c', 'cd "%s"; %s' % (gitolite_path, command)])
 

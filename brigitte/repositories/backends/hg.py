@@ -47,7 +47,7 @@ class Repo(BaseRepo):
     @property
     def tags(self):
 
-        cmd = 'hg --cwd %s tags' % self.path
+        cmd = 'hg --cwd "%s" tags' % self.path
         tags = self.exec_command(cmd)
         tags = TAGS_RE.findall(tags)
 
@@ -59,7 +59,7 @@ class Repo(BaseRepo):
 
     @property
     def branches(self):
-        cmd = 'hg --cwd %s branches' % self.path
+        cmd = 'hg --cwd "%s" branches' % self.path
         branches = self.exec_command(cmd)
         branches = BRANCHES_RE.findall(branches)
 
@@ -130,7 +130,7 @@ class Repo(BaseRepo):
         return self.get_commit(None)
 
     def init_repo(self):
-        cmd = 'hg init %s' % (self.path)
+        cmd = 'hg init "%s"' % (self.path)
         self.exec_command(cmd)
         return True
 
@@ -159,7 +159,7 @@ class Commit(BaseCommit):
 
         archive_name = self.id[:7]
 
-        cmd2 = 'hg --cwd %s archive -t zip -r %s -' % (
+        cmd2 = 'hg --cwd "%s" archive -t zip -r %s -' % (
             self.repo.path,
             self.id,
         )
@@ -182,7 +182,7 @@ class Commit(BaseCommit):
             if not path[-1] == '/':
                 path = path+'/'
 
-        cmd = 'git --git-dir=%s ls-tree -l %s %s' % (
+        cmd = 'git --git-dir="%s" ls-tree -l %s "%s"' % (
             self.repo.path,
             str(self.id),
             path
@@ -220,7 +220,7 @@ class Commit(BaseCommit):
             return None
 
     def get_file(self, path):
-        cmd = 'git --git-dir=%s show --exit-code %s:%s' % (
+        cmd = 'git --git-dir="%s" show --exit-code %s:"%s"' % (
             self.repo.path,
             str(self.id),
             path
@@ -234,7 +234,7 @@ class Commit(BaseCommit):
 
     @property
     def changed_files(self):
-        cmd = 'hg --cwd %s status --change %s' % (
+        cmd = 'hg --cwd "%s" status --change %s' % (
             self.repo.path,
             str(self.id)
         )
@@ -250,7 +250,7 @@ class Commit(BaseCommit):
 
     @property
     def commit_diff(self):
-        cmd = 'hg --cwd %s diff -g -r %s' % (
+        cmd = 'hg --cwd "%s" diff -g -r %s' % (
             self.repo.path,
             str(self.id)
         )
@@ -288,7 +288,7 @@ class Commit(BaseCommit):
         return lines
 
     def get_file_diff(self, path):
-        cmd = 'hg --cwd %s diff -g -c %s %s' % (
+        cmd = 'hg --cwd "%s" diff -g -c %s "%s"' % (
             self.repo.path,
             self.id,
             path

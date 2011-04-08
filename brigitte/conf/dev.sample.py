@@ -1,4 +1,4 @@
-from conf.global_settings import *
+from brigitte.conf.global_settings import *
 
 DEBUG = TEMPLATE_DEBUG = THUMBNAIL_DEBUG = True
 

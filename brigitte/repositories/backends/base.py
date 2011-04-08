@@ -1,3 +1,4 @@
+import shlex
 from subprocess import Popen, PIPE
 
 class ShellCommandException(Exception): pass
@@ -5,7 +6,7 @@ class ShellCommandException(Exception): pass
 class ShellMixin:
     def exec_command(self, command):
         if not isinstance(command, (list, tuple)):
-            cmd = command.split(' ')
+            cmd = shlex.split(command)
         else:
             cmd = command
 

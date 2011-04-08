@@ -62,7 +62,7 @@ class Repo(BaseRepo):
 
     @property
     def tags(self):
-        cmd = 'git --git-dir=%s show-ref --tags' % self.path
+        cmd = 'git --git-dir="%s" show-ref --tags' % self.path
         tags = self.exec_command(cmd).split('\n')
         tags.reverse()
 
@@ -75,7 +75,7 @@ class Repo(BaseRepo):
 
     @property
     def branches(self):
-        cmd = 'git --git-dir=%s show-ref --heads' % self.path
+        cmd = 'git --git-dir="%s" show-ref --heads' % self.path
 
         branches = self.exec_command(cmd).split('\n')
 
@@ -92,7 +92,7 @@ class Repo(BaseRepo):
             sha = head if head else 'HEAD'
 
         cmd = ['git',
-            '--git-dir=%s' % self.path,
+            '--git-dir="%s"' % self.path,
             'log',
             '--no-color',
             '--raw',
@@ -142,7 +142,8 @@ class Repo(BaseRepo):
         return self.get_commit(None)
 
     def init_repo(self):
-        cmd = 'git init -q --shared=0770 --bare %s --template=%s/%s' % (self.path, settings.PROJECT_ROOT, 'repo_templates/git/')
+        cmd = 'git init -q --shared=0770 --bare "%s" --template="%s/%s"' % (self.path, settings.PROJECT_ROOT, 'repo_templates/git/')
+        print cmd
         self.exec_command(cmd)
         return True
 
@@ -160,7 +161,7 @@ class Commit(BaseCommit):
         return [(parent[:7], parent) for parent in self.parents]
 
     def get_archive(self):
-        cmd1 = 'git --git-dir=%s describe --tags --abbrev=7 %s' % (
+        cmd1 = 'git --git-dir="%s" describe --tags --abbrev=7 %s' % (
             self.repo.path,
             self.id
         )
@@ -170,7 +171,7 @@ class Commit(BaseCommit):
         except:
             archive_name = self.id[:7]
 
-        cmd2 = 'git --git-dir=%s archive --format=zip --prefix=%s-%s/ %s^{tree}' % (
+        cmd2 = 'git --git-dir="%s" archive --format=zip --prefix=%s-%s/ %s^{tree}' % (
             self.repo.path,
             self.repo.repo.slug,
             archive_name,
@@ -195,7 +196,7 @@ class Commit(BaseCommit):
             if not path[-1] == '/':
                 path = path+'/'
 
-        cmd = 'git --git-dir=%s ls-tree -l %s %s' % (
+        cmd = 'git --git-dir="%s" ls-tree -l %s "%s"' % (
             self.repo.path,
             str(self.id),
             path
@@ -227,7 +228,7 @@ class Commit(BaseCommit):
 
                     try:
                         cmd = ['git',
-                            '--git-dir=%s' % self.repo.path,
+                            '--git-dir="%s"' % self.repo.path,
                             'log',
                             '-1',
                             str(self.id),
@@ -285,7 +286,7 @@ class Commit(BaseCommit):
             return None
 
     def get_file(self, path):
-        cmd = 'git --git-dir=%s show --exit-code %s:%s' % (
+        cmd = 'git --git-dir="%s" show --exit-code %s:"%s"' % (
             self.repo.path,
             str(self.id),
             path
@@ -299,7 +300,7 @@ class Commit(BaseCommit):
 
     @property
     def changed_files(self):
-        cmd = 'git --git-dir=%s log -1 --numstat --pretty=format: %s' % (
+        cmd = 'git --git-dir="%s" log -1 --numstat --pretty=format: %s' % (
             self.repo.path,
             str(self.id)
         )
@@ -315,7 +316,7 @@ class Commit(BaseCommit):
 
     @property
     def commit_diff(self):
-        cmd = 'git --git-dir=%s diff-tree -p %s' % (
+        cmd = 'git --git-dir="%s" diff-tree -p %s' % (
             self.repo.path,
             str(self.id)
         )
@@ -353,7 +354,7 @@ class Commit(BaseCommit):
         return lines
 
     def get_file_diff(self, path):
-        cmd = 'git --git-dir=%s diff --exit-code %s~1 %s -- %s' % (
+        cmd = 'git --git-dir="%s" diff --exit-code %s~1 %s -- "%s"' % (
             self.repo.path,
             self.id,
             self.id,
