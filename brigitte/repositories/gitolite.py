@@ -21,6 +21,9 @@ def generate_gitolite_conf(file_path):
 
     for repo in Repository.objects.all():
         keys = []
+        if not repo.private:
+            keys.append('\tR\t= daemon\n')
+
         for user in repo.repositoryuser_set.all():
             for key in user.user.sshpublickey_set.all():
                 keys.append('\t%s\t= key-%s\n' % (generate_access_rule(user, key), key.pk))
