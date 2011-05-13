@@ -3,3 +3,4 @@ South==0.7.3
 pygments==1.4
 lxml==2.3beta1
 django-celery==2.2.4
+django-redis-cache==0.5.1
