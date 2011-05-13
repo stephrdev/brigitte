@@ -1,4 +1,5 @@
 import os
+from django.contrib.sites.models import Site
 from datetime import datetime
 from django.db import models
 from django.db.models import Q
@@ -99,12 +100,12 @@ class Repository(models.Model):
         return self._branches
 
     @property
-    def push_url(self):
-        return 'TBD'
+    def rw_url(self):
+        return 'ssh://git@%s:%s/%s.git' % (Site.objects.get_current(), self.user.username, self.slug)
 
     @property
-    def pull_url(self):
-        return 'TBD'
+    def ro_url(self):
+        return 'git://%s/%s/%s.git' % (Site.objects.get_current(), self.user.username, self.slug)
 
     def get_commit(self, sha):
         return self._repo.get_commit(sha)
