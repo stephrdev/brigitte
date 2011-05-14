@@ -69,7 +69,7 @@ class Repo(BaseRepo):
 
         return branch_list
 
-    def _get_commit_list(self, sha=None, count=10, skip=0, head=None):
+    def _get_commit_list(self, sha=None, count=10, skip=0, head=None, path=None):
         if sha == None:
             if head and head <> 'default' and head <> 'tip':
                 raise NotImplementedError
@@ -102,6 +102,9 @@ class Repo(BaseRepo):
             sha,
         ]
 
+        if path:
+            cmd.append(path)
+
         commits = []
         try:
             raw_log = '<?xml version="1.0" encoding="UTF-8"?>\
@@ -114,13 +117,13 @@ class Repo(BaseRepo):
 
         return commits
 
-    def get_commits(self, count=10, skip=0, head=None):
+    def get_commits(self, count=10, skip=0, head=None, path=None):
         return self._get_commit_list(
-            sha=None, count=count, skip=skip, head=head)
+            sha=None, count=count, skip=skip, head=head, path=path)
 
-    def get_commit(self, sha):
+    def get_commit(self, sha, path=None):
         try:
-            return self._get_commit_list(sha=sha, count=1, skip=0)[0]
+            return self._get_commit_list(sha=sha, count=1, skip=0, path=path)[0]
         except IndexError:
             pass
         return None
@@ -212,6 +215,8 @@ class Commit(BaseCommit):
                             line_file['mime_image'] = FILETYPE_MAP['default']
 
                     tree_out.append(line_file)
+
+                    line_file['commit'] = self.repo.get_commit(self.id, path=line_file['path'])
 
             tree_out.sort(lambda x, y: cmp(y['type'], x['type']))
 

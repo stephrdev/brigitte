@@ -52,7 +52,7 @@ FILETYPE_MAP = getattr(settings, 'FILETYPE_MAP', {})
 BRANCHES_RE = re.compile("^(?P<type>\s|\*) (?P<name>.+)$", re.MULTILINE)
 
 TREE_RE = re.compile(
-    "(?P<rights>\d*)\s(?P<type>[a-z]*)"\
+    "(?P<rights>\d*)\s(?P<type>[a-z]*)"
     "\s(?P<sha>\w*)\s*(?P<size>[0-9 -]*)\s*(?P<path>.+)")
 
 FILE_RE = re.compile("\.\w+")
@@ -87,7 +87,7 @@ class Repo(BaseRepo):
 
         return branch_list
 
-    def _get_commit_list(self, sha=None, count=10, skip=0, head=None):
+    def _get_commit_list(self, sha=None, count=10, skip=0, head=None, path=None):
         if sha == None:
             sha = head if head else 'HEAD'
 
@@ -114,6 +114,11 @@ class Repo(BaseRepo):
             sha,
         ]
 
+        if path:
+            cmd.append('--')
+            cmd.append(path)
+
+
         commits = []
         try:
             raw_log = '<?xml version="1.0" encoding="UTF-8"?>\
@@ -126,13 +131,13 @@ class Repo(BaseRepo):
 
         return commits
 
-    def get_commits(self, count=10, skip=0, head=None):
+    def get_commits(self, count=10, skip=0, head=None, path=None):
         return self._get_commit_list(
-            sha=None, count=count, skip=skip, head=head)
+            sha=None, count=count, skip=skip, head=head, path=path)
 
-    def get_commit(self, sha):
+    def get_commit(self, sha, path=None):
         try:
-            return self._get_commit_list(sha=sha, count=1, skip=0)[0]
+            return self._get_commit_list(sha=sha, count=1, skip=0, path=path)[0]
         except IndexError:
             pass
         return None
@@ -225,56 +230,12 @@ class Commit(BaseCommit):
                             line_file['suffix'] = ''
                             line_file['mime_image'] = FILETYPE_MAP['default']
 
-                    try:
-                        cmd = ['git',
-                            '--git-dir=%s' % self.repo.path,
-                            'log',
-                            '-1',
-                            str(self.id),
-                            '--no-color',
-                            '--pretty=format:\
-                                <commit>\
-                                    <id>%H</id>\
-                                    <parent>%P</parent>\
-                                    <short_message><![CDATA[%s]]></short_message>\
-                                    <author><![CDATA[%an]]></author>\
-                                    <author_email><![CDATA[%ae]]></author_email>\
-                                    <committer><![CDATA[%cn]]></committer>\
-                                    <committer_email><![CDATA[%ce]]></committer_email>\
-                                    <timestamp>%ct</timestamp>\
-                                </commit>',
-                                '--',
-                                line_file['path'],
-                            ]
-
-                        line_file['info'] = parse_single_xml(self.exec_command(cmd))
-                        line_file['info']['commit_date'] = \
-                            datetime.fromtimestamp(float(line_file['info']['timestamp']))
-
-
-                    except:
-                        return None
+                    line_file['commit'] = self.repo.get_commit(self.id, path=line_file['path'])
 
                     try:
-                        bytes = float(line_file['size'])
-
-                        if bytes >= 1099511627776:
-                            terabytes = bytes / 1099511627776
-                            size = '%.2f TB' % terabytes
-                        elif bytes >= 1073741824:
-                            gigabytes = bytes / 1073741824
-                            size = '%.2f GB' % gigabytes
-                        elif bytes >= 1048576:
-                            megabytes = bytes / 1048576
-                            size = '%.2f MB' % megabytes
-                        elif bytes >= 1024:
-                            kilobytes = bytes / 1024
-                            size = '%.2f KB' % kilobytes
-                        else:
-                            size = '%.2f Bytes' % bytes
-                        line_file['size'] = size
+                        line_file['size'] = float(line_file['size'])
                     except:
-                        line_file['size'] = '-'
+                        line_file['size'] = None
 
                     tree_out.append(line_file)
 
