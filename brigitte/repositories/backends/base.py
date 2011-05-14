@@ -2,7 +2,7 @@ from subprocess import Popen, PIPE
 
 class ShellCommandException(Exception): pass
 
-class ShellMixin:
+class ShellMixin(object):
     def exec_command(self, command):
         if not isinstance(command, (list, tuple)):
             cmd = command.split(' ')
@@ -191,7 +191,7 @@ class BaseBranch(ShellMixin):
     id = None
     is_master = False
 
-    def __init__(self, repo, name, id, is_master):
+    def __init__(self, repo, name, id, is_master=False):
         self.repo = repo
         self.name = name
         self.id = id
