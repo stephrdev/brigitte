@@ -138,6 +138,16 @@ def repositories_list(request):
 def repositories_summary(request, repo):
     return render(request, 'repositories/repository_summary.html', {
         'repository': repo,
+        'branches': repo.branches[:10],
+        'tags': repo.tags[:10],
+    })
+
+@repository_view()
+def repositories_heads(request, repo):
+    return render(request, 'repositories/repository_heads.html', {
+        'repository': repo,
+        'branches': repo.branches,
+        'tags': repo.tags,
     })
 
 

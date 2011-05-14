@@ -17,6 +17,9 @@ urlpatterns = patterns('brigitte.repositories.views',
     url(r'^(?P<user>[\w-]+)/(?P<slug>[\w-]+)/$', 'repositories_summary',
         name='repositories_summary'),
 
+    url(r'^(?P<user>[\w-]+)/(?P<slug>[\w-]+)/heads/$', 'repositories_heads',
+        name='repositories_heads'),
+
     url(r'^(?P<user>[\w-]+)/$', 'repositories_user',
         name='repositories_user'),
 

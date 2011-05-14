@@ -22,6 +22,7 @@
 
     {% if repository.last_commit %}
 
+    {% block commits %}
     <h2>Recent commits</h2>
 
     <div class="recent-commits">
@@ -39,8 +40,9 @@
             </tbody>
         </table>
     </div>
+    {% endblock %}
 
-    <h2>Heads</h2>
+    <h2>Heads (<a href="{% repo_url repositories_heads repository %}">Show all</a>)</h2>
 
     <div class="heads">
         <div class="grid_8">
@@ -52,7 +54,7 @@
                     <th>&nbsp;</th>
                 </thead>
                 <tbody>
-                    {% for branch in repository.branches %}
+                    {% for branch in branches %}
                     <tr>
                         <td>
                             <strong><a href="{% repo_url repositories_commits repository branch.name %}">{{ branch.name }}</a></strong>
@@ -77,7 +79,7 @@
                     <th>&nbsp;</th>
                 </thead>
                 <tbody>
-                    {% for tag in repository.tags %}
+                    {% for tag in tags %}
                         {% if tag.last_commit %}
                         <tr>
                             <td><strong><a href="{% repo_url repositories_commits repository tag.name %}">{{ tag.name }}</a></strong></td>
