@@ -19,6 +19,7 @@ other software (apache instead of nginx, postgres instead of mysql, ...).
   - libxml2-dev
   - libxslt-dev
   - gettext
+  - git-daemon-run
 
 2. Prepare environment as root
 ------------------------------
@@ -81,12 +82,14 @@ works until now - database, python modules, etc....)
   - mkdir ~/env/deploy (and cd)
   - cp ../src/brigitte/docs/nginx.conf.sample nginx.conf
   - cp ../src/brigitte/docs/wsgi.py.sample wsgi.py
+  - cp ../src/brigitte/docs/gitdaemon.sample gitdaemon
   - cp ../src/brigitte/docs/uwsgi.sample uwsgi
   - cp ../src/brigitte/docs/celeryd.sample celeryd
   - edit files to fit your needs
 
 - activate your configs (as root)
   - ln /home/brigitte/env/deploy/nginx.conf /etc/nginx/conf.d/brigitte.conf
+  - ln /home/brigitte/env/deploy/gitdaemon /etc/supervisord/conf.d/gitdaemon
   - ln /home/brigitte/env/deploy/uwsgi /etc/supervisord/conf.d/uwsgi
   - ln /home/brigitte/env/deploy/celeryd /etc/supervisord/conf.d/celeryd
 
