@@ -1,10 +1,12 @@
 from django.http import Http404, HttpResponse
 from django.utils.translation import gettext_lazy as _
+from django.utils import simplejson
+from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.template.defaultfilters import slugify
+from django.template.defaultfilters import slugify, timesince
 
 from brigitte.repositories.decorators import repository_view
 from brigitte.repositories.models import Repository
@@ -190,6 +192,20 @@ def repositories_commit_tree(request, repo, sha, path=None):
         raise Http404
 
     if not path or path[-1] == '/':
+        if request.is_ajax() and 'commits' in request.GET:
+            tree = commit.get_tree(path, commits=True).tree
+            tree_elements = []
+            for entry in tree:
+                tree_elements.append({
+                    'tree_id': entry['sha'],
+                    'id': entry['commit'].id,
+                    'author': entry['commit'].author,
+                    'commit_date': entry['commit'].commit_date,
+                    'since': timesince(entry['commit'].commit_date),
+                })
+            return HttpResponse(simplejson.dumps(tree_elements,
+                cls=DjangoJSONEncoder), mimetype='application/json')
+
         tree = commit.get_tree(path)
         if tree is None:
             raise Http404
