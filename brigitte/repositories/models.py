@@ -41,8 +41,8 @@ class RepositoryManager(models.Manager):
 
 class Repository(models.Model):
     user = models.ForeignKey(User, verbose_name=_('User'))
-    slug = models.SlugField(_('Slug'), max_length=255, blank=False)
-    title = models.CharField(_('Title'), max_length=255)
+    slug = models.SlugField(_('Slug'), max_length=80, blank=False)
+    title = models.CharField(_('Title'), max_length=80)
     description = models.TextField(_('Description'), blank=True)
     private = models.BooleanField(_('Private'), default=False)
     repo_type = models.CharField(_('Type'),
@@ -129,6 +129,10 @@ class Repository(models.Model):
         if not self.pk:
             self._repo.init_repo()
         super(Repository, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        self._repo.delete_repo(self.slug)
+        super(Repository, self).delete(*args, **kwargs)
 
     class Meta:
         unique_together = ('user', 'slug')

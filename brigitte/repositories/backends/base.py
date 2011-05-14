@@ -69,6 +69,10 @@ class BaseRepo(ShellMixin):
         """ This method should initialize the repository """
         raise NotImplementedError
 
+    def delete_repo(self):
+        """ This method should delete the repository """
+        raise NotImplementedError
+
 class BaseCommit(ShellMixin):
     """ Base Commit class to inherit from. """
 

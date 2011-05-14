@@ -78,6 +78,27 @@
                 <p><label>&nbsp;</label><button type="submit">Save changes</button></p>
             </fieldset>
         </form>
+
+    </div>
+    <div class="grid_4 push_12">
+        <form class="form extra" action="{% url repositories_manage_delete repo.user repo.slug %}" method="post">
+            <fieldset>
+                {% csrf_token %}
+                <script>
+                    $(document).ready(function() {
+                        $('#delete_button').attr("disabled", "true").css("color", "grey");
+                        $(function() {
+                            $('#id_statisfied').click(function() {
+                                var satisfied = $('#id_statisfied:checked').val();
+                                if (satisfied != undefined) $('#delete_button').removeAttr('disabled').css("color", "red");
+                                else $('#delete_button').attr('disabled', 'disabled').css("color", "grey");
+                            });
+                        });
+                    });
+                </script>
+                <label>I want to delete this repository:</label>{{ delete_form.statisfied }}
+                <label>&nbsp;</label><button id="delete_button">proceed deletion.</button>
+            </fieldset>
+        </form>
     </div>
 {% endblock %}
-

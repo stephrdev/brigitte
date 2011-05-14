@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
+import os
+import shutil
 from datetime import datetime
 from django.conf import settings
 import cStringIO
@@ -149,6 +151,16 @@ class Repo(BaseRepo):
     def init_repo(self):
         cmd = 'git init -q --shared=0770 --bare %s --template=%s/%s' % (self.path, settings.PROJECT_ROOT, 'repo_templates/git/')
         self.exec_command(cmd)
+        return True
+
+    def path_exists(self, slug):
+        if os.path.exists(os.path.join(settings.BRIGITTE_GIT_BASE_PATH, '_trash', '%s.git' % slug)):
+            return self.path_exists('_'+slug)
+        else:
+            return slug
+
+    def delete_repo(self, slug):
+        shutil.move(self.path, os.path.join(settings.BRIGITTE_GIT_BASE_PATH, '_trash', '%s.git' % self.path_exists(slug)))
         return True
 
 class Commit(BaseCommit):
