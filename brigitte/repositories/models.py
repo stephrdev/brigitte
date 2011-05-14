@@ -45,6 +45,8 @@ class Repository(models.Model):
     title = models.CharField(_('Title'), max_length=255)
     description = models.TextField(_('Description'), blank=True)
     private = models.BooleanField(_('Private'), default=False)
+    repo_type = models.CharField(_('Type'),
+        max_length=4, choices=REPO_TYPES, default='git')
 
     objects = RepositoryManager()
 
@@ -101,11 +103,17 @@ class Repository(models.Model):
 
     @property
     def rw_url(self):
-        return 'ssh://git@%s:%s/%s.git' % (Site.objects.get_current(), self.user.username, self.slug)
+        if self.repo_type == 'git':
+            return 'ssh://git@%s:%s/%s.git' % (Site.objects.get_current(), self.user.username, self.slug)
+
+        return None
 
     @property
     def ro_url(self):
-        return 'git://%s/%s/%s.git' % (Site.objects.get_current(), self.user.username, self.slug)
+        if self.repo_type == 'git':
+            return 'git://%s/%s/%s.git' % (Site.objects.get_current(), self.user.username, self.slug)
+
+        return None
 
     def get_commit(self, sha):
         return self._repo.get_commit(sha)

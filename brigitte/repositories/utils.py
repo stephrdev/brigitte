@@ -61,7 +61,7 @@ def register_repository_update(user, change, repo=None):
         RepositoryUpdate.objects.create(
             user=user,
             repo=repo,
-            repo_type='git',
+            repo_type=repo.repo_type,
             update=change,
         )
     else:
@@ -69,7 +69,7 @@ def register_repository_update(user, change, repo=None):
             RepositoryUpdate.objects.create(
                 user=user,
                 repo=repo,
-                repo_type='git',
+                repo_type=repo.repo_type,
                 update=change,
             )
 

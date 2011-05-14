@@ -19,7 +19,7 @@ def generate_gitolite_conf(file_path):
         elif repo_user.can_read and key.can_read:
             return 'R'
 
-    for repo in Repository.objects.all():
+    for repo in Repository.objects.filter(repo_type='git'):
         keys = []
         if not repo.private:
             keys.append('\tR\t= daemon\n')
