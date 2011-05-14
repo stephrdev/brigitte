@@ -20,7 +20,16 @@ class RepositoryForm(forms.ModelForm):
     def clean(self):
         slug = slugify(self.cleaned_data.get('title', ''))
 
-        if Repository.objects.filter(user=self.user, slug=slug).count() > 0:
+        instance_pk = 0
+        if self.instance:
+            instance_pk = self.instance.pk
+
+        if Repository.objects.filter(
+            user=self.user,
+            slug=slug
+        ).exclude(
+            pk=instance_pk
+        ).count() > 0:
             raise forms.ValidationError('Repository name already in use.')
 
         return self.cleaned_data
