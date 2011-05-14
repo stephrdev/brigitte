@@ -5,6 +5,6 @@ redirect_stderr = true
 autostart= true
 autorestart = true
 priority=1
+stopsignal=QUIT
 user=brigitte
 group=brigitte
-
