@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
 from django.utils.safestring import mark_safe
 
-from brigitte.repositories.backends.git import Repo
+from brigitte.repositories.backends import get_backend
 
 from brigitte.repositories.choices import REPO_TYPES, REPO_UPDATES
 
@@ -75,7 +75,7 @@ class Repository(models.Model):
     @property
     def _repo(self):
         if not hasattr(self, '_repo_obj'):
-            self._repo_obj = Repo(self)
+            self._repo_obj = get_backend(self.repo_type)(self)
         return self._repo_obj
 
     def recent_commits(self, count=10):
