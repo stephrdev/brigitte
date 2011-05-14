@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load cache repositories_tags %}
+{% load repositories_tags %}
 {% block title %}Repository: {{ repository.title }}{% endblock %}
 
 {% block content %}
@@ -22,7 +22,6 @@
 
     {% if repository.last_commit %}
 
-    {% cache 2592000 "repo_summary" repository.last_commit.id %}
     <h2>Recent commits</h2>
 
     <div class="recent-commits">
@@ -96,7 +95,6 @@
             </table>
         </div>
     </div>
-    {% endcache %}
     {% else %}
     <h2>This repository is empty. Feel free to push some commits.</h2>
     {% endif %}

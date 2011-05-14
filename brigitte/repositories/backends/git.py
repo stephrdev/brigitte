@@ -5,6 +5,9 @@ import shutil
 from datetime import datetime
 from django.conf import settings
 import cStringIO
+
+from django.core.cache import cache
+
 from brigitte.repositories.backends.base import BaseRepo, BaseCommit
 from brigitte.repositories.backends.base import BaseTag, BaseBranch
 from brigitte.repositories.backends.base import BaseFile, BaseTree
@@ -138,11 +141,23 @@ class Repo(BaseRepo):
             sha=None, count=count, skip=skip, head=head, path=path)
 
     def get_commit(self, sha, path=None):
-        try:
-            return self._get_commit_list(sha=sha, count=1, skip=0, path=path)[0]
-        except IndexError:
-            pass
-        return None
+        cache_key = '%s:commit:%s:%s' % (self.repo.pk, sha, path or 'direct')
+
+        commit = None
+
+        if sha:
+            commit = cache.get(cache_key)
+
+        if not commit:
+            try:
+                commit = self._get_commit_list(sha=sha, count=1, skip=0, path=path)[0]
+            except IndexError:
+                pass
+
+            if sha and commit:
+                cache.set(cache_key, commit, 2592000)
+
+        return commit
 
     @property
     def last_commit(self):
@@ -205,12 +220,18 @@ class Commit(BaseCommit):
         except:
             return None
 
-    def get_tree(self, path):
+    def get_tree(self, path, commits=False):
         if not path:
             path = ''
         else:
             if not path[-1] == '/':
                 path = path+'/'
+
+        cache_key = '%s:tree:%s:%s:%s' % (self.repo.repo.pk, self.id, path, commits)
+
+        tree_obj = cache.get(cache_key)
+        if tree_obj:
+            return tree_obj
 
         cmd = 'git --git-dir=%s ls-tree -l %s %s' % (
             self.repo.path,
@@ -225,6 +246,7 @@ class Commit(BaseCommit):
                 for tree_file in raw_tree.split('\n'):
                     line = TREE_RE.search(tree_file)
                     line_file = line.groupdict()
+                    line_file['id'] = line_file['sha']
                     line_file['name'] = line_file['path'].rsplit('/', 1)[-1]
 
                     if line_file['type'] == 'tree':
@@ -242,7 +264,8 @@ class Commit(BaseCommit):
                             line_file['suffix'] = ''
                             line_file['mime_image'] = FILETYPE_MAP['default']
 
-                    line_file['commit'] = self.repo.get_commit(self.id, path=line_file['path'])
+                    if commits:
+                        line_file['commit'] = self.repo.get_commit(self.id, path=line_file['path'])
 
                     try:
                         line_file['size'] = float(line_file['size'])
@@ -253,7 +276,9 @@ class Commit(BaseCommit):
 
             tree_out.sort(lambda x, y: cmp(y['type'], x['type']))
 
-            return Tree(self.repo, path, tree_out)
+            tree_obj = Tree(self.repo, path, tree_out)
+            cache.set(cache_key, tree_obj, 2592000)
+            return tree_obj
         except:
             return None
 
