@@ -8,7 +8,7 @@ from django.template.defaultfilters import slugify
 
 from brigitte.repositories.decorators import repository_view
 from brigitte.repositories.models import Repository
-from brigitte.repositories.forms import RepositoryForm, RepositoryUserFormSet
+from brigitte.repositories.forms import RepositoryForm, RepositoryUserFormSet, RepositoryDeleteForm
 from brigitte.repositories.utils import pygmentize, build_path_breadcrumb
 from brigitte.repositories.utils import register_repository_update
 
@@ -29,6 +29,21 @@ def repositories_user(request, user):
         'user': user,
         'repository_list': user.repository_set.public_repositories(),
     })
+
+
+@login_required
+@repository_view(can_admin=True)
+def repositories_manage_delete(request, repo):
+
+    if request.method == 'POST':
+        delete_form = RepositoryDeleteForm(request.POST)
+        if delete_form.is_valid():
+            register_repository_update(repo.user, 'deleted', repo)
+            messages.success(request, _('Repository deleted.'))
+            repo.delete()
+            return redirect('repositories_manage_list')
+        else:
+            raise Http404
 
 # FIXME !!
 @csrf_exempt
@@ -58,7 +73,7 @@ def repositories_manage_change(request, repo):
             )
 
         repo_form = RepositoryForm(
-            request.POST, instance=repo, prefix='repository')
+            request.user, request.POST, instance=repo, prefix='repository')
         users_formset = RepositoryUserFormSet(request.POST, prefix='users')
 
         if repo_form.is_valid():
@@ -74,7 +89,7 @@ def repositories_manage_change(request, repo):
             messages.success(request, _('Repository updated.'))
             return redirect('repositories_manage_list')
     else:
-        repo_form = RepositoryForm(instance=repo, prefix='repository')
+        repo_form = RepositoryForm(request.user, instance=repo, prefix='repository')
         users_formset = RepositoryUserFormSet(
             prefix='users',
             queryset=repo.alterable_users
@@ -83,13 +98,14 @@ def repositories_manage_change(request, repo):
     return render(request, 'repositories/repository_manage_change.html', {
         'repo': repo,
         'form': repo_form,
+        'delete_form': RepositoryDeleteForm(),
         'users': users_formset,
     })
 
 @login_required
 def repositories_manage_add(request):
     if request.method == 'POST':
-        form = RepositoryForm(request.POST)
+        form = RepositoryForm(request.user, request.POST)
         if form.is_valid():
             repo = form.save(commit=False)
             repo.user = request.user
@@ -105,7 +121,7 @@ def repositories_manage_add(request):
             messages.success(request, _('Repository added.'))
             return redirect('repositories_manage_list')
     else:
-        form = RepositoryForm()
+        form = RepositoryForm(request.user)
 
     return render(request, 'repositories/repository_manage_add.html', {
         'form': form,

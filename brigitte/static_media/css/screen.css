@@ -60,6 +60,14 @@ a:hover {
     margin-bottom: 10px;
     padding: 10px;
 }
+
+.extra fieldset {
+    border: 1px solid #3F423E;
+    margin-bottom: 10px;
+    padding: 10px;
+    background:#000;
+    text-align:right;
+}
 .form label {
     padding-top: 10px;
     width: 180px;
