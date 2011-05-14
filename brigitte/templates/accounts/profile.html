@@ -26,7 +26,7 @@
                         <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
                         <td>No commits</td>
                     {% endif %}
-                    <td>TBD</td>
+                    <td>{{ repository.can_write }}</td>
                 </tr>
             {% endfor %}
             </tbody>
