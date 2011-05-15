@@ -14,9 +14,9 @@
         <li><i>Last change:</i> <a href="{% repo_url repositories_commit repository repository.last_commit.id %}">{{ repository.last_commit.commit_date }}</a></li>
         {% endif %}
         {% if not repository.private %}
-        <li><i>GIT (RO) URL</i> {{ repository.ro_url }}</li>
+        <li><i>GIT (RO) URL</i> git clone {{ repository.ro_url }}</li>
         {% endif %}
-        <li><i>SSH URL</i> {{ repository.rw_url }}</li>
+        <li><i>SSH URL</i> git clone {{ repository.rw_url }}</li>
     </ul>
     <div style="clear:both"></div>
 

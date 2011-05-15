@@ -104,7 +104,7 @@ class Repository(models.Model):
     @property
     def rw_url(self):
         if self.repo_type == 'git':
-            return 'ssh://git@%s:%s/%s.git' % (Site.objects.get_current(), self.user.username, self.slug)
+            return 'git@%s:%s/%s.git' % (Site.objects.get_current(), self.user.username, self.slug)
 
         return None
 
