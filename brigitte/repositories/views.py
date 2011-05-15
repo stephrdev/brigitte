@@ -24,7 +24,6 @@ def repositories_manage_list(request):
             request.user),
     })
 
-@login_required
 def repositories_user(request, user):
     user = get_object_or_404(User, username=user)
     return render(request, 'repositories/repository_user.html', {
