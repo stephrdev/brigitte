@@ -19,7 +19,7 @@ MANAGERS = ADMINS
 DEFAULT_FROM_EMAIL = 'root@localhost'
 SERVER_EMAIL = 'root@localhost'
 
-BRIGITTE_GIT_BASE_PATH = 'brigitte_repos'
+BRIGITTE_GIT_BASE_PATH = os.path.join(PROJECT_ROOT, '..', 'brigitte_repos')
 
 CACHES = {
     'default': {
