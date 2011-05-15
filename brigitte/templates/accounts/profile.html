@@ -15,6 +15,7 @@
                 <th>Project</th>
                 <th>Last commit</th>
                 <th>Write access</th>
+                <th>Private</th>
             </thead>
             <tbody>
             {% for repository in repository_list %}
@@ -27,6 +28,7 @@
                         <td>No commits</td>
                     {% endif %}
                     <td>{{ repository.can_write }}</td>
+                    <td>{{ repository.private_html }}</td>
                 </tr>
             {% endfor %}
             </tbody>

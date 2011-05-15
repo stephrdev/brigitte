@@ -54,7 +54,7 @@ class Repository(models.Model):
         return self.title
 
     @property
-    def is_private_html(self):
+    def private_html(self):
         if self.private:
             return mark_safe('&#10004;')
         else:
