@@ -1,5 +1,5 @@
 body {
-    font-family: sans-serif;
+    font-family: 'Open Sans', sans-serif;
     background-color: #141616;
     color: #d4d4d4;
     font-size: 12px;
@@ -138,9 +138,14 @@ table {
     margin-top: 5px;
     margin-bottom: 5px;
 }
+
+.private thead th {
+    background-color: #F7A452;
+}
+
 td, th {
     border: 1px solid #3F423E;
-    padding: .4em;
+    padding: 0.4em;
     text-align: left;
 }
 thead th {
@@ -295,6 +300,7 @@ tbody tr:hover {
 table.users {
     width: auto;
 }
+
 span.folder {
     padding: 0px 5px;
     background-color: #ffffff;

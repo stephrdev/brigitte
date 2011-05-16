@@ -30,10 +30,22 @@ class RepositoryManager(models.Manager):
     def public_repositories(self):
         return super(RepositoryManager, self).get_query_set().filter(private=False)
 
+    def user_public_repositories(self, user):
+        return super(RepositoryManager, self).get_query_set().filter(private=False, user=user)
+
     def available_repositories(self, user):
         return super(RepositoryManager, self).get_query_set().filter(
             Q(
                 Q(private=False)
+                |
+                Q(pk__in=user.repositoryuser_set.filter(can_read=True).values_list('repo_id', flat=True))
+            )
+        )
+
+    def dashboard_available_repositories(self, user):
+        return super(RepositoryManager, self).get_query_set().filter(
+            Q(
+                Q(private=False, pk__in=user.repositoryuser_set.filter(can_read=True))
                 |
                 Q(pk__in=user.repositoryuser_set.filter(can_read=True).values_list('repo_id', flat=True))
             )

@@ -16,16 +16,22 @@ from brigitte.repositories.utils import register_repository_update
 
 @login_required
 def profile(request):
-    repositories = []
-    for repo in Repository.objects.available_repositories(request.user):
+    public_repositories = []
+    private_repositories = []
+    for repo in Repository.objects.dashboard_available_repositories(request.user):
         if repo.repositoryuser_set.filter(user=request.user, can_write=True).exists():
             repo.can_write = mark_safe('&#10004;')
         else:
             repo.can_write = mark_safe('&#10005;')
-        repositories.append(repo)
+
+        if repo.private:
+            private_repositories.append(repo)
+        else:
+            public_repositories.append(repo)
 
     return render(request, 'accounts/profile.html', {
-        'repository_list': repositories,
+        'private_repository_list': private_repositories,
+        'public_repository_list': public_repositories,
     })
 
 def registration_activate(request, activation_key):

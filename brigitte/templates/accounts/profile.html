@@ -9,25 +9,52 @@
         <h1>Welcome back, {{ request.user.username }}</h1>
     </div>
     <div class="grid_6">
-        <h2>Your repositories</h2>
-        <table>
+        <h2>Your private repositories</h2>
+        <table class="private">
             <thead>
                 <th>Project</th>
+                <th>Owner</th>
                 <th>Last commit</th>
-                <th>Private</th>
                 <th>Write</th>
             </thead>
             <tbody>
-            {% for repository in repository_list %}
+            {% for repository in private_repository_list %}
                 <tr>
                     {% if repository.last_commit %}
                         <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
+                        <td>{{ repository.user.username }}</td>
                         <td><a href="{% repo_url repositories_commit repository repository.last_commit.id %}">{{ repository.last_commit.commit_date }}</a></td>
-                    {% else %}
+                        {% else %}
                         <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
+                        <td>{{ repository.user.username }}</td>
                         <td>No commits</td>
                     {% endif %}
-                    <td>{{ repository.private_html }}</td>
+                    <td>{{ repository.can_write }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <br />
+        <h2>Your public repositories</h2>
+         <table>
+            <thead>
+                <th>Project</th>
+                <th>Owner</th>
+                <th>Last commit</th>
+                <th>Write</th>
+            </thead>
+            <tbody>
+            {% for repository in public_repository_list %}
+                <tr>
+                    {% if repository.last_commit %}
+                    <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
+                    <td>{{ repository.user.username }}</td>
+                    <td><a href="{% repo_url repositories_commit repository repository.last_commit.id %}">{{ repository.last_commit.commit_date }}</a></td>
+                    {% else %}
+                        <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
+                        <td>{{ repository.user.username }}</td>
+                        <td>No commits</td>
+                    {% endif %}
                     <td>{{ repository.can_write }}</td>
                 </tr>
             {% endfor %}
