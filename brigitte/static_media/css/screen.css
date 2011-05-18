@@ -203,6 +203,7 @@ tbody tr:hover {
 .repo-tags {
     margin-bottom: 10px;
 }
+
 .commit .commit-info {
     width:130px;
     float:left;
@@ -225,7 +226,7 @@ tbody tr:hover {
 
 .commit .commit-summary {
     padding: 10px;
-    width: 808px;
+    width: 804px;
     float:left;
 }
 .commit .commit-summary img {
@@ -261,6 +262,10 @@ tbody tr:hover {
 .commit-diff pre {
     margin: 5px;
     overflow-x: auto;
+}
+
+pre {
+    font-family:monospace,Fixedsys,Courier;
 }
 
 .treeview tr {
@@ -341,4 +346,9 @@ pre.lines {
     margin-top:2px;
     border:1px solid #444;
     margin-left:2px;
+}
+
+.diff {
+    font-family: 'Anonymous Pro', serif;
+    font-size:12px;
 }
