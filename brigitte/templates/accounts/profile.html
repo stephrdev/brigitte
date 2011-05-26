@@ -6,16 +6,17 @@
 {% block content %}
 <div class="content user">
     <div class="grid_16">
-        <h1>Welcome back, {{ request.user.username }}</h1>
-    </div>
-    <div class="grid_6">
         <h2>Your private repositories</h2>
         <table class="private">
+             <colgroup>
+                <col style="width:auto" /><col style="width:130px" /><col style="width:200px" /><col style="width:50px;" /><col style="width:100px" />
+            </colgroup>
             <thead>
                 <th>Project</th>
                 <th>Owner</th>
                 <th>Last commit</th>
                 <th>Write</th>
+                <th>Admin</th>
             </thead>
             <tbody>
             {% for repository in private_repository_list %}
@@ -30,18 +31,28 @@
                         <td>No commits</td>
                     {% endif %}
                     <td>{{ repository.can_write }}</td>
+                    <td>{% if repository.can_admin %}
+                            <a href="{% repo_url repositories_manage_change repository %}">Settings</a>
+                        {% else %}
+                            no rights
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
         <br />
         <h2>Your public repositories</h2>
-         <table>
+        <table>
+            <colgroup>
+                <col style="width:auto" /><col style="width:130px" /><col style="width:200px" /><col style="width:50px;" /><col style="width:100px" />
+            </colgroup>
             <thead>
                 <th>Project</th>
                 <th>Owner</th>
                 <th>Last commit</th>
                 <th>Write</th>
+                <th>Admin</th>
             </thead>
             <tbody>
             {% for repository in public_repository_list %}
@@ -56,19 +67,20 @@
                         <td>No commits</td>
                     {% endif %}
                     <td>{{ repository.can_write }}</td>
+                    <td>{% if repository.can_admin %}
+                            <a href="{% repo_url repositories_manage_change repository %}">Settings</a>
+                        {% else %}
+                            no rights
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
+        <p>
         <a href="{% url repositories_manage_add %}">Create a new repository</a>
-    </div>
-    <div class="grid_9 push_1">
-        <div class="timeline">
-            <h2>Timeline:</h2>
-            <p>
-                TBD
-             </p>
-        </div>
+        </p>
+    </ul>
     </div>
 </div>
 {% endblock %}

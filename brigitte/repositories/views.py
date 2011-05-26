@@ -42,7 +42,7 @@ def repositories_manage_delete(request, repo):
             register_repository_update(repo.user, 'deleted', repo)
             messages.success(request, _('Repository deleted.'))
             repo.delete()
-            return redirect('repositories_manage_list')
+            return redirect('accounts_profile')
         else:
             raise Http404
 
@@ -88,7 +88,7 @@ def repositories_manage_change(request, repo):
 
             register_repository_update(request.user, 'changed', repo)
             messages.success(request, _('Repository updated.'))
-            return redirect('repositories_manage_list')
+            return redirect('accounts_profile')
     else:
         repo_form = RepositoryForm(request.user, instance=repo, prefix='repository')
         users_formset = RepositoryUserFormSet(
@@ -120,7 +120,7 @@ def repositories_manage_add(request):
             )
             register_repository_update(request.user, 'created', repo)
             messages.success(request, _('Repository added.'))
-            return redirect('repositories_manage_list')
+            return redirect('accounts_profile')
     else:
         form = RepositoryForm(request.user)
 

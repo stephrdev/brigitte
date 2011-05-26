@@ -24,6 +24,11 @@ def profile(request):
         else:
             repo.can_write = mark_safe('&#10005;')
 
+        if repo.repositoryuser_set.filter(user=request.user, can_admin=True).exists():
+            repo.can_admin = True
+        else:
+            repo.can_admin = False
+
         if repo.private:
             private_repositories.append(repo)
         else:

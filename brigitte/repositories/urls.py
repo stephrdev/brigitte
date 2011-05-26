@@ -3,8 +3,6 @@ from django.conf.urls.defaults import *
 urlpatterns = patterns('brigitte.repositories.views',
     url(r'^$', 'repositories_list', name='repositories_list'),
 
-    url(r'^manage/$', 'repositories_manage_list',
-        name='repositories_manage_list'),
     url(r'^manage/add/$', 'repositories_manage_add',
         name='repositories_manage_add'),
     url(r'^(?P<user>[\w-]+)/(?P<slug>[\w-]+)/manage/$',
