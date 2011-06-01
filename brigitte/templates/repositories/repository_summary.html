@@ -2,6 +2,9 @@
 {% load repositories_tags %}
 {% block title %}Repository: {{ repository.title }}{% endblock %}
 
+{% block meta_description %}{{ repository.description }}{% endblock %}
+{% block meta_keywords %}{{ repository.title }}, {{ repository.user.username }}, brigitte, git{% endblock %}
+
 {% block content %}
 <div class="grid_16 content" id="repo-summary">
     <h1>{{ repository.title }}</h1>
