@@ -2,6 +2,8 @@
 {% load repositories_tags %}
 
 {% block title %}{{ user.username }}{% endblock %}
+{% block meta_description %}{{ user.get_profile.short_info }}{% endblock %}
+{% block meta_keywords %}{{ user.username }}, {% for repository in repository_list %}{{ repository.title }}, {% endfor %}, brigitte{% endblock %}
 
 {% block content %}
 <div class="content user">
