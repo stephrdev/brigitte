@@ -7,10 +7,14 @@
     $(document).ready(function(){
         var baseurl = "{% repo_url repositories_summary repository %}commits/";
         $("#tags").change(function(){
-            window.location.href=baseurl+this.value;
+            if (this.value.length > 0) {
+                window.location.href=baseurl+this.value;
+            }
         });
         $("#branches").change(function(){
-            window.location.href=baseurl+this.value;
+            if (this.value.length > 0) {
+                window.location.href=baseurl+this.value;
+            }
         });
     });
 </script>
