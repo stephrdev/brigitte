@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.template.defaultfilters import slugify, timesince
 
 from brigitte.repositories.decorators import repository_view
-from brigitte.repositories.models import Repository
+from brigitte.repositories.models import Repository, RepositoryUser
 from brigitte.repositories.forms import RepositoryForm, RepositoryUserFormSet, RepositoryDeleteForm
 from brigitte.repositories.utils import pygmentize, build_path_breadcrumb
 from brigitte.repositories.utils import register_repository_update
@@ -112,12 +112,21 @@ def repositories_manage_add(request):
             repo.user = request.user
             repo.slug = slugify(repo.title)
             repo.save()
-            repo.repositoryuser_set.create(
+
+            RepositoryUser.objects.create(
+                repo=repo,
                 user=request.user,
                 can_read=True,
                 can_write=True,
                 can_admin=True
             )
+# Fix ?
+#            repo.repositoryuser_set.create(
+#                user=request.user,
+#                can_read=True,
+#                can_write=True,
+#                can_admin=True
+#            )
             register_repository_update(request.user, 'created', repo)
             messages.success(request, _('Repository added.'))
             return redirect('accounts_profile')
