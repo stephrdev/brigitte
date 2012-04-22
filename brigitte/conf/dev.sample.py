@@ -10,6 +10,19 @@ DATABASES = {
     }
 }
 
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#        'NAME': '',
+#        'USER': '',
+#        'PASSWORD': '',
+#        'OPTIONS': {
+#            'autocommit': True,
+#        }
+#    }
+#}
+
+
 ADMINS = (
     ('root', 'root@localhost'),
 )

@@ -113,20 +113,13 @@ def repositories_manage_add(request):
             repo.slug = slugify(repo.title)
             repo.save()
 
-            RepositoryUser.objects.create(
-                repo=repo,
+            repo.repositoryuser_set.create(
                 user=request.user,
                 can_read=True,
                 can_write=True,
                 can_admin=True
             )
-# Fix ?
-#            repo.repositoryuser_set.create(
-#                user=request.user,
-#                can_read=True,
-#                can_write=True,
-#                can_admin=True
-#            )
+
             register_repository_update(request.user, 'created', repo)
             messages.success(request, _('Repository added.'))
             return redirect('accounts_profile')
