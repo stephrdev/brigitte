@@ -290,7 +290,7 @@ class Commit(BaseCommit):
         )
 
         try:
-            raw_file = self.exec_command(cmd)
+            raw_file = self.exec_command(cmd).decode('utf-8')
             return File(self.repo, path, raw_file, None, None)
         except:
             return None
@@ -317,7 +317,7 @@ class Commit(BaseCommit):
             self.repo.path,
             str(self.id)
         )
-        return self.exec_command(cmd)
+        return self.exec_command(cmd).decode('utf-8')
 
     def _get_diff_line_numbers(self, diff):
         lines = []
@@ -359,7 +359,7 @@ class Commit(BaseCommit):
         )
 
         try:
-            diff = self.exec_command(cmd)
+            diff = self.exec_command(cmd).decode('utf-8')
             file_diff = {
                 'file': path,
                 'diff': diff,

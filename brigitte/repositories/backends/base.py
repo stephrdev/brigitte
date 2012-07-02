@@ -13,7 +13,7 @@ class ShellMixin(object):
         output, err = raw.communicate()
         if err:
             raise ShellCommandException(err)
-        return output.decode('utf-8')
+        return output
 
     def exec_command_strip(self, command):
         return self.exec_command(command).strip()
