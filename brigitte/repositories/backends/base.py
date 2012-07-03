@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
 from subprocess import Popen, PIPE
 
-class ShellCommandException(Exception): pass
+
+class ShellCommandException(Exception):
+    pass
 
 class ShellMixin(object):
     def exec_command(self, command):
@@ -238,5 +241,3 @@ class BaseFile:
 
     def __repr__(self):
         return u'<File: %s>' % self.path
-
-

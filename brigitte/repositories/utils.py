@@ -1,18 +1,20 @@
+# -*- coding: utf-8 -*-
 import os
+
 import pygments
 import pygments.lexers as lexers
 import pygments.formatters as formatters
 from pygments.util import ClassNotFound
-from django.utils.safestring import mark_safe
+
 from django.conf import settings
+from django.utils.safestring import mark_safe
 
-from brigitte.repositories.gitolite import generate_gitolite_conf
-from brigitte.repositories.gitolite import export_public_keys
-from brigitte.repositories.gitolite import update_gitolite_repo
-
-from brigitte.repositories.models import Repository, RepositoryUpdate
 from brigitte.repositories.choices import REPO_UPDATES_DICT
+from brigitte.repositories.gitolite import (generate_gitolite_conf,
+    export_public_keys, update_gitolite_repo)
+from brigitte.repositories.models import Repository, RepositoryUpdate
 from brigitte.repositories.tasks import UpdateGitoliteTask
+
 
 class NakedHtmlFormatter(formatters.HtmlFormatter):
     def wrap(self, source, outfile):
@@ -86,4 +88,3 @@ def update_gitolite():
     export_public_keys(os.path.join(BRIGITTE_GIT_ADMIN_PATH, 'keydir'))
 
     update_gitolite_repo(BRIGITTE_GIT_ADMIN_PATH)
-

@@ -1,8 +1,0 @@
-{% load repositories_tags %}
-<tr>
-    <td>{{ commit.commit_date }}</td>
-    <td><a href="{% repo_url repositories_commit repository commit.id %}">{{ commit.short_message }}</a></td>
-    <td>{{ commit.committer }}</td>
-    <td><a href="{% repo_url repositories_commit repository commit.id %}">{{ commit.short_id }}</a></td>
-</tr>
-

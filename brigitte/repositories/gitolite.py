@@ -1,9 +1,10 @@
-from brigitte.repositories.models import Repository
-from brigitte.accounts.models import SshPublicKey
-
-from brigitte.repositories.backends.base import ShellMixin
-
+# -*- coding: utf-8 -*-
 import os
+
+from brigitte.accounts.models import SshPublicKey
+from brigitte.repositories.backends.base import ShellMixin
+from brigitte.repositories.models import Repository
+
 
 def generate_gitolite_conf(file_path):
     file_obj = open(file_path, 'w')
@@ -26,7 +27,8 @@ def generate_gitolite_conf(file_path):
 
         for user in repo.repositoryuser_set.all():
             for key in user.user.sshpublickey_set.all():
-                keys.append('\t%s\t= key-%s\n' % (generate_access_rule(user, key), key.pk))
+                keys.append('\t%s\t= key-%s\n' % (
+                    generate_access_rule(user, key), key.pk))
 
         if len(keys) > 0:
             lines.append('\n')
@@ -43,7 +45,8 @@ def export_public_keys(keydir_path):
             os.unlink(key_path)
 
     for pubkey in SshPublicKey.objects.all():
-        key_obj = open(os.path.join(keydir_path, 'key-%s.pub' % pubkey.pk), 'w')
+        key_obj = open(os.path.join(
+            keydir_path, 'key-%s.pub' % pubkey.pk), 'w')
         key_obj.write('%s\n' % pubkey.key)
         key_obj.close()
 
@@ -57,5 +60,5 @@ def update_gitolite_repo(gitolite_path):
     shell = ShellMixin()
 
     for command in commands:
-        shell.exec_command(['/bin/sh', '-c', 'cd %s; %s' % (gitolite_path, command)])
-
+        shell.exec_command(['/bin/sh', '-c', 'cd %s; %s' % (
+            gitolite_path, command)])

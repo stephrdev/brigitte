@@ -1,4 +1,6 @@
-from django.conf.urls.defaults import *
+# -*- coding: utf-8 -*-
+from django.conf.urls.defaults import url, patterns
+
 
 urlpatterns = patterns('brigitte.repositories.views',
     url(r'^$', 'repositories_list', name='repositories_list'),
@@ -35,4 +37,3 @@ urlpatterns = patterns('brigitte.repositories.views',
     url(r'^(?P<user>[\w-]+)/(?P<slug>[\w-]+)/archive/(?P<sha>[\w-]+)/$',
         'repositories_commit_archive', name='repositories_commit_archive'),
 )
-

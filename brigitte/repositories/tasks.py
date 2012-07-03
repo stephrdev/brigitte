@@ -1,7 +1,11 @@
+# -*- coding: utf-8 -*-
+from datetime import datetime
+
 from celery.task import Task
 from celery.registry import tasks
-from datetime import datetime
+
 from brigitte.repositories.models import RepositoryUpdate
+
 
 class UpdateGitoliteTask(Task):
     default_retry_delay = 10

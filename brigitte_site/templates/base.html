@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>brigitte | {% block title %}Home{% endblock %}</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+    <meta name="description" content="{% block meta_description %}brigitte - Simple and free private GIT repository hosting.{% endblock %}" />
+    <meta name="keywords" content="{% block meta_keywords %}brigitte, git, repository hosting{% endblock %}" />
+
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/reset.css" type="text/css" />
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/960.css" type="text/css" />
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/screen.css" type="text/css" />
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/code_native.css" type="text/css" />
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/custom-theme/jquery-ui-1.8.13.custom.css" type="text/css" />
+
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link href="http://fonts.googleapis.com/css?family=Anonymous+Pro:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css" >
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="container_16" id="container">
+        <div class="grid_6" id="header">
+            <a href="/"><h1>bri<span>git</span>te</h1></a>
+        </div>
+        <div class="grid_10" id="headernav">
+        {% if request.user.is_authenticated %}
+            <ul>
+                <li><a href="{% url repositories_list %}">Start</a></li>
+                <li><a href="{% url accounts_profile %}">Dashboard</a></li>
+                <li><a href="{% url repositories_user request.user.username %}">Public profile</a></li>
+                <li><a href="{% url userprofiles_profile_change %}">Edit profile</a></li>
+                <li><a href="{% url accounts_keys_list %}">Manage public keys</a></li>
+                <li><a href="{% url auth_logout %}">Logout</a></li>
+            </ul>
+            <div class="clear"></div>
+            <div>Welcome back, <strong>{{ request.user.username }}</strong></div>
+        {% else %}
+            <ul>
+                <li><a href="{% url userprofiles_registration %}">Register</a></li>
+                <li><a href="{% url auth_login %}">Login</a></li>
+            </ul>
+        {% endif %}
+        </div>
+        <div class="clear"></div>
+        <div class="grid_16" id="headerdelim"></div>
+        {% include "snippets/messages.html" %}
+        {% block content %}
+        {% endblock %}
+        <div class="clear"></div>
+        {% block footer %}
+        {% endblock %}
+        <div class="grid_16" style="padding-top:20px;color:#666666">
+            <p>
+            <div id="fb-root"></div><script src="http://connect.facebook.net/en_US/all.js#appId=252246994801750&amp;xfbml=1"></script><fb:like href="http://www.brigittehq.com" send="false" width="450" show_faces="true" colorscheme="dark" font=""></fb:like>
+            </p>
+            <p>
+                <strong>This project is currenty <em>beta</em>.</strong> We don't guarantee anything at the moment, especially no data availability (no backups) and no data security. But we try our best! ;-)<br />
+                For more information visit <a href="http://brigittehq.com/">brigittehq.com</a>.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

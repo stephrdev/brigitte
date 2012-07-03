@@ -1,9 +1,12 @@
+# -*- coding: utf-8 -*-
 from django import template
-from brigitte.repositories.utils import pygmentize
-
 from django.template.defaulttags import url
 
+from brigitte.repositories.utils import pygmentize
+
+
 register = template.Library()
+
 
 @register.filter
 def pygmentize_diff(blob):
@@ -24,11 +27,12 @@ def do_repo_url(parser, token):
         repo_obj_name = token_parts[0]
         new_token = ''
 
-    return url(parser, template.Token(token.token_type, '%s %s %s.user.username %s.slug %s' % (
-        func_name,
-        view_name,
-        repo_obj_name,
-        repo_obj_name,
-        new_token
-    )))
-
+    return url(parser, template.Token(token.token_type,
+        '%s %s %s.user.username %s.slug %s' % (
+            func_name,
+            view_name,
+            repo_obj_name,
+            repo_obj_name,
+            new_token
+        )
+    ))

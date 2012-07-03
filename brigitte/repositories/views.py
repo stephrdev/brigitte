@@ -1,21 +1,22 @@
-from django.http import Http404, HttpResponse
-from django.utils.translation import gettext_lazy as _
-from django.utils import simplejson
-from django.core.serializers.json import DjangoJSONEncoder
-from django.shortcuts import render, get_object_or_404, redirect
+# -*- coding: utf-8 -*-
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib import messages
+from django.core.serializers.json import DjangoJSONEncoder
+from django.http import Http404, HttpResponse
+from django.shortcuts import render, get_object_or_404, redirect
 from django.template.defaultfilters import slugify, timesince
+from django.utils.translation import gettext_lazy as _
+from django.utils import simplejson
+from django.views.decorators.csrf import csrf_exempt
 
 from brigitte.repositories.decorators import repository_view
-from brigitte.repositories.models import Repository, RepositoryUser
-from brigitte.repositories.forms import RepositoryForm, RepositoryUserFormSet, RepositoryDeleteForm
-from brigitte.repositories.utils import pygmentize, build_path_breadcrumb
-from brigitte.repositories.utils import register_repository_update
+from brigitte.repositories.models import Repository
+from brigitte.repositories.forms import (RepositoryForm, RepositoryUserFormSet,
+    RepositoryDeleteForm)
+from brigitte.repositories.utils import (pygmentize, build_path_breadcrumb,
+    register_repository_update)
 
-# FIXME !!
-from django.views.decorators.csrf import csrf_exempt
 
 @login_required
 def repositories_manage_list(request):
@@ -46,7 +47,6 @@ def repositories_manage_delete(request, repo):
         else:
             raise Http404
 
-# FIXME !!
 @csrf_exempt
 @login_required
 @repository_view(can_admin=True)
@@ -245,4 +245,3 @@ def repositories_commit_tree(request, repo, sha, path=None):
             'file_blob_pygmentized': file_blob_pygmentized,
             'breadcrumb': build_path_breadcrumb(path)
         })
-
