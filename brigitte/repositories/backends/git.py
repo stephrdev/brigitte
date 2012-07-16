@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 import re
 import os
+import operator
 import shutil
 from datetime import datetime
 from django.conf import settings
 import cStringIO
+
+from dulwich.repo import Repo as DulwichRepo
 
 from django.core.cache import cache
 
@@ -12,49 +15,11 @@ from brigitte.repositories.backends.base import BaseRepo, BaseCommit
 from brigitte.repositories.backends.base import BaseTag, BaseBranch
 from brigitte.repositories.backends.base import BaseFile, BaseTree
 
-try:
-    from lxml import etree
 
-    def parse_log_xml(raw_log):
-        log = etree.XML(raw_log)
-        for commit in log.iterchildren():
-            c = {}
-            for field in commit.iterchildren():
-                if field.text:
-                    c[field.tag] = field.text.strip()
-            yield c
-
-    def parse_single_xml(raw_log):
-        log = etree.XML(raw_log)
-        c = {}
-        for field in log.iterchildren():
-            if field.text:
-                c[field.tag] = field.text.strip()
-        return c
-
-except ImportError:
-    import xml.etree.ElementTree as ET
-
-    def parse_log_xml(raw_log):
-        log = ET.fromstring(raw_log)
-        for commit in log.findall('commit'):
-            c = {}
-            for key in commit:
-                if key.text:
-                    c[key.tag] = key.text
-            yield c
-
-    def parse_single_xml(raw_log):
-        log = ET.fromstring(raw_log)
-        c = {}
-        for elem in list(log):
-            c[elem.tag] = elem.text
-        return c
-
+AUTHOR_EMAIL_RE=re.compile('(.*) <(.*)>')
 
 FILETYPE_MAP = getattr(settings, 'FILETYPE_MAP', {})
 
-BRANCHES_RE = re.compile("^(?P<type>\s|\*) (?P<name>.+)$", re.MULTILINE)
 
 TREE_RE = re.compile(
     "(?P<rights>\d*)\s(?P<type>[a-z]*)"
@@ -63,76 +28,87 @@ TREE_RE = re.compile(
 FILE_RE = re.compile("\.\w+")
 HUNK_RE = re.compile(r'@@ -(\d+),(\d+) \+(\d+),(\d+) @@')
 
+
 class Repo(BaseRepo):
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Dulwich Repo is not cachable
+        if '_git_repo' in state:
+            del state['_git_repo']
+        return state
+
+    @property
+    def git_repo(self):
+        if not hasattr(self, '_git_repo'):
+            self._git_repo = DulwichRepo(self.path)
+        return self._git_repo
+
+    def get_refs(self, ref_type):
+        # we only support heads and tags
+        assert ref_type in ('heads', 'tags')
+
+        # sadly, tags and commits have different attributes for the time
+        time_attr = 'commit_time' if ref_type == 'heads' else 'tag_time'
+
+        ref_prefix_len = 6 + len(ref_type)
+
+        for ref, sha in self.git_repo.get_refs().iteritems():
+            if ref[:ref_prefix_len] == 'refs/%s/' % ref_type:
+                commit = self.git_repo[sha]
+                # only return refs with valid time attribute
+                if hasattr(commit, time_attr):
+                    yield (ref[ref_prefix_len:], sha, getattr(commit, time_attr))
 
     @property
     def tags(self):
-        cmd = 'git --git-dir=%s show-ref --tags' % self.path
-        tags = self.exec_command(cmd).split('\n')
-        tags.reverse()
-
-        tag_list = []
-        for sha, tag in [tag.split(' ') for tag in tags if len(tag) > 0]:
-            tag = tag.split('/', 2)[-1]
-            tag_list.append(Tag(self, tag, sha))
-
-        return tag_list
+        return [Tag(self, tag, sha)
+            for tag, sha, time
+            in sorted(self.get_refs('tags'), key=operator.itemgetter(2), reverse=True)
+        ]
 
     @property
     def branches(self):
-        cmd = 'git --git-dir=%s show-ref --heads' % self.path
+        return [Branch(self, branch, sha)
+            for branch, sha, time
+            in sorted(self.get_refs('heads'), key=operator.itemgetter(2), reverse=True)
+        ]
 
-        branches = self.exec_command(cmd).split('\n')
-
-        branch_list = []
-        for sha, branch in [branch.split(' ') for branch in branches if len(branch) > 0]:
-            branch = branch.split('/', 2)[-1]
-            branch_list.append(
-                Branch(self, branch, sha, False))
-
-        return branch_list
+    def resolve_head(self, head):
+        try:
+            return self.git_repo.ref('refs/heads/%s' % head)
+        except KeyError:
+            return self.git_repo.ref('refs/tags/%s' % head)
 
     def _get_commit_list(self, sha=None, count=10, skip=0, head=None, path=None):
         if sha == None:
-            sha = head if head else 'HEAD'
+            try:
+                sha = self.resolve_head(head) if head else self.git_repo.head()
+            except KeyError:
+                # no commits and no head found
+                return []
 
-        cmd = ['git',
-            '--git-dir=%s' % self.path,
-            'log',
-            '--no-color',
-            '--raw',
-            '--pretty=format:\
-                <commit>\
-                    <id>%H</id>\
-                    <tree>%T</tree>\
-                    <parent>%P</parent>\
-                    <short_message><![CDATA[%s]]></short_message>\
-                    <message><![CDATA[%B]]></message>\
-                    <author><![CDATA[%an]]></author>\
-                    <author_email><![CDATA[%ae]]></author_email>\
-                    <committer><![CDATA[%cn]]></committer>\
-                    <committer_email><![CDATA[%ce]]></committer_email>\
-                    <timestamp>%ct</timestamp>\
-                </commit>',
-            '--skip=' + str(skip),
-            '-' + str(count),
-            sha,
-        ]
-
-        if path:
-            cmd.append('--')
-            cmd.append(path)
-
+        paths = [path] if path else None
 
         commits = []
-        try:
-            raw_log = '<?xml version="1.0" encoding="UTF-8"?>\
-                <log>%s</log>' % self.exec_command(cmd)
 
-            for commit in parse_log_xml(raw_log):
-                commits.append(Commit(self, commit))
-        except:
-            pass
+        for entry in list(self.git_repo.get_walker(
+            include=[sha], max_entries=count+skip, paths=paths))[skip:]:
+
+            author = AUTHOR_EMAIL_RE.match(entry.commit.author).groups(0)
+            committer = AUTHOR_EMAIL_RE.match(entry.commit.committer).groups(0)
+
+            commits.append(Commit(self, {
+                'id': entry.commit.id,
+                'tree': entry.commit.tree,
+                'parents': entry.commit.parents,
+                'short_message': entry.commit.message.split('\n')[0],
+                'message': entry.commit.message,
+                'timestamp': entry.commit.commit_time,
+                'author': author[0],
+                'author_email': author[1],
+                'committer': committer[0],
+                'committer_email': committer[1],
+            }))
 
         return commits
 
@@ -164,28 +140,27 @@ class Repo(BaseRepo):
         return self.get_commit(None)
 
     def init_repo(self):
-        cmd = 'git init -q --shared=0770 --bare %s --template=%s/%s' % (self.path, settings.PROJECT_ROOT, 'repo_templates/git/')
+        cmd = 'git init -q --shared=0770 --bare %s --template=%s/%s' % (
+            self.path, settings.PROJECT_ROOT, 'repo_templates/git/')
         self.exec_command(cmd)
         return True
 
     def path_exists(self, slug):
-        if os.path.exists(os.path.join(settings.BRIGITTE_GIT_BASE_PATH, '_trash', '%s.git' % slug)):
+        if os.path.exists(os.path.join(
+            settings.BRIGITTE_GIT_BASE_PATH, '_trash', '%s.git' % slug)):
             return self.path_exists('_'+slug)
         else:
             return slug
 
     def delete_repo(self, slug):
-        shutil.move(self.path, os.path.join(settings.BRIGITTE_GIT_BASE_PATH, '_trash', '%s.git' % self.path_exists(slug)))
+        shutil.move(self.path, os.path.join(settings.BRIGITTE_GIT_BASE_PATH,
+            '_trash', '%s.git' % self.path_exists(slug)))
         return True
 
 class Commit(BaseCommit):
     @property
     def commit_date(self):
         return datetime.fromtimestamp(float(self.timestamp))
-
-    @property
-    def parents(self):
-        return self.parent.split(' ')
 
     @property
     def short_long_parents(self):
@@ -280,6 +255,7 @@ class Commit(BaseCommit):
             cache.set(cache_key, tree_obj, 2592000)
             return tree_obj
         except:
+            raise
             return None
 
     def get_file(self, path):
@@ -382,20 +358,15 @@ class Tag(BaseTag):
     @property
     def last_commit(self):
         if not hasattr(self, '_last_commit'):
-            try:
-                self._last_commit = self.repo.get_commit(self.id)
-            except:
-                self._last_commit = None
+            self._last_commit = self.repo.get_commit(
+                self.repo.git_repo[self.id].object[1])
         return self._last_commit
 
 class Branch(BaseBranch):
     @property
     def last_commit(self):
         if not hasattr(self, '_last_commit'):
-            try:
-                self._last_commit = self.repo.get_commit(self.id)
-            except:
-                self._last_commit = None
+            self._last_commit = self.repo.get_commit(self.id)
         return self._last_commit
 
 class Tree(BaseTree):
@@ -403,4 +374,3 @@ class Tree(BaseTree):
 
 class File(BaseFile):
     pass
-
