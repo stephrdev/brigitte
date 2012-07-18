@@ -22,17 +22,19 @@
         {% if not forloop.last %}<hr />{% endif %}
         {% endfor %}
     </div>
-    {% for diff in commit.file_diffs %}
-        <a name="{{ diff.file }}"></a>        <h2>{{ diff.file }}</h2>
-        <div class="commit-diff">
-            <pre class="lines">{% for line1, line2 in diff.line_numbers %}<a id="LL{{ line1 }}" href="#LL{{ line1 }}">{{ line1 }}</a> 
-{% endfor %}</pre>
-            <pre class="lines">{% for line1, line2 in diff.line_numbers %}<a id="LR{{ line2 }}" href="#LR{{ line2 }}">{{ line2 }}</a> 
-{% endfor %}</pre>
-            <pre class="diff">{{ diff.diff|pygmentize_diff }}</pre>
-            <div style="clear:both"></div>
-        </div>
-    {% endfor %}
+    {% if commit.changed_files|length <= 20 %}
+      {% for diff in commit.file_diffs %}
+          <a name="{{ diff.file }}"></a>        <h2>{{ diff.file }}</h2>
+          <div class="commit-diff">
+              <pre class="lines">{% for line1, line2 in diff.line_numbers %}<a id="LL{{ line1 }}" href="#LL{{ line1 }}">{{ line1 }}</a>
+  {% endfor %}</pre>
+              <pre class="lines">{% for line1, line2 in diff.line_numbers %}<a id="LR{{ line2 }}" href="#LR{{ line2 }}">{{ line2 }}</a>
+  {% endfor %}</pre>
+              <pre class="diff">{{ diff.diff|pygmentize_diff }}</pre>
+              <div style="clear:both"></div>
+          </div>
+      {% endfor %}
+    {% endif %}
     </div>
 {% endblock %}
 
