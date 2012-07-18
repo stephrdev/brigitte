@@ -155,7 +155,12 @@ def repositories_heads(request, repo):
 @repository_view()
 def repositories_commits(request, repo, branchtag):
     count = 10
-    page = int(request.GET.get('page', 1))
+
+    try:
+        page = int(request.GET.get('page', 1))
+    except Exception:
+        page = 1
+
     skip = (page * count) - count
     if skip < 0:
         skip = 0
