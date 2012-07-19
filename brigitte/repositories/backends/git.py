@@ -3,19 +3,18 @@ import re
 import os
 import operator
 import shutil
-from datetime import datetime
-from django.conf import settings
 import cStringIO
+from datetime import datetime
+
+from django.conf import settings
+from django.core.cache import cache
 
 from dulwich.diff_tree import tree_changes, tree_changes_for_merge
 from dulwich.patch import write_object_diff
 from dulwich.repo import Repo as DulwichRepo
 
-from django.core.cache import cache
-
-from brigitte.repositories.backends.base import BaseRepo, BaseCommit
-from brigitte.repositories.backends.base import BaseTag, BaseBranch
-from brigitte.repositories.backends.base import BaseFile, BaseTree
+from brigitte.repositories.backends.base import (BaseRepo, BaseCommit,
+    BaseTag, BaseBranch, BaseFile, BaseTree)
 
 
 FILETYPE_MAP = getattr(settings, 'FILETYPE_MAP', {})
@@ -197,8 +196,9 @@ class Commit(BaseCommit):
                 else:
                     parsed_entry['size'] = float(entry_object.raw_length())
                     # We skip dot-files at the moment.
-                    if '.' in parsed_entry['name'] and parsed_entry['name'][0] != '.':
-                        parsed_entry['suffix'] = parsed_entry['name'].rsplit('.', 1)[-1]
+                    name = parsed_entry['name']
+                    if '.' in name and name[0] != '.':
+                        parsed_entry['suffix'] = name.rsplit('.', 1)[-1]
                         parsed_entry['mime_image'] = FILETYPE_MAP.get(
                             parsed_entry['suffix'], FILETYPE_MAP['default'])
                     else:
@@ -275,7 +275,8 @@ class Commit(BaseCommit):
                 write_object_diff(diff, self.repo.git_repo,
                     change.old, change.new)
                 diff = diff.getvalue()
-                lines_added, lines_removed = self._get_diff_line_numbers(diff, count=True)
+                lines_added, lines_removed = self._get_diff_line_numbers(
+                    diff, count=True)
                 files.append({
                     'file': change.new.path,
                     'lines_added': lines_added,
