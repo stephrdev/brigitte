@@ -16,16 +16,8 @@ from brigitte.repositories.backends.base import BaseTag, BaseBranch
 from brigitte.repositories.backends.base import BaseFile, BaseTree
 
 
-AUTHOR_EMAIL_RE=re.compile('(.*) <(.*)>')
-
 FILETYPE_MAP = getattr(settings, 'FILETYPE_MAP', {})
-
-
-TREE_RE = re.compile(
-    "(?P<rights>\d*)\s(?P<type>[a-z]*)"
-    "\s(?P<sha>\w*)\s*(?P<size>[0-9 -]*)\s*(?P<path>.+)")
-
-FILE_RE = re.compile("\.\w+")
+AUTHOR_EMAIL_RE=re.compile('(.*) <(.*)>')
 HUNK_RE = re.compile(r'@@ -(\d+),(\d+) \+(\d+),(\d+) @@')
 
 
@@ -208,55 +200,45 @@ class Commit(BaseCommit):
         if tree_obj:
             return tree_obj
 
-        cmd = 'git --git-dir=%s ls-tree -l %s %s' % (
-            self.repo.path,
-            str(self.id),
-            path
-        )
+        tree = self.repo.git_repo.tree(self.repo.git_repo.tree(
+            self.tree).lookup_path(self.repo.git_repo.tree, path)[1])
 
-        try:
-            tree_out = []
-            raw_tree = self.exec_command_strip(cmd)
-            if raw_tree:
-                for tree_file in raw_tree.split('\n'):
-                    line = TREE_RE.search(tree_file)
-                    line_file = line.groupdict()
-                    line_file['id'] = line_file['sha']
-                    line_file['name'] = line_file['path'].rsplit('/', 1)[-1]
+        tree_output = []
+        for entry in tree.iteritems():
+            entry_object = self.repo.git_repo.get_object(entry.sha)
+            parsed_entry = {
+                'rights': entry.mode,
+                'type': entry_object.type_name,
+                'id': entry.sha,
+                'sha': entry.sha,
+                'path': entry.in_path(path).path,
+                'name': entry.path
+            }
 
-                    if line_file['type'] == 'tree':
-                        line_file['path'] += '/'
-                    else:
-                        if not FILE_RE.match(line_file['name']):
-                            if '.' in line_file['name']:
-                                line_file['suffix'] = line_file['name'].rsplit('.', 1)[-1]
-                                line_file['mime_image'] = FILETYPE_MAP.get(
-                                    line_file['suffix'], FILETYPE_MAP['default'])
-                            else:
-                                line_file['suffix'] = ''
-                                line_file['mime_image'] = FILETYPE_MAP['default']
-                        else:
-                            line_file['suffix'] = ''
-                            line_file['mime_image'] = FILETYPE_MAP['default']
+            if entry_object.type_name == 'tree':
+                parsed_entry['size'] = None
+                parsed_entry['path'] += '/'
+            else:
+                parsed_entry['size'] = float(entry_object.raw_length())
+                if '.' in parsed_entry['name'] and parsed_entry['name'][0] != '.':
+                    parsed_entry['suffix'] = parsed_entry['name'].rsplit('.', 1)[-1]
+                    parsed_entry['mime_image'] = FILETYPE_MAP.get(
+                        parsed_entry['suffix'], FILETYPE_MAP['default'])
+                else:
+                    parsed_entry['suffix'] = ''
+                    parsed_entry['mime_image'] = FILETYPE_MAP['default']
 
-                    if commits:
-                        line_file['commit'] = self.repo.get_commit(self.id, path=line_file['path'])
+            if commits:
+                parsed_entry['commit'] = self.repo.get_commit(
+                    self.id, path=parsed_entry['path'].rstrip('/'))
 
-                    try:
-                        line_file['size'] = float(line_file['size'])
-                    except:
-                        line_file['size'] = None
+            tree_output.append(parsed_entry)
 
-                    tree_out.append(line_file)
+        tree_output.sort(lambda x, y: cmp(y['type'], x['type']))
 
-            tree_out.sort(lambda x, y: cmp(y['type'], x['type']))
-
-            tree_obj = Tree(self.repo, path, tree_out)
-            cache.set(cache_key, tree_obj, 2592000)
-            return tree_obj
-        except:
-            raise
-            return None
+        tree_obj = Tree(self.repo, path, tree_output)
+        cache.set(cache_key, tree_obj, 2592000)
+        return tree_obj
 
     def get_file(self, path):
         cmd = 'git --git-dir=%s show --exit-code %s:%s' % (

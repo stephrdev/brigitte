@@ -212,7 +212,7 @@ class BaseBranch(ShellMixin):
         """ This property should return the last commit of this branch. """
         raise NotImplementedError
 
-class BaseTree:
+class BaseTree(object):
     repo = None
     path = None
     tree = None
@@ -225,7 +225,7 @@ class BaseTree:
     def __repr__(self):
         return u'<Tree: %s>' % self.path
 
-class BaseFile:
+class BaseFile(object):
     repo = None
     path = None
     size = None
