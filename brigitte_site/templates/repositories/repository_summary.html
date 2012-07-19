@@ -90,7 +90,7 @@
                             <td>
                                 <a href="{% repo_url repositories_commits repository tag.name %}">Commits</a>
                                 <a href="{% repo_url repositories_commit_tree_root repository tag.last_commit.id %}">Tree</a>
-                                <a href="{% repo_url repositories_commit_archive repository tag.last_commit.id %}">Archive</a>
+                                {# <a href="{% repo_url repositories_commit_archive repository tag.last_commit.id %}">Archive</a> #}
                             </td>
                         </tr>
                         {% endif %}

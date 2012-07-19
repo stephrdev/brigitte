@@ -180,20 +180,20 @@ def repositories_commit(request, repo, sha):
         'commit': commit,
     })
 
-@repository_view()
-def repositories_commit_archive(request, repo, sha):
-    commit = repo.get_commit(sha)
-
-    try:
-        archive = commit.get_archive()
-        response = HttpResponse(archive['data'].getvalue(),
-            mimetype=archive['mime'])
-        response['Content-Disposition'] = \
-            'attachment; filename="%s-%s.zip"' \
-                % (repo.slug, archive['filename'])
-        return response
-    except:
-        raise Http404
+#@repository_view()
+#def repositories_commit_archive(request, repo, sha):
+#    commit = repo.get_commit(sha)
+#
+#    try:
+#        archive = commit.get_archive()
+#        response = HttpResponse(archive['data'].getvalue(),
+#            mimetype=archive['mime'])
+#        response['Content-Disposition'] = \
+#            'attachment; filename="%s-%s.zip"' \
+#                % (repo.slug, archive['filename'])
+#        return response
+#    except:
+#        raise Http404
 
 @repository_view()
 def repositories_commit_tree(request, repo, sha, path=None):

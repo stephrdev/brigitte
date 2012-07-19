@@ -5,7 +5,7 @@ import operator
 import shutil
 from datetime import datetime
 from django.conf import settings
-import cStringIO
+#import cStringIO
 
 from dulwich.repo import Repo as DulwichRepo
 
@@ -166,34 +166,34 @@ class Commit(BaseCommit):
     def short_long_parents(self):
         return [(parent[:7], parent) for parent in self.parents]
 
-    def get_archive(self):
-        cmd1 = 'git --git-dir=%s describe --tags --abbrev=7 %s' % (
-            self.repo.path,
-            self.id
-        )
+    #def get_archive(self):
+    #    cmd1 = 'git --git-dir=%s describe --tags --abbrev=7 %s' % (
+    #        self.repo.path,
+    #        self.id
+    #    )
 
-        try:
-            archive_name = self.exec_command_strip(cmd1).replace('-g', '-')
-        except:
-            archive_name = self.id[:7]
+    #    try:
+    #        archive_name = self.exec_command_strip(cmd1).replace('-g', '-')
+    #    except:
+    #        archive_name = self.id[:7]
 
-        cmd2 = 'git --git-dir=%s archive --format=zip --prefix=%s-%s/ %s^{tree}' % (
-            self.repo.path,
-            self.repo.repo.slug,
-            archive_name,
-            self.id,
-        )
+    #    cmd2 = 'git --git-dir=%s archive --format=zip --prefix=%s-%s/ %s^{tree}' % (
+    #        self.repo.path,
+    #        self.repo.repo.slug,
+    #        archive_name,
+    #        self.id,
+    #    )
 
-        try:
-            archive = cStringIO.StringIO()
-            archive.write(self.exec_command(cmd2))
-            return {
-                'filename': archive_name,
-                'mime': 'application/zip',
-                'data': archive,
-            }
-        except:
-            return None
+    #    try:
+    #        archive = cStringIO.StringIO()
+    #        archive.write(self.exec_command(cmd2))
+    #        return {
+    #            'filename': archive_name,
+    #            'mime': 'application/zip',
+    #            'data': archive,
+    #        }
+    #    except:
+    #        return None
 
     def get_tree(self, path, commits=False):
         if not path:
