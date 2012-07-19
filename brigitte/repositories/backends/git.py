@@ -227,20 +227,30 @@ class Commit(BaseCommit):
 
     def get_tree_changes(self, as_dict=False):
         if not hasattr(self, '_tree_changes'):
-            if not self.parents:
-                changes_func = tree_changes
-                parent = None
-            elif len(self.parents) == 1:
-                changes_func = tree_changes
-                parent = self.repo.git_repo[self.parents[0]].tree
-            else:
-                changes_func = tree_changes_for_merge
-                parent = [self.repo.git_repo[p].tree for p in self.parents]
+            cache_key = '%s:tree_changes:%s' % (self.repo.repo.pk, self.id)
 
-            self._tree_changes = list(changes_func(
-                self.repo.git_repo, parent, self.tree))
-            self._tree_changes_dict = dict([(c.new.path, c)
-                for c in self._tree_changes])
+            tree_changes_cache = cache.get(cache_key)
+
+            if tree_changes_cache:
+                self._tree_changes, self._tree_changes_dict = tree_changes_cache
+            else:
+                if not self.parents:
+                    changes_func = tree_changes
+                    parent = None
+                elif len(self.parents) == 1:
+                    changes_func = tree_changes
+                    parent = self.repo.git_repo[self.parents[0]].tree
+                else:
+                    changes_func = tree_changes_for_merge
+                    parent = [self.repo.git_repo[p].tree for p in self.parents]
+
+                self._tree_changes = list(changes_func(
+                    self.repo.git_repo, parent, self.tree))
+                self._tree_changes_dict = dict([(c.new.path, c)
+                    for c in self._tree_changes])
+
+                cache.set(cache_key,
+                    (self._tree_changes, self._tree_changes_dict), 2592000)
 
         if as_dict:
             return self._tree_changes_dict
@@ -291,18 +301,26 @@ class Commit(BaseCommit):
         return lines
 
     def get_file_diff(self, path):
-        files = self.get_tree_changes(True)
+        cache_key = '%s:file_diff:%s:%s' % (self.repo.repo.pk, self.id, path)
 
-        diff = cStringIO.StringIO()
-        write_object_diff(diff, self.repo.git_repo,
-            files[path].old, files[path].new)
-        diff = diff.getvalue().decode('utf-8')
+        file_diff = cache.get(cache_key)
 
-        return {
-            'file': path,
-            'diff': diff,
-            'line_numbers': self._get_diff_line_numbers(diff)
-        }
+        if not file_diff:
+            files = self.get_tree_changes(True)
+            print 'diff', path
+            diff = cStringIO.StringIO()
+            write_object_diff(diff, self.repo.git_repo,
+                files[path].old, files[path].new)
+            diff = diff.getvalue().decode('utf-8')
+
+            file_diff = {
+                'file': path,
+                'diff': diff,
+                'line_numbers': self._get_diff_line_numbers(diff)
+            }
+            cache.set(cache_key, file_diff, 2592000)
+
+        return file_diff
 
     @property
     def file_diffs(self):
