@@ -264,20 +264,34 @@ class Commit(BaseCommit):
 
     @property
     def changed_files(self):
-        # LINE NUMBERS MISSING
-        files = [{
-            'file': c.new.path,
-            'lines_added': 0,
-            'lines_removed': 0,
-            'change_type': c.type,
-        } for c in self.get_tree_changes()]
+        cache_key = '%s:changed_files:%s' % (self.repo.repo.pk, self.id)
+
+        files = cache.get(cache_key)
+
+        if not files:
+            files = []
+            for change in self.get_tree_changes():
+                diff = cStringIO.StringIO()
+                write_object_diff(diff, self.repo.git_repo,
+                    change.old, change.new)
+                diff = diff.getvalue()
+                lines_added, lines_removed = self._get_diff_line_numbers(diff, count=True)
+                files.append({
+                    'file': change.new.path,
+                    'lines_added': lines_added,
+                    'lines_removed': lines_removed,
+                    'change_type': change.type,
+                })
+            cache.set(cache_key, files, 2592000)
 
         return files
 
-    def _get_diff_line_numbers(self, diff):
+    def _get_diff_line_numbers(self, diff, count=False):
         lines = []
         line1 = 0
         line2 = 0
+        lines_added = 0
+        lines_removed = 0
         hunk_started = False
 
         for line in diff.splitlines():
@@ -291,10 +305,11 @@ class Commit(BaseCommit):
                 if line.startswith('-') and not line.startswith('---'):
                     lines.append((line1, ''))
                     line1 += 1
-
+                    lines_removed += 1
                 elif line.startswith('+') and not line.startswith('+++'):
                     lines.append(('', line2))
                     line2 += 1
+                    lines_added += 1
                 else:
                     if not hunk_started:
                         lines.append(('', ''))
@@ -303,7 +318,10 @@ class Commit(BaseCommit):
                         line1 += 1
                         line2 += 1
 
-        return lines
+        if count:
+            return (lines_added, lines_removed)
+        else:
+            return lines
 
     def get_file_diff(self, path):
         cache_key = '%s:file_diff:%s:%s' % (self.repo.repo.pk, self.id, path)
@@ -312,7 +330,6 @@ class Commit(BaseCommit):
 
         if not file_diff:
             files = self.get_tree_changes(True)
-            print 'diff', path
             diff = cStringIO.StringIO()
             write_object_diff(diff, self.repo.git_repo,
                 files[path].old, files[path].new)
