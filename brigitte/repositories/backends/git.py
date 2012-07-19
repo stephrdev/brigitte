@@ -5,8 +5,10 @@ import operator
 import shutil
 from datetime import datetime
 from django.conf import settings
-#import cStringIO
+import cStringIO
 
+from dulwich.diff_tree import tree_changes, tree_changes_for_merge
+from dulwich.patch import write_object_diff
 from dulwich.repo import Repo as DulwichRepo
 
 from django.core.cache import cache
@@ -55,14 +57,16 @@ class Repo(BaseRepo):
     def tags(self):
         return [Tag(self, tag, sha)
             for tag, sha, time
-            in sorted(self.get_refs('tags'), key=operator.itemgetter(2), reverse=True)
+            in sorted(self.get_refs('tags'),
+                key=operator.itemgetter(2), reverse=True)
         ]
 
     @property
     def branches(self):
         return [Branch(self, branch, sha)
             for branch, sha, time
-            in sorted(self.get_refs('heads'), key=operator.itemgetter(2), reverse=True)
+            in sorted(self.get_refs('heads'),
+                key=operator.itemgetter(2), reverse=True)
         ]
 
     def resolve_head(self, head):
@@ -109,7 +113,7 @@ class Repo(BaseRepo):
             sha=None, count=count, skip=skip, head=head, path=path)
 
     def get_commit(self, sha, path=None):
-        cache_key = '%s:commit:%s:%s' % (self.repo.pk, sha, path or 'direct')
+        cache_key = '%s:commit:%s:%s' % (self.repo.pk, sha, path or 'no-path')
 
         commit = None
 
@@ -118,7 +122,8 @@ class Repo(BaseRepo):
 
         if not commit:
             try:
-                commit = self._get_commit_list(sha=sha, count=1, skip=0, path=path)[0]
+                commit = self._get_commit_list(
+                    sha=sha, count=1, skip=0, path=path)[0]
             except IndexError:
                 pass
 
@@ -137,7 +142,7 @@ class Repo(BaseRepo):
         self.exec_command(cmd)
         return True
 
-    def path_exists(self, slug):
+    def trash_path_exists(self, slug):
         if os.path.exists(os.path.join(
             settings.BRIGITTE_GIT_BASE_PATH, '_trash', '%s.git' % slug)):
             return self.path_exists('_'+slug)
@@ -146,7 +151,7 @@ class Repo(BaseRepo):
 
     def delete_repo(self, slug):
         shutil.move(self.path, os.path.join(settings.BRIGITTE_GIT_BASE_PATH,
-            '_trash', '%s.git' % self.path_exists(slug)))
+            '_trash', '%s.git' % self.trash_path_exists(slug)))
         return True
 
 class Commit(BaseCommit):
@@ -158,35 +163,6 @@ class Commit(BaseCommit):
     def short_long_parents(self):
         return [(parent[:7], parent) for parent in self.parents]
 
-    #def get_archive(self):
-    #    cmd1 = 'git --git-dir=%s describe --tags --abbrev=7 %s' % (
-    #        self.repo.path,
-    #        self.id
-    #    )
-
-    #    try:
-    #        archive_name = self.exec_command_strip(cmd1).replace('-g', '-')
-    #    except:
-    #        archive_name = self.id[:7]
-
-    #    cmd2 = 'git --git-dir=%s archive --format=zip --prefix=%s-%s/ %s^{tree}' % (
-    #        self.repo.path,
-    #        self.repo.repo.slug,
-    #        archive_name,
-    #        self.id,
-    #    )
-
-    #    try:
-    #        archive = cStringIO.StringIO()
-    #        archive.write(self.exec_command(cmd2))
-    #        return {
-    #            'filename': archive_name,
-    #            'mime': 'application/zip',
-    #            'data': archive,
-    #        }
-    #    except:
-    #        return None
-
     def get_tree(self, path, commits=False):
         if not path:
             path = ''
@@ -194,88 +170,94 @@ class Commit(BaseCommit):
             if not path[-1] == '/':
                 path = path+'/'
 
-        cache_key = '%s:tree:%s:%s:%s' % (self.repo.repo.pk, self.id, path, commits)
+        cache_key = '%s:tree:%s:%s:%s' % (
+            self.repo.repo.pk, self.id, path, commits)
 
         tree_obj = cache.get(cache_key)
-        if tree_obj:
-            return tree_obj
 
-        tree = self.repo.git_repo.tree(self.repo.git_repo.tree(
-            self.tree).lookup_path(self.repo.git_repo.tree, path)[1])
+        if not tree_obj:
+            tree = self.repo.git_repo.tree(self.repo.git_repo.tree(
+                self.tree).lookup_path(self.repo.git_repo.tree, path)[1])
 
-        tree_output = []
-        for entry in tree.iteritems():
-            entry_object = self.repo.git_repo.get_object(entry.sha)
-            parsed_entry = {
-                'rights': entry.mode,
-                'type': entry_object.type_name,
-                'id': entry.sha,
-                'sha': entry.sha,
-                'path': entry.in_path(path).path,
-                'name': entry.path
-            }
+            tree_output = []
+            for entry in tree.iteritems():
+                entry_object = self.repo.git_repo.get_object(entry.sha)
+                parsed_entry = {
+                    'rights': entry.mode,
+                    'type': entry_object.type_name,
+                    'id': entry.sha,
+                    'sha': entry.sha,
+                    'path': entry.in_path(path).path,
+                    'name': entry.path
+                }
 
-            if entry_object.type_name == 'tree':
-                parsed_entry['size'] = None
-                parsed_entry['path'] += '/'
-            else:
-                parsed_entry['size'] = float(entry_object.raw_length())
-                if '.' in parsed_entry['name'] and parsed_entry['name'][0] != '.':
-                    parsed_entry['suffix'] = parsed_entry['name'].rsplit('.', 1)[-1]
-                    parsed_entry['mime_image'] = FILETYPE_MAP.get(
-                        parsed_entry['suffix'], FILETYPE_MAP['default'])
+                if entry_object.type_name == 'tree':
+                    parsed_entry['size'] = None
+                    parsed_entry['path'] += '/'
                 else:
-                    parsed_entry['suffix'] = ''
-                    parsed_entry['mime_image'] = FILETYPE_MAP['default']
+                    parsed_entry['size'] = float(entry_object.raw_length())
+                    # We skip dot-files at the moment.
+                    if '.' in parsed_entry['name'] and parsed_entry['name'][0] != '.':
+                        parsed_entry['suffix'] = parsed_entry['name'].rsplit('.', 1)[-1]
+                        parsed_entry['mime_image'] = FILETYPE_MAP.get(
+                            parsed_entry['suffix'], FILETYPE_MAP['default'])
+                    else:
+                        parsed_entry['suffix'] = ''
+                        parsed_entry['mime_image'] = FILETYPE_MAP['default']
 
-            if commits:
-                parsed_entry['commit'] = self.repo.get_commit(
-                    self.id, path=parsed_entry['path'].rstrip('/'))
+                if commits:
+                    # WOAAAA THIS IS SLOW!
+                    parsed_entry['commit'] = self.repo.get_commit(
+                        self.id, path=parsed_entry['path'].rstrip('/'))
 
-            tree_output.append(parsed_entry)
+                tree_output.append(parsed_entry)
 
-        tree_output.sort(lambda x, y: cmp(y['type'], x['type']))
+            tree_output.sort(lambda x, y: cmp(y['type'], x['type']))
 
-        tree_obj = Tree(self.repo, path, tree_output)
-        cache.set(cache_key, tree_obj, 2592000)
+            tree_obj = Tree(self.repo, path, tree_output)
+            cache.set(cache_key, tree_obj, 2592000)
+
         return tree_obj
 
     def get_file(self, path):
-        cmd = 'git --git-dir=%s show --exit-code %s:%s' % (
-            self.repo.path,
-            str(self.id),
-            path
-        )
+        blob = self.repo.git_repo.get_blob(self.repo.git_repo.tree(
+            self.tree).lookup_path(self.repo.git_repo.tree, path)[1])
 
-        try:
-            raw_file = self.exec_command(cmd).decode('utf-8')
-            return File(self.repo, path, raw_file, None, None)
-        except:
-            return None
+        return File(self.repo, path, blob.data.decode('utf-8'), None, None)
+
+    def get_tree_changes(self, as_dict=False):
+        if not hasattr(self, '_tree_changes'):
+            if not self.parents:
+                changes_func = tree_changes
+                parent = None
+            elif len(self.parents) == 1:
+                changes_func = tree_changes
+                parent = self.repo.git_repo[self.parents[0]].tree
+            else:
+                changes_func = tree_changes_for_merge
+                parent = [self.repo.git_repo[p].tree for p in self.parents]
+
+            self._tree_changes = list(changes_func(
+                self.repo.git_repo, parent, self.tree))
+            self._tree_changes_dict = dict([(c.new.path, c)
+                for c in self._tree_changes])
+
+        if as_dict:
+            return self._tree_changes_dict
+        else:
+            return self._tree_changes
 
     @property
     def changed_files(self):
-        cmd = 'git --git-dir=%s log -1 --numstat --pretty=format: %s' % (
-            self.repo.path,
-            str(self.id)
-        )
-
-        raw_changed_files = self.exec_command_strip(cmd)
-        files = []
-        for line in [l.split('\t') for l in raw_changed_files.split('\n') if len(l) > 0]:
-            files.append({'file': line[2],
-                          'lines_added': line[0],
-                          'lines_removed': line[1]})
+        # LINE NUMBERS MISSING
+        files = [{
+            'file': c.new.path,
+            'lines_added': 0,
+            'lines_removed': 0,
+            'change_type': c.type,
+        } for c in self.get_tree_changes()]
 
         return files
-
-    @property
-    def commit_diff(self):
-        cmd = 'git --git-dir=%s diff-tree -p %s' % (
-            self.repo.path,
-            str(self.id)
-        )
-        return self.exec_command(cmd).decode('utf-8')
 
     def _get_diff_line_numbers(self, diff):
         lines = []
@@ -309,23 +291,18 @@ class Commit(BaseCommit):
         return lines
 
     def get_file_diff(self, path):
-        cmd = 'git --git-dir=%s diff --exit-code %s~1 %s -- %s' % (
-            self.repo.path,
-            self.id,
-            self.id,
-            path
-        )
+        files = self.get_tree_changes(True)
 
-        try:
-            diff = self.exec_command(cmd).decode('utf-8')
-            file_diff = {
-                'file': path,
-                'diff': diff,
-                'line_numbers': self._get_diff_line_numbers(diff)
-            }
-            return file_diff
-        except:
-            return None
+        diff = cStringIO.StringIO()
+        write_object_diff(diff, self.repo.git_repo,
+            files[path].old, files[path].new)
+        diff = diff.getvalue().decode('utf-8')
+
+        return {
+            'file': path,
+            'diff': diff,
+            'line_numbers': self._get_diff_line_numbers(diff)
+        }
 
     @property
     def file_diffs(self):
