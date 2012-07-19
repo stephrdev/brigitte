@@ -220,37 +220,42 @@ class Commit(BaseCommit):
         return tree_obj
 
     def get_file(self, path):
-        blob = self.repo.git_repo.get_blob(self.repo.git_repo.tree(
-            self.tree).lookup_path(self.repo.git_repo.tree, path)[1])
+        cache_key = '%s:blob:%s:%s' % (self.repo.repo.pk, self.id, path)
+
+        blob = cache.get(cache_key)
+
+        if not blob:
+            blob = self.repo.git_repo.get_blob(self.repo.git_repo.tree(
+                self.tree).lookup_path(self.repo.git_repo.tree, path)[1])
+            cache.set(cache_key, blob, 2592000)
 
         return File(self.repo, path, blob.data.decode('utf-8'), None, None)
 
     def get_tree_changes(self, as_dict=False):
-        if not hasattr(self, '_tree_changes'):
-            cache_key = '%s:tree_changes:%s' % (self.repo.repo.pk, self.id)
+        cache_key = '%s:tree_changes:%s' % (self.repo.repo.pk, self.id)
 
-            tree_changes_cache = cache.get(cache_key)
+        tree_changes_cache = cache.get(cache_key)
 
-            if tree_changes_cache:
-                self._tree_changes, self._tree_changes_dict = tree_changes_cache
+        if tree_changes_cache:
+            self._tree_changes, self._tree_changes_dict = tree_changes_cache
+        else:
+            if not self.parents:
+                changes_func = tree_changes
+                parent = None
+            elif len(self.parents) == 1:
+                changes_func = tree_changes
+                parent = self.repo.git_repo[self.parents[0]].tree
             else:
-                if not self.parents:
-                    changes_func = tree_changes
-                    parent = None
-                elif len(self.parents) == 1:
-                    changes_func = tree_changes
-                    parent = self.repo.git_repo[self.parents[0]].tree
-                else:
-                    changes_func = tree_changes_for_merge
-                    parent = [self.repo.git_repo[p].tree for p in self.parents]
+                changes_func = tree_changes_for_merge
+                parent = [self.repo.git_repo[p].tree for p in self.parents]
 
-                self._tree_changes = list(changes_func(
-                    self.repo.git_repo, parent, self.tree))
-                self._tree_changes_dict = dict([(c.new.path, c)
-                    for c in self._tree_changes])
+            self._tree_changes = list(changes_func(
+                self.repo.git_repo, parent, self.tree))
+            self._tree_changes_dict = dict([(c.new.path, c)
+                for c in self._tree_changes])
 
-                cache.set(cache_key,
-                    (self._tree_changes, self._tree_changes_dict), 2592000)
+            cache.set(cache_key,
+                (self._tree_changes, self._tree_changes_dict), 2592000)
 
         if as_dict:
             return self._tree_changes_dict
