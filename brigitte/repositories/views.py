@@ -160,6 +160,9 @@ def repositories_commits(request, repo, branchtag):
     if skip < 0:
         skip = 0
     commits = repo.get_commits(count=count, skip=skip, head=branchtag)
+    if not commits:
+        raise Http404
+
     return render(request, 'repositories/repository_commits.html', {
         'repository': repo,
         'commits': commits,
