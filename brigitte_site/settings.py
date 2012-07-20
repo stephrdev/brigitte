@@ -51,3 +51,5 @@ BROKER_VHOST = '1'
 
 BRIGITTE_GIT_BASE_PATH = '/Users/steph/Projects/brigitte_repos/'
 BRIGITTE_GIT_ADMIN_PATH = '/Users/steph/Projects/brigitte_admin/'
+BRIGITTE_SSH_PORT = 2222
+BRIGITTE_SSH_KEY_PATH = '/Users/steph/Projects/brigitte_sshserver'
