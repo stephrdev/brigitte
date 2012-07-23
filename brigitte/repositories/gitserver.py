@@ -4,9 +4,11 @@ import shlex
 import sys
 from twisted.conch.avatar import ConchUser
 from twisted.conch.checkers import SSHPublicKeyDatabase
+from twisted.conch.ssh import common
 from twisted.conch.ssh.factory import SSHFactory
 from twisted.conch.ssh.keys import Key
-from twisted.conch.ssh.session import ISession, SSHSession
+from twisted.conch.ssh.session import (ISession, SSHSession,
+    SSHSessionProcessProtocol)
 from twisted.cred.portal import IRealm, Portal
 from twisted.internet import reactor
 from twisted.python import log
@@ -65,24 +67,32 @@ class GitSession(object):
     def validate_git_command(self, proto, argv, repo):
         command = argv[0]
 
-        if command not in ('git-upload-archive', 'git-receive-pack', 'git-upload-pack'):
+        if command not in (
+            'git-upload-archive',
+            'git-receive-pack',
+            'git-upload-pack'
+        ):
             self.writeErr(proto, 'Invalid command: %s' % command)
             return False
         else:
             # upload means receive, weird.
             want_write = not 'upload' in command
-            self.writeErr(proto, 'Attempted access: %s' % ('write' if want_write else 'read'))
+            self.writeErr(proto,
+                'Attempted access: %s' % ('write' if want_write else 'read'))
 
             db_user = User.objects.get(username=self.user.username)
             try:
                 access = repo.repositoryuser_set.get(user__username=db_user)
             except RepositoryUser.DoesNotExist:
-                self.writeErr(proto, 'No access configuration found for %s' % db_user.username)
+                self.writeErr(proto,
+                    'No access configuration found for %s' % db_user.username)
                 return False
 
-            self.writeErr(proto, 'Access for %s - read: %s write: %s' % (db_user.username, access.can_read, access.can_write))
+            self.writeErr(proto, 'Access for %s - read: %s write: %s' % (
+                db_user.username, access.can_read, access.can_write))
 
-            if (want_write and not access.can_write) or (not want_write and not access.can_read):
+            if ((want_write and not access.can_write)
+                or (not want_write and not access.can_read)):
                 self.writeErr(proto, 'Access denied!')
                 return False
 
@@ -128,6 +138,41 @@ class GitPubKeyChecker(SSHPublicKeyDatabase):
                 return True
         return False
 
+# Backport: http://twistedmatrix.com/trac/ticket/5142
+class GitProcessProtocolSession(SSHSession):
+    def request_exec(self, data):
+        if not self.session:
+            self.session = ISession(self.avatar)
+        f, data = common.getNS(data)
+        log.msg('executing command "%s"' % f)
+        try:
+            pp = GitProcessProtocol(self)
+            self.session.execCommand(pp, f)
+        except:
+            log.deferr()
+            return 0
+        else:
+            self.client = pp
+            return 1
+
+
+# Backport: http://twistedmatrix.com/trac/ticket/5142
+class GitProcessProtocol(SSHSessionProcessProtocol):
+    def __init__(self, session):
+        self.session = session
+        self.lostOutFlag = False
+        self.lostErrFlag = False
+
+    def outConnectionLost(self):
+        if self.lostOutFlag and self.lostErrFlag:
+            self.session.conn.sendEOF(self.session)
+        else:
+            self.lostOutOrErrFlag = True
+        self.lostOutFlag = True
+
+    def errConnectionLost(self):
+        self.lostErrFlag = True
+
 
 class GitConchUser(ConchUser):
     shell = find_git_shell()
@@ -135,7 +180,7 @@ class GitConchUser(ConchUser):
     def __init__(self, username):
         ConchUser.__init__(self)
         self.username = username
-        self.channelLookup.update({"session": SSHSession})
+        self.channelLookup.update({"session": GitProcessProtocolSession})
 
     def logout(self):
         pass
