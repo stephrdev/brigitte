@@ -34,7 +34,6 @@ def find_git_shell():
             return full_path
     raise Exception('Could not find git executable!')
 
-
 class GitSession(object):
     interface.implements(ISession)
 
@@ -122,7 +121,6 @@ class GitSession(object):
         except Repository.DoesNotExist:
             return None
 
-
 class GitPubKeyChecker(SSHPublicKeyDatabase):
     def get_pub_keys(self):
         log.msg('loading availble public keys')
@@ -155,7 +153,6 @@ class GitProcessProtocolSession(SSHSession):
             self.client = pp
             return 1
 
-
 # Backport: http://twistedmatrix.com/trac/ticket/5142
 class GitProcessProtocol(SSHSessionProcessProtocol):
     def __init__(self, session):
@@ -173,7 +170,6 @@ class GitProcessProtocol(SSHSessionProcessProtocol):
     def errConnectionLost(self):
         self.lostErrFlag = True
 
-
 class GitConchUser(ConchUser):
     shell = find_git_shell()
 
@@ -185,14 +181,12 @@ class GitConchUser(ConchUser):
     def logout(self):
         pass
 
-
 class GitRealm(object):
     interface.implements(IRealm)
 
     def requestAvatar(self, username, mind, *interfaces):
         user = GitConchUser(username)
         return interfaces[0], user, user.logout
-
 
 class GitServer(SSHFactory):
     portal = Portal(GitRealm())

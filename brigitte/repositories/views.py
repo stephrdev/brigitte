@@ -14,8 +14,7 @@ from brigitte.repositories.decorators import repository_view
 from brigitte.repositories.models import Repository
 from brigitte.repositories.forms import (RepositoryForm, RepositoryUserFormSet,
     RepositoryDeleteForm)
-from brigitte.repositories.utils import (pygmentize, build_path_breadcrumb,
-    register_repository_update)
+from brigitte.repositories.utils import pygmentize, build_path_breadcrumb
 
 
 @login_required
@@ -32,7 +31,6 @@ def repositories_user(request, user):
         'repository_list': user.repository_set.user_public_repositories(user),
     })
 
-
 @login_required
 @repository_view(can_admin=True)
 def repositories_manage_delete(request, repo):
@@ -40,7 +38,6 @@ def repositories_manage_delete(request, repo):
     if request.method == 'POST':
         delete_form = RepositoryDeleteForm(request.POST)
         if delete_form.is_valid():
-            register_repository_update(repo.user, 'deleted', repo)
             messages.success(request, _('Repository deleted.'))
             repo.delete()
             return redirect('accounts_profile')
@@ -64,7 +61,6 @@ def repositories_manage_change(request, repo):
                     error_msg = 'User already added to repository'
                 else:
                     repo.repositoryuser_set.create(user=user)
-                    register_repository_update(user, 'changed', repo)
                     result = True
             except User.DoesNotExist:
                 error_msg ='Invalid email address'
@@ -86,7 +82,6 @@ def repositories_manage_change(request, repo):
                         instance.repo = repo
                     instance.save()
 
-            register_repository_update(request.user, 'changed', repo)
             messages.success(request, _('Repository updated.'))
             return redirect('accounts_profile')
     else:
@@ -120,7 +115,6 @@ def repositories_manage_add(request):
                 can_admin=True
             )
 
-            register_repository_update(request.user, 'created', repo)
             messages.success(request, _('Repository added.'))
             return redirect('accounts_profile')
     else:
@@ -150,7 +144,6 @@ def repositories_heads(request, repo):
         'branches': repo.branches,
         'tags': repo.tags,
     })
-
 
 @repository_view()
 def repositories_commits(request, repo, branchtag):

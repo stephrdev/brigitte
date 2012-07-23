@@ -58,7 +58,6 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.staticfiles',
     'south',
-    'djcelery',
     'userprofiles',
     'userprofiles.contrib.accountverification',
     'userprofiles.contrib.emailverification',
@@ -175,18 +174,6 @@ FILETYPE_MAP = {
     'xvid': 'xvid.png',
     'zip': 'zip.png'
 }
-
-import djcelery
-djcelery.setup_loader()
-
-CELERY_DEFAULT_QUEUE = 'tasks'
-CELERY_QUEUES = {
-    'tasks': {'exchange': 'tasks'},
-}
-
-CELERY_RESULT_BACKEND = 'database'
-
-CELERYD_CONCURRENCY = 1
 
 USERPROFILES_CHECK_UNIQUE_EMAIL = True
 USERPROFILES_DOUBLE_CHECK_EMAIL = True

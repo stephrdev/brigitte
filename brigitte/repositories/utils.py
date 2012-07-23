@@ -1,19 +1,10 @@
 # -*- coding: utf-8 -*-
-import os
-
 import pygments
 import pygments.lexers as lexers
 import pygments.formatters as formatters
 from pygments.util import ClassNotFound
 
-from django.conf import settings
 from django.utils.safestring import mark_safe
-
-from brigitte.repositories.choices import REPO_UPDATES_DICT
-from brigitte.repositories.gitolite import (generate_gitolite_conf,
-    export_public_keys, update_gitolite_repo)
-from brigitte.repositories.models import Repository, RepositoryUpdate
-from brigitte.repositories.tasks import UpdateGitoliteTask
 
 
 class NakedHtmlFormatter(formatters.HtmlFormatter):
@@ -55,36 +46,3 @@ def build_path_breadcrumb(path):
             'name': part,
         })
     return links
-
-def register_repository_update(user, change, repo=None):
-    assert REPO_UPDATES_DICT.has_key(change), 'Invalid update type'
-
-    if repo:
-        RepositoryUpdate.objects.create(
-            user=user,
-            repo=repo,
-            repo_type=repo.repo_type,
-            update=change,
-        )
-    else:
-        for repo in Repository.objects.writeable_repositories(user):
-            RepositoryUpdate.objects.create(
-                user=user,
-                repo=repo,
-                repo_type=repo.repo_type,
-                update=change,
-            )
-
-    UpdateGitoliteTask.delay()
-
-def update_gitolite():
-    BRIGITTE_GIT_ADMIN_PATH = getattr(settings,
-                                     'BRIGITTE_GIT_ADMIN_PATH',
-                                      'gitolite-admin')
-
-    generate_gitolite_conf(os.path.join(BRIGITTE_GIT_ADMIN_PATH,
-                                        'conf/gitolite.conf'))
-
-    export_public_keys(os.path.join(BRIGITTE_GIT_ADMIN_PATH, 'keydir'))
-
-    update_gitolite_repo(BRIGITTE_GIT_ADMIN_PATH)

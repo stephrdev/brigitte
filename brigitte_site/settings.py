@@ -44,12 +44,11 @@ BROKER_VHOST = '1'
 #     'debug_toolbar.middleware.DebugToolbarMiddleware',
 # )
 # INTERNAL_IPS = ('127.0.0.1',)
-# 
+#
 # DEBUG_TOOLBAR_CONFIG = {
 #     'INTERCEPT_REDIRECTS': False,
 # }
 
 BRIGITTE_GIT_BASE_PATH = '/Users/steph/Projects/brigitte_repos/'
-BRIGITTE_GIT_ADMIN_PATH = '/Users/steph/Projects/brigitte_admin/'
 BRIGITTE_SSH_PORT = 2222
 BRIGITTE_SSH_KEY_PATH = '/Users/steph/Projects/brigitte_sshserver'
