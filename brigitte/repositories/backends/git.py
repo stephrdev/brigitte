@@ -153,6 +153,15 @@ class Repo(BaseRepo):
             '_trash', '%s.git' % self.trash_path_exists(slug)))
         return True
 
+    def repo_settings_changed(self):
+        daemon_file = os.path.join(self.path, 'git-daemon-export-ok')
+        if self.repo.private:
+            if os.path.exists(daemon_file):
+                os.unlink(daemon_file)
+        else:
+            if not os.path.exists(daemon_file):
+                open(daemon_file, 'w').close()
+
 class Commit(BaseCommit):
     @property
     def commit_date(self):

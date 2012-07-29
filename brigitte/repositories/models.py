@@ -150,6 +150,7 @@ class Repository(models.Model):
     def save(self, *args, **kwargs):
         if not self.pk:
             self._repo.init_repo()
+        self._repo.repo_settings_changed()
         super(Repository, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
