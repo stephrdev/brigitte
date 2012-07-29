@@ -227,9 +227,13 @@ class Commit(BaseCommit):
         if not blob:
             blob = self.repo.git_repo.get_blob(self.repo.git_repo.tree(
                 self.tree).lookup_path(self.repo.git_repo.tree, path)[1])
+            try:
+                blob = blob.data.decode('utf-8')
+            except UnicodeDecodeError:
+                blob = 'This filetype is not supported at the moment.'
             cache.set(cache_key, blob, 2592000)
 
-        return File(self.repo, path, blob.data.decode('utf-8'), None, None)
+        return File(self.repo, path, blob, None, None)
 
     def get_tree_changes(self, as_dict=False):
         cache_key = '%s:tree_changes:%s' % (self.repo.repo.pk, self.id)
