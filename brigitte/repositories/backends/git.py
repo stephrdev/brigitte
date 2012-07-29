@@ -190,37 +190,41 @@ class Commit(BaseCommit):
 
             tree_output = []
             for entry in tree.iteritems():
-                entry_object = self.repo.git_repo.get_object(entry.sha)
-                parsed_entry = {
-                    'rights': entry.mode,
-                    'type': entry_object.type_name,
-                    'id': entry.sha,
-                    'sha': entry.sha,
-                    'path': entry.in_path(path).path,
-                    'name': entry.path
-                }
+                try:
+                    entry_object = self.repo.git_repo.get_object(entry.sha)
+                    parsed_entry = {
+                        'rights': entry.mode,
+                        'type': entry_object.type_name,
+                        'id': entry.sha,
+                        'sha': entry.sha,
+                        'path': entry.in_path(path).path,
+                        'name': entry.path
+                    }
 
-                if entry_object.type_name == 'tree':
-                    parsed_entry['size'] = None
-                    parsed_entry['path'] += '/'
-                else:
-                    parsed_entry['size'] = float(entry_object.raw_length())
-                    # We skip dot-files at the moment.
-                    name = parsed_entry['name']
-                    if '.' in name and name[0] != '.':
-                        parsed_entry['suffix'] = name.rsplit('.', 1)[-1]
-                        parsed_entry['mime_image'] = FILETYPE_MAP.get(
-                            parsed_entry['suffix'], FILETYPE_MAP['default'])
+                    if entry_object.type_name == 'tree':
+                        parsed_entry['size'] = None
+                        parsed_entry['path'] += '/'
                     else:
-                        parsed_entry['suffix'] = ''
-                        parsed_entry['mime_image'] = FILETYPE_MAP['default']
+                        parsed_entry['size'] = float(entry_object.raw_length())
+                        # We skip dot-files at the moment.
+                        name = parsed_entry['name']
+                        if '.' in name and name[0] != '.':
+                            parsed_entry['suffix'] = name.rsplit('.', 1)[-1]
+                            parsed_entry['mime_image'] = FILETYPE_MAP.get(
+                                parsed_entry['suffix'], FILETYPE_MAP['default'])
+                        else:
+                            parsed_entry['suffix'] = ''
+                            parsed_entry['mime_image'] = FILETYPE_MAP['default']
 
-                if commits:
-                    # WOAAAA THIS IS SLOW!
-                    parsed_entry['commit'] = self.repo.get_commit(
-                        self.id, path=parsed_entry['path'].rstrip('/'))
+                    if commits:
+                        # WOAAAA THIS IS SLOW!
+                        parsed_entry['commit'] = self.repo.get_commit(
+                            self.id, path=parsed_entry['path'].rstrip('/'))
 
-                tree_output.append(parsed_entry)
+                    tree_output.append(parsed_entry)
+                except KeyError:
+                    # Entry not found
+                    pass
 
             tree_output.sort(lambda x, y: cmp(y['type'], x['type']))
 
