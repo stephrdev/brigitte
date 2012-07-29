@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
 from hashlib import md5
 
 from django import template
 
+
 register = template.Library()
+
 
 @register.simple_tag
 def avatar(email, size=50, rating='g', default=None):
@@ -30,4 +33,3 @@ def avatar(email, size=50, rating='g', default=None):
     if default:
         url = "%s&d=%s" % (url, default)
     return url
-

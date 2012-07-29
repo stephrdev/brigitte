@@ -1,9 +1,0 @@
-[program:celeryd]
-command=/home/brigitte/env/bin/python manage.py celeryd -B
-directory=/home/brigitte/env/src/brigitte/brigitte
-redirect_stderr=True
-autostart=true
-autorestart=true
-user=brigitte
-group=brigitte
-

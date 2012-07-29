@@ -1,138 +1,109 @@
 # -*- coding: utf-8 -*-
 import re
 import os
+import operator
 import shutil
-from datetime import datetime
-from django.conf import settings
 import cStringIO
+from datetime import datetime
 
+from django.conf import settings
 from django.core.cache import cache
 
-from brigitte.repositories.backends.base import BaseRepo, BaseCommit
-from brigitte.repositories.backends.base import BaseTag, BaseBranch
-from brigitte.repositories.backends.base import BaseFile, BaseTree
+from dulwich.diff_tree import tree_changes, tree_changes_for_merge
+from dulwich.patch import write_object_diff
+from dulwich.repo import Repo as DulwichRepo
 
-try:
-    from lxml import etree
-
-    def parse_log_xml(raw_log):
-        log = etree.XML(raw_log)
-        for commit in log.iterchildren():
-            c = {}
-            for field in commit.iterchildren():
-                if field.text:
-                    c[field.tag] = field.text.strip()
-            yield c
-
-    def parse_single_xml(raw_log):
-        log = etree.XML(raw_log)
-        c = {}
-        for field in log.iterchildren():
-            if field.text:
-                c[field.tag] = field.text.strip()
-        return c
-
-except ImportError:
-    import xml.etree.ElementTree as ET
-
-    def parse_log_xml(raw_log):
-        log = ET.fromstring(raw_log)
-        for commit in log.findall('commit'):
-            c = {}
-            for key in commit:
-                if key.text:
-                    c[key.tag] = key.text
-            yield c
-
-    def parse_single_xml(raw_log):
-        log = ET.fromstring(raw_log)
-        c = {}
-        for elem in list(log):
-            c[elem.tag] = elem.text
-        return c
+from brigitte.repositories.backends.base import (BaseRepo, BaseCommit,
+    BaseTag, BaseBranch, BaseFile, BaseTree)
 
 
 FILETYPE_MAP = getattr(settings, 'FILETYPE_MAP', {})
-
-BRANCHES_RE = re.compile("^(?P<type>\s|\*) (?P<name>.+)$", re.MULTILINE)
-
-TREE_RE = re.compile(
-    "(?P<rights>\d*)\s(?P<type>[a-z]*)"
-    "\s(?P<sha>\w*)\s*(?P<size>[0-9 -]*)\s*(?P<path>.+)")
-
-FILE_RE = re.compile("\.\w+")
+AUTHOR_EMAIL_RE=re.compile('(.*) <(.*)>')
 HUNK_RE = re.compile(r'@@ -(\d+),(\d+) \+(\d+),(\d+) @@')
 
+
 class Repo(BaseRepo):
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Dulwich Repo is not cachable
+        if '_git_repo' in state:
+            del state['_git_repo']
+        return state
+
+    @property
+    def git_repo(self):
+        if not hasattr(self, '_git_repo'):
+            self._git_repo = DulwichRepo(self.path)
+        return self._git_repo
+
+    def get_refs(self, ref_type):
+        # we only support heads and tags
+        assert ref_type in ('heads', 'tags')
+
+        # sadly, tags and commits have different attributes for the time
+        time_attr = 'commit_time' if ref_type == 'heads' else 'tag_time'
+
+        ref_prefix_len = 6 + len(ref_type)
+
+        for ref, sha in self.git_repo.get_refs().iteritems():
+            if ref[:ref_prefix_len] == 'refs/%s/' % ref_type:
+                commit = self.git_repo[sha]
+                # only return refs with valid time attribute
+                if hasattr(commit, time_attr):
+                    yield (ref[ref_prefix_len:], sha, getattr(commit, time_attr))
 
     @property
     def tags(self):
-        cmd = 'git --git-dir=%s show-ref --tags' % self.path
-        tags = self.exec_command(cmd).split('\n')
-        tags.reverse()
-
-        tag_list = []
-        for sha, tag in [tag.split(' ') for tag in tags if len(tag) > 0]:
-            tag = tag.split('/', 2)[-1]
-            tag_list.append(Tag(self, tag, sha))
-
-        return tag_list
+        return [Tag(self, tag, sha)
+            for tag, sha, time
+            in sorted(self.get_refs('tags'),
+                key=operator.itemgetter(2), reverse=True)
+        ]
 
     @property
     def branches(self):
-        cmd = 'git --git-dir=%s show-ref --heads' % self.path
+        return [Branch(self, branch, sha)
+            for branch, sha, time
+            in sorted(self.get_refs('heads'),
+                key=operator.itemgetter(2), reverse=True)
+        ]
 
-        branches = self.exec_command(cmd).split('\n')
-
-        branch_list = []
-        for sha, branch in [branch.split(' ') for branch in branches if len(branch) > 0]:
-            branch = branch.split('/', 2)[-1]
-            branch_list.append(
-                Branch(self, branch, sha, False))
-
-        return branch_list
+    def resolve_head(self, head):
+        try:
+            return self.git_repo.ref('refs/heads/%s' % head)
+        except KeyError:
+            return self.git_repo.ref('refs/tags/%s' % head)
 
     def _get_commit_list(self, sha=None, count=10, skip=0, head=None, path=None):
         if sha == None:
-            sha = head if head else 'HEAD'
+            try:
+                sha = self.resolve_head(head) if head else self.git_repo.head()
+            except KeyError:
+                # no commits and no head found
+                return []
 
-        cmd = ['git',
-            '--git-dir=%s' % self.path,
-            'log',
-            '--no-color',
-            '--raw',
-            '--pretty=format:\
-                <commit>\
-                    <id>%H</id>\
-                    <tree>%T</tree>\
-                    <parent>%P</parent>\
-                    <short_message><![CDATA[%s]]></short_message>\
-                    <message><![CDATA[%B]]></message>\
-                    <author><![CDATA[%an]]></author>\
-                    <author_email><![CDATA[%ae]]></author_email>\
-                    <committer><![CDATA[%cn]]></committer>\
-                    <committer_email><![CDATA[%ce]]></committer_email>\
-                    <timestamp>%ct</timestamp>\
-                </commit>',
-            '--skip=' + str(skip),
-            '-' + str(count),
-            sha,
-        ]
-
-        if path:
-            cmd.append('--')
-            cmd.append(path)
-
+        paths = [path] if path else None
 
         commits = []
-        try:
-            raw_log = '<?xml version="1.0" encoding="UTF-8"?>\
-                <log>%s</log>' % self.exec_command(cmd)
 
-            for commit in parse_log_xml(raw_log):
-                commits.append(Commit(self, commit))
-        except:
-            pass
+        for entry in list(self.git_repo.get_walker(
+            include=[sha], max_entries=count+skip, paths=paths))[skip:]:
+
+            author = AUTHOR_EMAIL_RE.match(entry.commit.author).groups(0)
+            committer = AUTHOR_EMAIL_RE.match(entry.commit.committer).groups(0)
+
+            commits.append(Commit(self, {
+                'id': entry.commit.id,
+                'tree': entry.commit.tree,
+                'parents': entry.commit.parents,
+                'short_message': entry.commit.message.split('\n')[0],
+                'message': entry.commit.message,
+                'timestamp': entry.commit.commit_time,
+                'author': author[0],
+                'author_email': author[1],
+                'committer': committer[0],
+                'committer_email': committer[1],
+            }))
 
         return commits
 
@@ -141,7 +112,7 @@ class Repo(BaseRepo):
             sha=None, count=count, skip=skip, head=head, path=path)
 
     def get_commit(self, sha, path=None):
-        cache_key = '%s:commit:%s:%s' % (self.repo.pk, sha, path or 'direct')
+        cache_key = '%s:commit:%s:%s' % (self.repo.pk, sha, path or 'no-path')
 
         commit = None
 
@@ -150,7 +121,8 @@ class Repo(BaseRepo):
 
         if not commit:
             try:
-                commit = self._get_commit_list(sha=sha, count=1, skip=0, path=path)[0]
+                commit = self._get_commit_list(
+                    sha=sha, count=1, skip=0, path=path)[0]
             except IndexError:
                 pass
 
@@ -164,18 +136,21 @@ class Repo(BaseRepo):
         return self.get_commit(None)
 
     def init_repo(self):
-        cmd = 'git init -q --shared=0770 --bare %s --template=%s/%s' % (self.path, settings.PROJECT_ROOT, 'repo_templates/git/')
+        cmd = 'git init -q --shared=0770 --bare %s --template=%s/%s' % (
+            self.path, settings.PROJECT_ROOT, 'repo_templates/git/')
         self.exec_command(cmd)
         return True
 
-    def path_exists(self, slug):
-        if os.path.exists(os.path.join(settings.BRIGITTE_GIT_BASE_PATH, '_trash', '%s.git' % slug)):
+    def trash_path_exists(self, slug):
+        if os.path.exists(os.path.join(
+            settings.BRIGITTE_GIT_BASE_PATH, '_trash', '%s.git' % slug)):
             return self.path_exists('_'+slug)
         else:
             return slug
 
     def delete_repo(self, slug):
-        shutil.move(self.path, os.path.join(settings.BRIGITTE_GIT_BASE_PATH, '_trash', '%s.git' % self.path_exists(slug)))
+        shutil.move(self.path, os.path.join(settings.BRIGITTE_GIT_BASE_PATH,
+            '_trash', '%s.git' % self.trash_path_exists(slug)))
         return True
 
 class Commit(BaseCommit):
@@ -184,41 +159,8 @@ class Commit(BaseCommit):
         return datetime.fromtimestamp(float(self.timestamp))
 
     @property
-    def parents(self):
-        return self.parent.split(' ')
-
-    @property
     def short_long_parents(self):
         return [(parent[:7], parent) for parent in self.parents]
-
-    def get_archive(self):
-        cmd1 = 'git --git-dir=%s describe --tags --abbrev=7 %s' % (
-            self.repo.path,
-            self.id
-        )
-
-        try:
-            archive_name = self.exec_command_strip(cmd1).replace('-g', '-')
-        except:
-            archive_name = self.id[:7]
-
-        cmd2 = 'git --git-dir=%s archive --format=zip --prefix=%s-%s/ %s^{tree}' % (
-            self.repo.path,
-            self.repo.repo.slug,
-            archive_name,
-            self.id,
-        )
-
-        try:
-            archive = cStringIO.StringIO()
-            archive.write(self.exec_command(cmd2))
-            return {
-                'filename': archive_name,
-                'mime': 'application/zip',
-                'data': archive,
-            }
-        except:
-            return None
 
     def get_tree(self, path, commits=False):
         if not path:
@@ -227,102 +169,130 @@ class Commit(BaseCommit):
             if not path[-1] == '/':
                 path = path+'/'
 
-        cache_key = '%s:tree:%s:%s:%s' % (self.repo.repo.pk, self.id, path, commits)
+        cache_key = '%s:tree:%s:%s:%s' % (
+            self.repo.repo.pk, self.id, path, commits)
 
         tree_obj = cache.get(cache_key)
-        if tree_obj:
-            return tree_obj
 
-        cmd = 'git --git-dir=%s ls-tree -l %s %s' % (
-            self.repo.path,
-            str(self.id),
-            path
-        )
+        if not tree_obj:
+            tree = self.repo.git_repo.tree(self.repo.git_repo.tree(
+                self.tree).lookup_path(self.repo.git_repo.tree, path)[1])
 
-        try:
-            tree_out = []
-            raw_tree = self.exec_command_strip(cmd)
-            if raw_tree:
-                for tree_file in raw_tree.split('\n'):
-                    line = TREE_RE.search(tree_file)
-                    line_file = line.groupdict()
-                    line_file['id'] = line_file['sha']
-                    line_file['name'] = line_file['path'].rsplit('/', 1)[-1]
+            tree_output = []
+            for entry in tree.iteritems():
+                entry_object = self.repo.git_repo.get_object(entry.sha)
+                parsed_entry = {
+                    'rights': entry.mode,
+                    'type': entry_object.type_name,
+                    'id': entry.sha,
+                    'sha': entry.sha,
+                    'path': entry.in_path(path).path,
+                    'name': entry.path
+                }
 
-                    if line_file['type'] == 'tree':
-                        line_file['path'] += '/'
+                if entry_object.type_name == 'tree':
+                    parsed_entry['size'] = None
+                    parsed_entry['path'] += '/'
+                else:
+                    parsed_entry['size'] = float(entry_object.raw_length())
+                    # We skip dot-files at the moment.
+                    name = parsed_entry['name']
+                    if '.' in name and name[0] != '.':
+                        parsed_entry['suffix'] = name.rsplit('.', 1)[-1]
+                        parsed_entry['mime_image'] = FILETYPE_MAP.get(
+                            parsed_entry['suffix'], FILETYPE_MAP['default'])
                     else:
-                        if not FILE_RE.match(line_file['name']):
-                            if '.' in line_file['name']:
-                                line_file['suffix'] = line_file['name'].rsplit('.', 1)[-1]
-                                line_file['mime_image'] = FILETYPE_MAP.get(
-                                    line_file['suffix'], FILETYPE_MAP['default'])
-                            else:
-                                line_file['suffix'] = ''
-                                line_file['mime_image'] = FILETYPE_MAP['default']
-                        else:
-                            line_file['suffix'] = ''
-                            line_file['mime_image'] = FILETYPE_MAP['default']
+                        parsed_entry['suffix'] = ''
+                        parsed_entry['mime_image'] = FILETYPE_MAP['default']
 
-                    if commits:
-                        line_file['commit'] = self.repo.get_commit(self.id, path=line_file['path'])
+                if commits:
+                    # WOAAAA THIS IS SLOW!
+                    parsed_entry['commit'] = self.repo.get_commit(
+                        self.id, path=parsed_entry['path'].rstrip('/'))
 
-                    try:
-                        line_file['size'] = float(line_file['size'])
-                    except:
-                        line_file['size'] = None
+                tree_output.append(parsed_entry)
 
-                    tree_out.append(line_file)
+            tree_output.sort(lambda x, y: cmp(y['type'], x['type']))
 
-            tree_out.sort(lambda x, y: cmp(y['type'], x['type']))
-
-            tree_obj = Tree(self.repo, path, tree_out)
+            tree_obj = Tree(self.repo, path, tree_output)
             cache.set(cache_key, tree_obj, 2592000)
-            return tree_obj
-        except:
-            return None
+
+        return tree_obj
 
     def get_file(self, path):
-        cmd = 'git --git-dir=%s show --exit-code %s:%s' % (
-            self.repo.path,
-            str(self.id),
-            path
-        )
+        cache_key = '%s:blob:%s:%s' % (self.repo.repo.pk, self.id, path)
 
-        try:
-            raw_file = self.exec_command(cmd).decode('utf-8')
-            return File(self.repo, path, raw_file, None, None)
-        except:
-            return None
+        blob = cache.get(cache_key)
+
+        if not blob:
+            blob = self.repo.git_repo.get_blob(self.repo.git_repo.tree(
+                self.tree).lookup_path(self.repo.git_repo.tree, path)[1])
+            cache.set(cache_key, blob, 2592000)
+
+        return File(self.repo, path, blob.data.decode('utf-8'), None, None)
+
+    def get_tree_changes(self, as_dict=False):
+        cache_key = '%s:tree_changes:%s' % (self.repo.repo.pk, self.id)
+
+        tree_changes_cache = cache.get(cache_key)
+
+        if tree_changes_cache:
+            self._tree_changes, self._tree_changes_dict = tree_changes_cache
+        else:
+            if not self.parents:
+                changes_func = tree_changes
+                parent = None
+            elif len(self.parents) == 1:
+                changes_func = tree_changes
+                parent = self.repo.git_repo[self.parents[0]].tree
+            else:
+                changes_func = tree_changes_for_merge
+                parent = [self.repo.git_repo[p].tree for p in self.parents]
+
+            self._tree_changes = list(changes_func(
+                self.repo.git_repo, parent, self.tree))
+            self._tree_changes_dict = dict([(c.new.path, c)
+                for c in self._tree_changes])
+
+            cache.set(cache_key,
+                (self._tree_changes, self._tree_changes_dict), 2592000)
+
+        if as_dict:
+            return self._tree_changes_dict
+        else:
+            return self._tree_changes
 
     @property
     def changed_files(self):
-        cmd = 'git --git-dir=%s log -1 --numstat --pretty=format: %s' % (
-            self.repo.path,
-            str(self.id)
-        )
+        cache_key = '%s:changed_files:%s' % (self.repo.repo.pk, self.id)
 
-        raw_changed_files = self.exec_command_strip(cmd)
-        files = []
-        for line in [l.split('\t') for l in raw_changed_files.split('\n') if len(l) > 0]:
-            files.append({'file': line[2],
-                          'lines_added': line[0],
-                          'lines_removed': line[1]})
+        files = cache.get(cache_key)
+
+        if not files:
+            files = []
+            for change in self.get_tree_changes():
+                diff = cStringIO.StringIO()
+                write_object_diff(diff, self.repo.git_repo,
+                    change.old, change.new)
+                diff = diff.getvalue()
+                lines_added, lines_removed = self._get_diff_line_numbers(
+                    diff, count=True)
+                files.append({
+                    'file': change.new.path,
+                    'lines_added': lines_added,
+                    'lines_removed': lines_removed,
+                    'change_type': change.type,
+                })
+            cache.set(cache_key, files, 2592000)
 
         return files
 
-    @property
-    def commit_diff(self):
-        cmd = 'git --git-dir=%s diff-tree -p %s' % (
-            self.repo.path,
-            str(self.id)
-        )
-        return self.exec_command(cmd).decode('utf-8')
-
-    def _get_diff_line_numbers(self, diff):
+    def _get_diff_line_numbers(self, diff, count=False):
         lines = []
         line1 = 0
         line2 = 0
+        lines_added = 0
+        lines_removed = 0
         hunk_started = False
 
         for line in diff.splitlines():
@@ -336,10 +306,11 @@ class Commit(BaseCommit):
                 if line.startswith('-') and not line.startswith('---'):
                     lines.append((line1, ''))
                     line1 += 1
-
+                    lines_removed += 1
                 elif line.startswith('+') and not line.startswith('+++'):
                     lines.append(('', line2))
                     line2 += 1
+                    lines_added += 1
                 else:
                     if not hunk_started:
                         lines.append(('', ''))
@@ -348,26 +319,31 @@ class Commit(BaseCommit):
                         line1 += 1
                         line2 += 1
 
-        return lines
+        if count:
+            return (lines_added, lines_removed)
+        else:
+            return lines
 
     def get_file_diff(self, path):
-        cmd = 'git --git-dir=%s diff --exit-code %s~1 %s -- %s' % (
-            self.repo.path,
-            self.id,
-            self.id,
-            path
-        )
+        cache_key = '%s:file_diff:%s:%s' % (self.repo.repo.pk, self.id, path)
 
-        try:
-            diff = self.exec_command(cmd).decode('utf-8')
+        file_diff = cache.get(cache_key)
+
+        if not file_diff:
+            files = self.get_tree_changes(True)
+            diff = cStringIO.StringIO()
+            write_object_diff(diff, self.repo.git_repo,
+                files[path].old, files[path].new)
+            diff = diff.getvalue().decode('utf-8')
+
             file_diff = {
                 'file': path,
                 'diff': diff,
                 'line_numbers': self._get_diff_line_numbers(diff)
             }
-            return file_diff
-        except:
-            return None
+            cache.set(cache_key, file_diff, 2592000)
+
+        return file_diff
 
     @property
     def file_diffs(self):
@@ -382,20 +358,15 @@ class Tag(BaseTag):
     @property
     def last_commit(self):
         if not hasattr(self, '_last_commit'):
-            try:
-                self._last_commit = self.repo.get_commit(self.id)
-            except:
-                self._last_commit = None
+            self._last_commit = self.repo.get_commit(
+                self.repo.git_repo[self.id].object[1])
         return self._last_commit
 
 class Branch(BaseBranch):
     @property
     def last_commit(self):
         if not hasattr(self, '_last_commit'):
-            try:
-                self._last_commit = self.repo.get_commit(self.id)
-            except:
-                self._last_commit = None
+            self._last_commit = self.repo.get_commit(self.id)
         return self._last_commit
 
 class Tree(BaseTree):
@@ -403,4 +374,3 @@ class Tree(BaseTree):
 
 class File(BaseFile):
     pass
-

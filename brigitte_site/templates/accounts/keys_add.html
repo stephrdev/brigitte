@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Add public key{% endblock %}
+
+{% block content %}
+    <div class="grid_16 content">
+        <h1>Add public key</h1>
+
+        <form action="." method="post" class="form">
+            {% csrf_token %}
+            <fieldset>
+                {{ form.as_p }}
+            </fieldset>
+            <fieldset class="submitrow">
+                <p><label>&nbsp;</label><button type="submit">Add public key</button></p>
+            </fieldset>
+        </form>
+    </div>
+{% endblock %}

@@ -1,21 +1,21 @@
-from django.http import Http404, HttpResponse
-from django.utils.translation import gettext_lazy as _
-from django.utils import simplejson
-from django.core.serializers.json import DjangoJSONEncoder
-from django.shortcuts import render, get_object_or_404, redirect
+# -*- coding: utf-8 -*-
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib import messages
+from django.core.serializers.json import DjangoJSONEncoder
+from django.http import Http404, HttpResponse
+from django.shortcuts import render, get_object_or_404, redirect
 from django.template.defaultfilters import slugify, timesince
+from django.utils.translation import gettext_lazy as _
+from django.utils import simplejson
+from django.views.decorators.csrf import csrf_exempt
 
 from brigitte.repositories.decorators import repository_view
-from brigitte.repositories.models import Repository, RepositoryUser
-from brigitte.repositories.forms import RepositoryForm, RepositoryUserFormSet, RepositoryDeleteForm
+from brigitte.repositories.models import Repository
+from brigitte.repositories.forms import (RepositoryForm, RepositoryUserFormSet,
+    RepositoryDeleteForm)
 from brigitte.repositories.utils import pygmentize, build_path_breadcrumb
-from brigitte.repositories.utils import register_repository_update
 
-# FIXME !!
-from django.views.decorators.csrf import csrf_exempt
 
 @login_required
 def repositories_manage_list(request):
@@ -31,7 +31,6 @@ def repositories_user(request, user):
         'repository_list': user.repository_set.user_public_repositories(user),
     })
 
-
 @login_required
 @repository_view(can_admin=True)
 def repositories_manage_delete(request, repo):
@@ -39,14 +38,12 @@ def repositories_manage_delete(request, repo):
     if request.method == 'POST':
         delete_form = RepositoryDeleteForm(request.POST)
         if delete_form.is_valid():
-            register_repository_update(repo.user, 'deleted', repo)
             messages.success(request, _('Repository deleted.'))
             repo.delete()
             return redirect('accounts_profile')
         else:
             raise Http404
 
-# FIXME !!
 @csrf_exempt
 @login_required
 @repository_view(can_admin=True)
@@ -64,7 +61,6 @@ def repositories_manage_change(request, repo):
                     error_msg = 'User already added to repository'
                 else:
                     repo.repositoryuser_set.create(user=user)
-                    register_repository_update(user, 'changed', repo)
                     result = True
             except User.DoesNotExist:
                 error_msg ='Invalid email address'
@@ -86,7 +82,6 @@ def repositories_manage_change(request, repo):
                         instance.repo = repo
                     instance.save()
 
-            register_repository_update(request.user, 'changed', repo)
             messages.success(request, _('Repository updated.'))
             return redirect('accounts_profile')
     else:
@@ -120,7 +115,6 @@ def repositories_manage_add(request):
                 can_admin=True
             )
 
-            register_repository_update(request.user, 'created', repo)
             messages.success(request, _('Repository added.'))
             return redirect('accounts_profile')
     else:
@@ -151,7 +145,6 @@ def repositories_heads(request, repo):
         'tags': repo.tags,
     })
 
-
 @repository_view()
 def repositories_commits(request, repo, branchtag):
     count = 10
@@ -165,6 +158,9 @@ def repositories_commits(request, repo, branchtag):
     if skip < 0:
         skip = 0
     commits = repo.get_commits(count=count, skip=skip, head=branchtag)
+    if not commits:
+        raise Http404
+
     return render(request, 'repositories/repository_commits.html', {
         'repository': repo,
         'commits': commits,
@@ -185,20 +181,20 @@ def repositories_commit(request, repo, sha):
         'commit': commit,
     })
 
-@repository_view()
-def repositories_commit_archive(request, repo, sha):
-    commit = repo.get_commit(sha)
-
-    try:
-        archive = commit.get_archive()
-        response = HttpResponse(archive['data'].getvalue(),
-            mimetype=archive['mime'])
-        response['Content-Disposition'] = \
-            'attachment; filename="%s-%s.zip"' \
-                % (repo.slug, archive['filename'])
-        return response
-    except:
-        raise Http404
+#@repository_view()
+#def repositories_commit_archive(request, repo, sha):
+#    commit = repo.get_commit(sha)
+#
+#    try:
+#        archive = commit.get_archive()
+#        response = HttpResponse(archive['data'].getvalue(),
+#            mimetype=archive['mime'])
+#        response['Content-Disposition'] = \
+#            'attachment; filename="%s-%s.zip"' \
+#                % (repo.slug, archive['filename'])
+#        return response
+#    except:
+#        raise Http404
 
 @repository_view()
 def repositories_commit_tree(request, repo, sha, path=None):
@@ -250,4 +246,3 @@ def repositories_commit_tree(request, repo, sha, path=None):
             'file_blob_pygmentized': file_blob_pygmentized,
             'breadcrumb': build_path_breadcrumb(path)
         })
-

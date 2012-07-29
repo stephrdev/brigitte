@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django import forms
 from django.forms.models import modelformset_factory
 from django.template.defaultfilters import slugify
@@ -33,7 +34,6 @@ class RepositoryForm(forms.ModelForm):
             raise forms.ValidationError('Repository name already in use.')
 
         return self.cleaned_data
-
 
 RepositoryUserFormSet = modelformset_factory(
     RepositoryUser,

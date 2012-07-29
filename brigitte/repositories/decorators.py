@@ -1,7 +1,10 @@
-from django.shortcuts import get_object_or_404
+# -*- coding: utf-8 -*-
 from functools import wraps
 
+from django.shortcuts import get_object_or_404
+
 from brigitte.repositories.models import Repository
+
 
 def repository_view(can_admin=False):
     def inner_repository_view(f):
@@ -24,4 +27,3 @@ def repository_view(can_admin=False):
             return f(request, repository, *args, **kwargs)
         return wraps(f)(wrapped)
     return inner_repository_view
-

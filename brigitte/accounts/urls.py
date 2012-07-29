@@ -1,49 +1,12 @@
-from django.conf.urls.defaults import *
+# -*- coding: utf-8 -*-
+from django.conf.urls.defaults import url, patterns
+
 
 urlpatterns = patterns('brigitte.accounts.views',
-    url(r'^$', 'profile', name='accounts_profile'),
-    url(r'^activate/(?P<activation_key>\w+)/$', 'registration_activate',
-        name='registration_activate'),
-    url(r'^register/$', 'registration', name='registration'),
-    url(r'^register/complete/$', 'registration_complete',
-        name='registration_complete'),
-    url(r'^change/$', 'profile_change', name='accounts_profile_change'),
-    url(r'^email/change/$', 'email_change', name='accounts_email_change'),
-    url(r'^email/requested/$', 'email_change_requested',
-        name='accounts_email_change_requested'),
-    url(r'^email/approve/(?P<token>[0-9A-Za-z-]+)/(?P<code>[0-9A-Za-z-]+)/$',
-        'email_change_approve', name='accounts_email_change_approve'),
+    url(r'^profile/$', 'profile', name='accounts_profile'),
 
     url(r'^keys/$', 'keys_list', name='accounts_keys_list'),
     url(r'^keys/add/$', 'keys_add', name='accounts_keys_add'),
     url(r'^keys/(?P<pk>\d+)/$', 'keys_change', name='accounts_keys_change'),
     url(r'^keys/(?P<pk>\d+)/delete/$', 'keys_delete', name='accounts_keys_delete'),
 )
-
-urlpatterns += patterns('django.contrib.auth.views',
-    url(r'^login/$', 'login', {'template_name': 'accounts/login.html'},
-        name='auth_login'),
-    url(r'^logout/$', 'logout', {'template_name': 'accounts/logged_out.html'},
-        name='auth_logout'),
-    url(r'^password/change/$', 'password_change',
-        {'template_name': 'accounts/password_change.html'},
-        name='auth_password_change'),
-    url(r'^password/change/done/$', 'password_change_done',
-        {'template_name': 'accounts/password_change_done.html'},
-        name='auth_password_change_done'),
-    url(r'^password/reset/$', 'password_reset',
-        {'template_name': 'accounts/password_reset.html',
-         'email_template_name': 'accounts/mails/password_reset_email.html'},
-        name='auth_password_reset'),
-    url(r'^password/reset/confirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$',
-        'password_reset_confirm',
-        {'template_name': 'accounts/password_reset_confirm.html'},
-        name='auth_password_reset_confirm'),
-    url(r'^password/reset/complete/$', 'password_reset_complete',
-        {'template_name': 'accounts/password_reset_complete.html'},
-        name='auth_password_reset_complete'),
-    url(r'^password/reset/done/$', 'password_reset_done',
-        {'template_name': 'accounts/password_reset_done.html'},
-        name='auth_password_reset_done'),
-)
-

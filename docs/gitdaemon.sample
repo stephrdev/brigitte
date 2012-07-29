@@ -1,8 +1,8 @@
 [program:gitdaemon]
-command=/usr/bin/git-daemon --base-path=/home/git/repositories
-directory=/home/git
+command=/usr/bin/git-daemon --base-path=/home/brigitte/repositories
+directory=/home/brigitte
 redirect_stderr=True
 autostart=true
 autorestart=true
-user=git
-group=git
+user=brigitte
+group=brigitte

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Change repository: {{ repo.title }}{% endblock %}
+
+{% block content %}
+    <div class="grid_16 content">
+        <h1>Change repository: {{ repo.title }}</h1>
+
+        <form action="." method="post" class="form">
+            {% csrf_token %}
+            <fieldset>
+                {{ form.as_p }}
+            </fieldset>
+            <fieldset>
+                {{ users.management_form }}
+                <label>Access rules:</label>
+                <table class="users">
+                    <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Read access</th>
+                        <th>Write access</th>
+                        <th>Admin access</th>
+                        <th>&nbsp;</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for form in users %}
+                        {{ form.id }}
+                        <tr>
+                            <td><strong>{{ form.instance.user }} ({{ form.instance.user.email }})</strong></td>
+                            <td>{{ form.can_read }}</td>
+                            <td>{{ form.can_write }}</td>
+                            <td>{{ form.can_admin }}</td>
+                            <td>{{ form.DELETE }} Delete</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <div style="clear:both"></div>
+                <div>
+                    <script type="text/javascript">
+                        function repouser_error(msg) {
+                            $('#repouser_error li').text(msg);
+                            $('#repouser_error').fadeIn();
+                            return false;
+                        }
+
+                        $(document).ready(function() {
+                            $('#repouser_add').click(function() {
+                                var email = $('#repouser_email').val();
+                                if(email.length < 3) {
+                                    return repouser_error('Invalid email address');
+                                }
+                                $.post('.', {
+                                    'method': 'add_repouser',
+                                    'email': email,
+                                    }, function(data) {
+                                        if(data.result != true) {
+                                            return repouser_error(data.error_msg);
+                                        } else {
+                                            window.location=window.location;
+                                        }
+                                    },
+                                    'json'
+                                );
+                                return false;
+                            });
+                        });
+                    </script>
+                    <ul class="errorlist" id="repouser_error" style="display:none"><li></li></ul>
+                    <label>Add another user:</label>
+                    <input type="text" name="repouser_email" id="repouser_email" />
+                    <button id="repouser_add">Add</button>
+                </div>
+            </fieldset>
+            <fieldset class="submitrow">
+                <p><label>&nbsp;</label><button type="submit">Save changes</button></p>
+            </fieldset>
+        </form>
+    </div>
+    <div class="grid_4 push_12">
+        <form class="form extra" action="{% url repositories_manage_delete repo.user repo.slug %}" method="post">
+            <fieldset>
+                {% csrf_token %}
+                <script>
+                    $(document).ready(function() {
+                        $('#delete_button').attr("disabled", "true").css("color", "grey");
+                        $(function() {
+                            $('#id_statisfied').click(function() {
+                                var satisfied = $('#id_statisfied:checked').val();
+                                if (satisfied != undefined) $('#delete_button').removeAttr('disabled').css("color", "red");
+                                else $('#delete_button').attr('disabled', 'disabled').css("color", "grey");
+                            });
+                        });
+                    });
+                </script>
+                <label>I want to delete this repository:</label>{{ delete_form.statisfied }}
+                <label>&nbsp;</label><button id="delete_button">proceed deletion.</button>
+            </fieldset>
+        </form>
+    </div>
+{% endblock %}

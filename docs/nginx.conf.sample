@@ -18,7 +18,7 @@ server {
     }
 
     location /static_media {
-        alias /home/brigitte/env/src/brigitte/brigitte/static_media;
+        alias /home/brigitte/env/brigitte/brigitte_site/static_media;
     }
 }
 

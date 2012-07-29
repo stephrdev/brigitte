@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 REPO_BACKENDS = {}
 
 class RepositoryTypeNotAvailable(Exception): pass
@@ -20,4 +21,3 @@ def get_backend(repo_type):
         raise RepositoryTypeNotAvailable(repo_type)
 
     return REPO_BACKENDS[repo_type]
-
