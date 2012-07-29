@@ -34,9 +34,6 @@ LANGUAGES = (
 
 SITE_ID = 1
 
-# site media and static media
-ADMIN_MEDIA_PREFIX = '/admin_media/'
-
 STATIC_URL = '/static_media/'
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'deployed_static_media')
 
