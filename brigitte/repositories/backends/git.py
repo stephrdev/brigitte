@@ -72,7 +72,8 @@ class Repo(BaseRepo):
         try:
             return self.git_repo.ref('refs/heads/%s' % head)
         except KeyError:
-            return self.git_repo.ref('refs/tags/%s' % head)
+            tag_sha = self.git_repo.ref('refs/tags/%s' % head)
+            return self.git_repo.get_object(tag_sha).object[1]
 
     def _get_commit_list(self, sha=None, count=10, skip=0, head=None, path=None):
         if sha == None:

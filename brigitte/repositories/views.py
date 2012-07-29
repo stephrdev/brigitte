@@ -151,7 +151,7 @@ def repositories_commits(request, repo, branchtag):
 
     try:
         page = int(request.GET.get('page', 1))
-    except Exception:
+    except ValueError:
         page = 1
 
     skip = (page * count) - count
