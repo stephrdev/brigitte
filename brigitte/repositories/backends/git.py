@@ -10,6 +10,7 @@ from django.conf import settings
 from django.core.cache import cache
 
 from dulwich.diff_tree import tree_changes, tree_changes_for_merge
+from dulwich.errors import NotBlobError, NotTreeError
 from dulwich.patch import write_object_diff
 from dulwich.repo import Repo as DulwichRepo
 
@@ -20,6 +21,7 @@ from brigitte.repositories.backends.base import (BaseRepo, BaseCommit,
 FILETYPE_MAP = getattr(settings, 'FILETYPE_MAP', {})
 AUTHOR_EMAIL_RE=re.compile('(.*) <(.*)>')
 HUNK_RE = re.compile(r'@@ -(\d+),(\d+) \+(\d+),(\d+) @@')
+SHA1_RE = re.compile('^[a-f0-9]{40}$')
 
 
 class Repo(BaseRepo):
@@ -113,6 +115,9 @@ class Repo(BaseRepo):
             sha=None, count=count, skip=skip, head=head, path=path)
 
     def get_commit(self, sha, path=None):
+        if sha and not SHA1_RE.match(sha):
+            raise KeyError('Invalid sha: %s' % sha)
+
         cache_key = '%s:commit:%s:%s' % (self.repo.pk, sha, path or 'no-path')
 
         commit = None
@@ -185,8 +190,11 @@ class Commit(BaseCommit):
         tree_obj = cache.get(cache_key)
 
         if not tree_obj:
-            tree = self.repo.git_repo.tree(self.repo.git_repo.tree(
-                self.tree).lookup_path(self.repo.git_repo.tree, path)[1])
+            try:
+                tree = self.repo.git_repo.tree(self.repo.git_repo.tree(
+                    self.tree).lookup_path(self.repo.git_repo.tree, path)[1])
+            except NotTreeError:
+                raise KeyError('No tree: %s' % path)
 
             tree_output = []
             for entry in tree.iteritems():
@@ -239,8 +247,12 @@ class Commit(BaseCommit):
         blob = cache.get(cache_key)
 
         if not blob:
-            blob = self.repo.git_repo.get_blob(self.repo.git_repo.tree(
-                self.tree).lookup_path(self.repo.git_repo.tree, path)[1])
+            try:
+                blob = self.repo.git_repo.get_blob(self.repo.git_repo.tree(
+                    self.tree).lookup_path(self.repo.git_repo.tree, path)[1])
+            except NotBlobError:
+                raise KeyError('No blob: %s' % path)
+
             try:
                 blob = blob.data.decode('utf-8')
             except UnicodeDecodeError:
@@ -352,7 +364,11 @@ class Commit(BaseCommit):
             diff = cStringIO.StringIO()
             write_object_diff(diff, self.repo.git_repo,
                 files[path].old, files[path].new)
-            diff = diff.getvalue().decode('utf-8')
+            diff = diff.getvalue()
+            try:
+                diff = diff.decode('utf-8')
+            except UnicodeDecodeError:
+                pass
 
             file_diff = {
                 'file': path,

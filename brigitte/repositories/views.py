@@ -171,9 +171,9 @@ def repositories_commits(request, repo, branchtag):
 
 @repository_view()
 def repositories_commit(request, repo, sha):
-    commit = repo.get_commit(sha)
-
-    if not commit:
+    try:
+        commit = repo.get_commit(sha)
+    except KeyError:
         raise Http404
 
     return render(request, 'repositories/repository_commit.html', {
@@ -198,9 +198,9 @@ def repositories_commit(request, repo, sha):
 
 @repository_view()
 def repositories_commit_tree(request, repo, sha, path=None):
-    commit = repo.get_commit(sha)
-
-    if not commit:
+    try:
+        commit = repo.get_commit(sha)
+    except KeyError:
         raise Http404
 
     if not path or path[-1] == '/':
@@ -218,8 +218,9 @@ def repositories_commit_tree(request, repo, sha, path=None):
             return HttpResponse(simplejson.dumps(tree_elements,
                 cls=DjangoJSONEncoder), mimetype='application/json')
 
-        tree = commit.get_tree(path)
-        if tree is None:
+        try:
+            tree = commit.get_tree(path)
+        except KeyError:
             raise Http404
 
         return render(request, 'repositories/repository_tree.html', {
@@ -230,8 +231,9 @@ def repositories_commit_tree(request, repo, sha, path=None):
         })
 
     else:
-        file_obj = commit.get_file(path)
-        if file_obj is None:
+        try:
+            file_obj = commit.get_file(path)
+        except KeyError:
             raise Http404
 
         file_blob_pygmentized = pygmentize(
