@@ -4,7 +4,7 @@ import shlex
 import sys
 from twisted.conch.avatar import ConchUser
 from twisted.conch.checkers import SSHPublicKeyDatabase
-from twisted.conch.ssh import common
+from twisted.conch.ssh import common, transport
 from twisted.conch.ssh.factory import SSHFactory
 from twisted.conch.ssh.keys import Key
 from twisted.conch.ssh.session import (ISession, SSHSession,
@@ -196,3 +196,4 @@ class GitServer(SSHFactory):
         pub_key = '%s.pub' % priv_key
         self.privateKeys = {'ssh-rsa': Key.fromFile(priv_key)}
         self.publicKeys = {'ssh-rsa': Key.fromFile(pub_key)}
+        self.primes = {2048: [(transport.DH_GENERATOR, transport.DH_PRIME)]}
