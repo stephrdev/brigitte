@@ -41,7 +41,7 @@ class GitSession(object):
         self.user = user
 
     def writeErr(self, proto, message):
-        proto.session.writeExtended(1, '%s\n' % message)
+        proto.session.writeExtended(1, ('%s\n' % message).encode('UTF-8'))
 
     def execCommand(self, proto, cmd):
         self.writeErr(proto, 'Welcome to Brigitte.')
