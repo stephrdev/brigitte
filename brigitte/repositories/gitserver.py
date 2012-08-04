@@ -116,7 +116,7 @@ class GitSession(object):
 
         try:
             repo = Repository.objects.get(
-                repositoryuser__user__username=username, slug=slug)
+                user__username=username, slug=slug)
             return repo
         except Repository.DoesNotExist:
             return None
