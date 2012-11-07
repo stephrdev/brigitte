@@ -21,22 +21,22 @@ class RepositoryManager(models.Manager):
     def manageable_repositories(self, user):
         return super(RepositoryManager, self).get_query_set().filter(
             pk__in=user.repositoryuser_set.filter(
-                can_admin=True).values_list('repo_id', flat=True)
+                can_admin=True).order_by('-last_commit_date').values_list('repo_id', flat=True)
         )
 
     def writeable_repositories(self, user):
         return super(RepositoryManager, self).get_query_set().filter(
             pk__in=user.repositoryuser_set.filter(
-                can_write=True).values_list('repo_id', flat=True)
+                can_write=True).order_by('-last_commit_date').values_list('repo_id', flat=True)
         )
 
     def public_repositories(self):
         return super(RepositoryManager, self).get_query_set().filter(
-            private=False)
+            private=False).order_by('-last_commit_date')
 
     def user_public_repositories(self, user):
         return super(RepositoryManager, self).get_query_set().filter(
-            private=False, user=user)
+            private=False, user=user).order_by('-last_commit_date')
 
     def available_repositories(self, user):
         return super(RepositoryManager, self).get_query_set().filter(
@@ -46,7 +46,7 @@ class RepositoryManager(models.Manager):
                 Q(pk__in=user.repositoryuser_set.filter(
                     can_read=True).values_list('repo_id', flat=True))
             )
-        )
+        ).order_by('-last_commit_date')
 
     def dashboard_available_repositories(self, user):
         return super(RepositoryManager, self).get_query_set().filter(
@@ -57,7 +57,7 @@ class RepositoryManager(models.Manager):
                 Q(pk__in=user.repositoryuser_set.filter(
                     can_read=True).values_list('repo_id', flat=True))
             )
-        )
+        ).order_by('-last_commit_date')
 
 class Repository(models.Model):
     user = models.ForeignKey(User, verbose_name=_('User'))
@@ -67,11 +67,25 @@ class Repository(models.Model):
     private = models.BooleanField(_('Private'), default=False)
     repo_type = models.CharField(_('Type'), max_length=4, choices=REPO_TYPES,
         default='git')
+    last_commit_date = models.DateTimeField(blank=True, null=True)
 
     objects = RepositoryManager()
 
     def __unicode__(self):
         return self.title
+
+    def get_last_commit(self):
+        '''
+        TODO: cache self.last_commit with git hook ...
+        '''
+        last_commit = self.last_commit
+        if not self.last_commit_date and last_commit:
+           self.last_commit_date = last_commit.commit_date
+           self.save()
+        elif self.last_commit_date and last_commit and self.last_commit_date != last_commit.commit_date:
+            self.last_commit_date = self.last_commit.commit_date
+            self.save()
+        return last_commit
 
     @property
     def private_html(self):

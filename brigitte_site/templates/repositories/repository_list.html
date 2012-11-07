@@ -20,9 +20,9 @@
         {% for repo in repository_list %}
         <tr>
             <td><a href="{% repo_url repositories_summary repo %}">{{ repo.title }}</a></td>
-            {% if repo.last_commit %}
-            <td><a href="{% repo_url repositories_commit repo repo.last_commit.id %}">{{ repo.last_commit.short_message }} (by {{ repo.last_commit.author }})</a></td>
-            <td>{{ repo.last_commit.commit_date|timesince }}</td>
+            {% if repo.get_last_commit %}
+            <td><a href="{% repo_url repositories_commit repo repo.last_commit.id %}">{{ repo.get_last_commit.short_message }} (by {{ repo.get_last_commit.author }})</a></td>
+            <td>{{ repo.get_last_commit.commit_date|timesince }}</td>
             {% else %}
             <td>Empty repository</td>
             <td>No commits</td>
