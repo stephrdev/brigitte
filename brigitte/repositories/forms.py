@@ -12,7 +12,7 @@ class RepositoryDeleteForm(forms.Form):
 class RepositoryForm(forms.ModelForm):
     class Meta:
         model = Repository
-        exclude = ('user', 'slug')
+        exclude = ('user', 'slug', 'last_commit_date')
 
     def __init__(self, user, *args, **kwargs):
         super(RepositoryForm, self).__init__(*args, **kwargs)
