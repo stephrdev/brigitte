@@ -75,6 +75,9 @@ class Repository(models.Model):
         return self.title
 
     def get_last_commit(self):
+        '''
+        TODO: cache self.last_commit with git hook ...
+        '''
         last_commit = self.last_commit
         if not self.last_commit_date and last_commit:
            self.last_commit_date = last_commit.commit_date
