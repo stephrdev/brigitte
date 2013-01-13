@@ -1,92 +1,99 @@
-brigitte - install docs
-=======================
+INSTALLATION HOWTO - BRIGITTE
+=============================
 
-This is just one way to install and configure brigitte. Feel free to user
-other software (apache instead of nginx, postgres instead of mysql, ...).
+This howto describes the installation of Brigitte on a Debian 6 instance.
 
-1. Requirements
----------------
 
-- up and running mysql server (including db user and empty database)
-- up and running redis server (for caching)
-- up and running nginx webserver (with uwsgi support)
-- up and running supervisor (for gitsshserver and uwsgi)
+Prerequisites
+-------------
 
-- some packages (names are based on debian's apt-get)
-  - python-setuptools
-  - python-dev
-  - build-essential
-  - gettext
-  - git-daemon-run
+We need a preinstalled Debian 6 with some services already running:
 
-2. Prepare environment as root
-------------------------------
+- Mail Server (to send password recovery emails and stuff like this)
+- Database Server (you don't want to run a production instance on SQLite)
+- Web Server (we presume you're using Apache2 with mod_wsgi)
+- Caching Server (we will use redis, you can use memcache instead, if you want)
+- Supervisor (we use Supervisor to run Git Daemon and Git SSH Server processes)
 
-- install pip and virtualenv:
-  - easy_install pip
-  - pip install virtualenv
 
-- download and compile git
-  - cd /usr/src
-  - wget http://kernel.org/pub/software/scm/git/git-1.7.11.3.tar.gz
-  - tar xzf git-1.7.11.3.tar.gz and cd
-  - ./configure && make && make install
+Prepare installation as superuser/root
+--------------------------------------
 
-- download and install uwsgi
-  - cd /usr/src
-  - wget http://projects.unbit.it/downloads/uwsgi-1.2.4.tar.gz
-  - tar xzf uwsgi-1.2.4 and cd
-  - python setup.py install
+First of all, install some Debian packages:
 
-- add user for brigitte
-  - adduser brigitte
+    apt-get install git build-essential python-dev python-setuptools
 
-2. Prepare environment as brigitte
-----------------------------------
+Now, we install two python packages:
 
-- create and activate virtualenv
-  - cd ~
-  - virtualenv env
-  - cd env
-  - . ./bin/activate
+    easy_install pip virtualenv
 
-3. Install and configure brigitte
----------------------------------
+Next step, create a system user for brigitte:
 
-- prepare ssh keys
-  - ssh-keygen -t dsa -f ~/env/gitsshserver
+    adduser brigitte
 
-- install and configure brigitte
-  - git clone git://github.com/stephrdev/brigitte.git
-  - cd brigitte
-  - pip install -r requirements.txt
-  - python setup.py develop
-  - cd brigitte_site & add a settings.py
-    - cp dev.sample.py settings.py
-    - edit settings.py
-        - BRIGITTE_SSH_KEY_PATH = '/home/brigitte/env/gitsshserver'
-        - BRIGITTE_GIT_BASE_PATH = '/home/brigitte/repositories/'
-  - manage.py syncdb
-  - manage.py migrate
 
-(you could now user manage.py runserver 0.0.0.0:8000 to check if everything
-works until now - database, python modules, etc....)
+Install brigitte and prepare configuration
+------------------------------------------
 
-4. Configure nginx, uwsgi and supervisor
-----------------------------------------
+Log in as the new created user brigitte.
 
-- configure uwsgi and nginx
-  - mkdir ~/env/deploy (and cd)
-  - cp ../brigitte/docs/nginx.conf.sample nginx.conf
-  - cp ../brigitte/docs/gitdaemon.sample gitdaemon
-  - cp ../brigitte/docs/uwsgi.sample uwsgi
-  - cp ../brigitte/docs/gitsshserver.sample gitsshserver
-  - edit files to fit your needs
+Before we install the needed python requirements for brigitte, we create and
+activate a virtualenv:
 
-- activate your configs (as root)
-  - ln /home/brigitte/env/deploy/nginx.conf /etc/nginx/conf.d/brigitte.conf
-  - ln /home/brigitte/env/deploy/gitdaemon /etc/supervisord/conf.d/gitdaemon
-  - ln /home/brigitte/env/deploy/uwsgi /etc/supervisord/conf.d/uwsgi
-  - ln /home/brigitte/env/deploy/gitsshserver /etc/supervisord/conf.d/gitsshserver
+    virtualenv pyenv
+    cd pyenv
+    . ./bin/activate
 
-After restarting the servers, everything should work. *fingers crossed*
+We need to create the repositories folder and generate the ssh key for the
+git ssh server:
+
+    mkdir repositories
+    ssh-keygen -t rsa -f sshserver_key
+
+Now we can clone the brigitte repository:
+
+    git clone git://github.com/stephrdev/brigitte.git
+    cd brigitte
+
+Install the python requirements and brigitte to python path:
+
+    pip install -r requirements.txt
+    python setup.py develop
+
+Go to the brigitte_site directory and create the configuration:
+
+    cd brigitte_site
+    cp dev.sample.py settings.py
+
+You need to update the sample config and change the database configuration,
+caching configuration and add a secret key. If you want to user a different
+location for the repositories, you also need to update the path in this config.
+
+IMPORTANT: If you want to run brigitte in a production environment,
+change the DEBUG setting to False.
+
+After updating the configuration, we can prepare the database and
+collect static files:
+
+    python manage.py syncdb
+    python manage.py migrate
+    python manage.py collectstatic
+
+To test the configuration, you can run
+
+    python manage.py runserver 0.0.0.0:8000 --insecure
+
+to check if everything works as expected.
+
+Update server configrations and configure supervisor
+----------------------------------------------------
+
+You need to activate Brigitte in your webserver. You can find a sample
+configuration for Apache2 in the docs folder.
+Place the apache2.conf.sample in your Apache2 configuration directory
+(/etc/apache2/sites-enabled/) and update the VirtualHost to fit your needs.
+
+You also need to add Git Daemon and Git SSH Server to your supervisor.
+Two sample configurations are provided in the docs folder.
+Pleace the two files in your Supervisor configuration directory
+(/etc/supervisor/conf.d/) and update the paths if needed.

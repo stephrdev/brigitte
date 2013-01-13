@@ -1,0 +1,22 @@
+<VirtualHost *:80>
+    DocumentRoot /home/brigitte/public_html/
+
+    Alias /static_media/ /home/brigitte/pyenv/static_media/
+
+    <Directory /home/brigitte/public_html/>
+        Options -Indexes FollowSymLinks +ExecCGI
+        Allow From All
+    </Directory>
+
+    <Directory /home/brigitte/pyenv/>
+        Options -Indexes FollowSymLinks +ExecCGI
+        Allow From All
+    </Directory>
+
+    ErrorLog /var/log/apache2/brigitte.error.log
+    CustomLog /var/log/apache2/brigitte.access.log combined
+
+    WSGIScriptAlias / /home/brigitte/pyenv/brigitte/brigitte_site/wsgi.py
+    WSGIDaemonProcess brigitte user=brigitte group=brigitte processes=4 threads=1 python-path=/home/brigitte/pyenv/lib/python2.6/site-packages/
+    WSGIProcessGroup brigitte
+</VirtualHost>

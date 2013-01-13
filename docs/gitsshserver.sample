@@ -1,8 +1,0 @@
-[program:gitsshserver]
-command=/home/brigitte/env/bin/python manage.py run_gitserver
-directory=/home/brigitte/env/brigitte/brigitte_site
-redirect_stderr=True
-autostart=true
-autorestart=true
-user=brigitte
-group=brigitte

@@ -1,0 +1,8 @@
+[program:brigitte_gitdaemon]
+command=/usr/lib/git-core/git-daemon --base-path=/home/brigitte/pyenv/repositories
+directory=/home/brigitte
+redirect_stderr=True
+autostart=true
+autorestart=true
+user=brigitte
+group=brigitte
