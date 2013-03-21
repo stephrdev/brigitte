@@ -2,24 +2,16 @@
 from django import template
 from django.template.defaulttags import url
 
-from brigitte.repositories.utils import pygmentize
-
 
 register = template.Library()
 
-
-@register.filter
-def pygmentize_diff(blob):
-    try:
-        return pygmentize('diff', blob)
-    except:
-        return blob
 
 @register.tag(name='repo_url')
 def do_repo_url(parser, token):
     func_name, view_name, token_parts = token.contents.split(' ', 2)
 
     token_parts = token_parts.split(' ', 1)
+
     if len(token_parts) > 1:
         repo_obj_name = token_parts[0]
         new_token = token_parts[1]

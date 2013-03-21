@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load gravatar_tags repositories_tags %}
+{% load gravatar_tags repositories_tags utils_tags %}
 
 {% block title %}Repository: {{ repository.title }} - {{ commit.id }}{% endblock %}
 
@@ -7,7 +7,7 @@
 <div class="grid_16 content" id="repo-commit">
     <h1><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a> - Commit {{ commit.id }}</h1>
 
-    {% include "repositories/snippet_commit.html" %}
+    {% include "commits/snippet_commit.html" %}
 
     <div class="changed-files">
         {% for file in commit.changed_files %}

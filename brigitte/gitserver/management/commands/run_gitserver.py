@@ -6,7 +6,7 @@ from twisted.conch.interfaces import ISession
 from twisted.internet import reactor
 from twisted.python import components
 
-from brigitte.repositories.gitserver import GitSession, GitConchUser, GitServer
+from brigitte.gitserver.server import GitSession, GitConchUser, GitServer
 
 
 class Command(BaseCommand):

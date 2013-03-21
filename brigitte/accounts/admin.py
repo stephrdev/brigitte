@@ -8,14 +8,17 @@ from brigitte.accounts.models import Profile, SshPublicKey
 
 admin.site.unregister(User)
 
+
 class ProfileInline(admin.StackedInline):
     model = Profile
     extra = 1
     max_num = 1
 
+
 class SshPublicKeyInline(admin.TabularInline):
     model = SshPublicKey
     extra = 1
+
 
 class UserProfileAdmin(UserAdmin):
     inlines = [ProfileInline, SshPublicKeyInline]

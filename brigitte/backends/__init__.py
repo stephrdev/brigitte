@@ -1,20 +1,29 @@
 # -*- coding: utf-8 -*-
 REPO_BACKENDS = {}
+REPO_TYPES = []
 
-class RepositoryTypeNotAvailable(Exception): pass
+
+class RepositoryTypeNotAvailable(Exception):
+    pass
+
 
 try:
-    from brigitte.repositories.backends import libgit
+    from brigitte.backends import libgit
     REPO_BACKENDS['git'] = libgit.Repo
+    REPO_TYPES.append(('git', 'GIT'))
 except ImportError:
-    from brigitte.repositories.backends import git
+    from brigitte.backends import git
     REPO_BACKENDS['git'] = git.Repo
+    REPO_TYPES.append(('git', 'GIT'))
+
 
 try:
-    from brigitte.repositories.backends import hg
+    from brigitte.backends import hg
     REPO_BACKENDS['hg'] = hg.Repo
+    REPO_TYPES.append(('hg', 'Mercurial'))
 except ImportError:
     pass
+
 
 def get_backend(repo_type):
     if not repo_type in REPO_BACKENDS:

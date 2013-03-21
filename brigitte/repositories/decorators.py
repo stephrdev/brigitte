@@ -20,9 +20,7 @@ def repository_view(can_admin=False):
                 if not can_admin:
                     qs = Repository.objects.public_repositories()
 
-            repository = get_object_or_404(qs,
-                                           user__username=user,
-                                           slug=slug)
+            repository = get_object_or_404(qs, user__username=user, slug=slug)
 
             return f(request, repository, *args, **kwargs)
         return wraps(f)(wrapped)

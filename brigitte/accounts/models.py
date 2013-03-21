@@ -24,6 +24,7 @@ class Profile(models.Model):
         verbose_name = _('Profile')
         verbose_name_plural = _('Profiles')
 
+
 class SshPublicKey(models.Model):
     user = models.ForeignKey(User, verbose_name=_('User'), blank=False)
     description = models.CharField(_('Description'), max_length=250, blank=True)

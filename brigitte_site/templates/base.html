@@ -26,9 +26,9 @@
         <div class="grid_10" id="headernav">
         {% if request.user.is_authenticated %}
             <ul>
-                <li><a href="{% url repositories_list %}">Start</a></li>
+                <li><a href="{% url repositories_overview %}">Start</a></li>
                 <li><a href="{% url accounts_profile %}">Dashboard</a></li>
-                <li><a href="{% url repositories_user request.user.username %}">Public profile</a></li>
+                <li><a href="{% url accounts_public_profile request.user.username %}">Public profile</a></li>
                 <li><a href="{% url userprofiles_profile_change %}">Edit profile</a></li>
                 <li><a href="{% url accounts_keys_list %}">Manage public keys</a></li>
                 <li><a href="{% url auth_logout %}">Logout</a></li>

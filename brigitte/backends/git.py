@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-import re
-import os
-import operator
-import shutil
 import cStringIO
+import operator
+import os
+import re
+import shutil
 from datetime import datetime
 
 from django.conf import settings
@@ -14,12 +14,12 @@ from dulwich.errors import NotBlobError, NotTreeError
 from dulwich.patch import write_object_diff
 from dulwich.repo import Repo as DulwichRepo
 
-from brigitte.repositories.backends.base import (BaseRepo, BaseCommit,
+from brigitte.backends.base import (BaseRepo, BaseCommit,
     BaseTag, BaseBranch, BaseFile, BaseTree)
 
 
 FILETYPE_MAP = getattr(settings, 'FILETYPE_MAP', {})
-AUTHOR_EMAIL_RE=re.compile('(.*) <(.*)>')
+AUTHOR_EMAIL_RE = re.compile('(.*) <(.*)>')
 HUNK_RE = re.compile(r'@@ -(\d+),(\d+) \+(\d+),(\d+) @@')
 SHA1_RE = re.compile('^[a-f0-9]{40}$')
 
@@ -56,7 +56,8 @@ class Repo(BaseRepo):
 
     @property
     def tags(self):
-        return [Tag(self, tag, sha)
+        return [
+            Tag(self, tag, sha)
             for tag, sha, time
             in sorted(self.get_refs('tags'),
                 key=operator.itemgetter(2), reverse=True)
@@ -64,7 +65,8 @@ class Repo(BaseRepo):
 
     @property
     def branches(self):
-        return [Branch(self, branch, sha)
+        return [
+            Branch(self, branch, sha)
             for branch, sha, time
             in sorted(self.get_refs('heads'),
                 key=operator.itemgetter(2), reverse=True)
@@ -78,7 +80,7 @@ class Repo(BaseRepo):
             return self.git_repo.get_object(tag_sha).object[1]
 
     def _get_commit_list(self, sha=None, count=10, skip=0, head=None, path=None):
-        if sha == None:
+        if sha is None:
             try:
                 sha = self.resolve_head(head) if head else self.git_repo.head()
             except KeyError:
@@ -90,7 +92,8 @@ class Repo(BaseRepo):
         commits = []
 
         for entry in list(self.git_repo.get_walker(
-            include=[sha], max_entries=count+skip, paths=paths))[skip:]:
+            include=[sha], max_entries=count + skip, paths=paths)
+        )[skip:]:
 
             author = AUTHOR_EMAIL_RE.match(entry.commit.author).groups(0)
             committer = AUTHOR_EMAIL_RE.match(entry.commit.committer).groups(0)
@@ -148,9 +151,10 @@ class Repo(BaseRepo):
         return True
 
     def trash_path_exists(self, slug):
-        if os.path.exists(os.path.join(
-            settings.BRIGITTE_GIT_BASE_PATH, '_trash', '%s.git' % slug)):
-            return self.path_exists('_'+slug)
+        if os.path.exists(
+            os.path.join(settings.BRIGITTE_GIT_BASE_PATH, '_trash', '%s.git' % slug)
+        ):
+            return self.path_exists('_' + slug)
         else:
             return slug
 
@@ -168,6 +172,7 @@ class Repo(BaseRepo):
             if not os.path.exists(daemon_file):
                 open(daemon_file, 'w').close()
 
+
 class Commit(BaseCommit):
     @property
     def commit_date(self):
@@ -182,7 +187,7 @@ class Commit(BaseCommit):
             path = ''
         else:
             if not path[-1] == '/':
-                path = path+'/'
+                path = path + '/'
 
         cache_key = '%s:tree:%s:%s:%s' % (
             self.repo.repo.pk, self.id, path, commits)
@@ -388,6 +393,7 @@ class Commit(BaseCommit):
 
         return diff_files
 
+
 class Tag(BaseTag):
     @property
     def last_commit(self):
@@ -396,6 +402,7 @@ class Tag(BaseTag):
                 self.repo.git_repo[self.id].object[1])
         return self._last_commit
 
+
 class Branch(BaseBranch):
     @property
     def last_commit(self):
@@ -403,8 +410,10 @@ class Branch(BaseBranch):
             self._last_commit = self.repo.get_commit(self.id)
         return self._last_commit
 
+
 class Tree(BaseTree):
     pass
+
 
 class File(BaseFile):
     pass

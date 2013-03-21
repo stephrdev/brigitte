@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import struct, base64
+import base64
+import struct
 
 from django import forms
 from django.utils.translation import ugettext_lazy as _
@@ -18,6 +19,7 @@ class ProfileRegistrationForm(RegistrationForm):
             short_info=self.cleaned_data['short_info']
         )
 
+
 class SshPublicKeyForm(forms.ModelForm):
     class Meta:
         model = SshPublicKey
@@ -31,7 +33,7 @@ class SshPublicKeyForm(forms.ModelForm):
             int_len = 4
             str_len = struct.unpack('>I', data[:int_len])[0]
 
-            if data[int_len:int_len+str_len] == ktype:
+            if data[int_len:int_len + str_len] == ktype:
                 return key
         except:
             pass

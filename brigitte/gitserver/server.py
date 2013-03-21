@@ -29,10 +29,10 @@ def find_git_shell():
     path = os.environ.get("PATH", os.defpath)
     for dir in path.split(os.pathsep):
         full_path = os.path.join(dir, 'git-shell')
-        if (os.path.exists(full_path)
-            and os.access(full_path, (os.F_OK | os.X_OK))):
+        if (os.path.exists(full_path) and os.access(full_path, (os.F_OK | os.X_OK))):
             return full_path
     raise Exception('Could not find git executable!')
+
 
 class GitSession(object):
     interface.implements(ISession)
@@ -90,8 +90,10 @@ class GitSession(object):
             self.writeErr(proto, 'Access for %s - read: %s write: %s' % (
                 db_user.username, access.can_read, access.can_write))
 
-            if ((want_write and not access.can_write)
-                or (not want_write and not access.can_read)):
+            if (
+                (want_write and not access.can_write)
+                or (not want_write and not access.can_read)
+            ):
                 self.writeErr(proto, 'Access denied!')
                 return False
 
@@ -100,7 +102,7 @@ class GitSession(object):
     def execute_git_command(self, proto, argv, repo):
         sh = self.user.shell
         command = ' '.join(argv[:-1] + ["'%s'" % (repo.path,)])
-        reactor.spawnProcess(proto, sh,(sh, '-c', command))
+        reactor.spawnProcess(proto, sh, (sh, '-c', command))
 
     def eofReceived(self):
         pass
@@ -121,6 +123,7 @@ class GitSession(object):
         except Repository.DoesNotExist:
             return None
 
+
 class GitPubKeyChecker(SSHPublicKeyDatabase):
     def get_pub_keys(self):
         log.msg('loading availble public keys')
@@ -135,6 +138,7 @@ class GitPubKeyChecker(SSHPublicKeyDatabase):
                 credentials.username = username
                 return True
         return False
+
 
 # Backport: http://twistedmatrix.com/trac/ticket/5142
 class GitProcessProtocolSession(SSHSession):
@@ -153,6 +157,7 @@ class GitProcessProtocolSession(SSHSession):
             self.client = pp
             return 1
 
+
 # Backport: http://twistedmatrix.com/trac/ticket/5142
 class GitProcessProtocol(SSHSessionProcessProtocol):
     def __init__(self, session):
@@ -170,6 +175,7 @@ class GitProcessProtocol(SSHSessionProcessProtocol):
     def errConnectionLost(self):
         self.lostErrFlag = True
 
+
 class GitConchUser(ConchUser):
     shell = find_git_shell()
 
@@ -181,12 +187,14 @@ class GitConchUser(ConchUser):
     def logout(self):
         pass
 
+
 class GitRealm(object):
     interface.implements(IRealm)
 
     def requestAvatar(self, username, mind, *interfaces):
         user = GitConchUser(username)
         return interfaces[0], user, user.logout
+
 
 class GitServer(SSHFactory):
     portal = Portal(GitRealm())

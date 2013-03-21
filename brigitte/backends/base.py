@@ -5,6 +5,7 @@ from subprocess import Popen, PIPE
 class ShellCommandException(Exception):
     pass
 
+
 class ShellMixin(object):
     def exec_command(self, command):
         if not isinstance(command, (list, tuple)):
@@ -20,6 +21,7 @@ class ShellMixin(object):
 
     def exec_command_strip(self, command):
         return self.exec_command(command).strip()
+
 
 class BaseRepo(ShellMixin):
     """ Base Repo class to inherit from. """
@@ -76,6 +78,7 @@ class BaseRepo(ShellMixin):
         """ This method should delete the repository """
         raise NotImplementedError
 
+
 class BaseCommit(ShellMixin):
     """ Base Commit class to inherit from. """
 
@@ -98,7 +101,7 @@ class BaseCommit(ShellMixin):
 
     def __init__(self, repo, params):
         self.repo = repo
-        self.__dict__.update(**dict([(str(k), v) for k,v in params.items()]))
+        self.__dict__.update(**dict([(str(k), v) for k, v in params.items()]))
 
     def __repr__(self):
         return u'<Commit: %s>' % self.id
@@ -174,6 +177,7 @@ class BaseCommit(ShellMixin):
         """
         raise NotImplementedError
 
+
 class BaseTag(ShellMixin):
     repo = None
     name = None
@@ -191,6 +195,7 @@ class BaseTag(ShellMixin):
     def last_commit(self):
         """ This property should return the last commit of this tag. """
         raise NotImplementedError
+
 
 class BaseBranch(ShellMixin):
     repo = None
@@ -212,6 +217,7 @@ class BaseBranch(ShellMixin):
         """ This property should return the last commit of this branch. """
         raise NotImplementedError
 
+
 class BaseTree(object):
     repo = None
     path = None
@@ -224,6 +230,7 @@ class BaseTree(object):
 
     def __repr__(self):
         return u'<Tree: %s>' % self.path
+
 
 class BaseFile(object):
     repo = None

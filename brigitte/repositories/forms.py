@@ -9,6 +9,7 @@ from brigitte.repositories.models import Repository, RepositoryUser
 class RepositoryDeleteForm(forms.Form):
     statisfied = forms.BooleanField('I want to delete this repository!')
 
+
 class RepositoryForm(forms.ModelForm):
     class Meta:
         model = Repository
@@ -34,6 +35,7 @@ class RepositoryForm(forms.ModelForm):
             raise forms.ValidationError('Repository name already in use.')
 
         return self.cleaned_data
+
 
 RepositoryUserFormSet = modelformset_factory(
     RepositoryUser,

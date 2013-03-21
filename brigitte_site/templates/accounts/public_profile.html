@@ -8,7 +8,7 @@
 {% block content %}
 <div class="content user">
     <div class="grid_16">
-        <a href="{% url repositories_user user.username %}"><h1>{{ user.username }}</h1></a>
+        <a href="{% url accounts_public_profile user.username %}"><h1>{{ user.username }}</h1></a>
     </div>
     <div class="grid_6">
         <h2>Public repositories</h2>
@@ -22,7 +22,7 @@
                 {% if repository.last_commit %}
                 <tr>
                     <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
-                    <td><a href="{% repo_url repositories_commit repository repository.last_commit.id %}">{{ repository.last_commit.commit_date }}</a></td>
+                    <td><a href="{% repo_url commits_commit repository repository.last_commit.id %}">{{ repository.last_commit.commit_date }}</a></td>
                 </tr>
                 {% else %}
                 <tr>

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -35,11 +36,21 @@ def profile(request):
         'public_repository_list': public_repositories,
     })
 
+
+def public_profile(request, user):
+    user = get_object_or_404(User, username=user)
+    return render(request, 'accounts/public_profile.html', {
+        'user': user,
+        'repository_list': user.repository_set.user_public_repositories(user),
+    })
+
+
 @login_required
 def keys_list(request):
     return render(request, 'accounts/keys_list.html', {
         'keys': request.user.sshpublickey_set.all(),
     })
+
 
 @login_required
 def keys_add(request):
@@ -56,6 +67,7 @@ def keys_add(request):
 
     return render(request, 'accounts/keys_add.html', {'form': form})
 
+
 @login_required
 def keys_change(request, pk):
     key = get_object_or_404(SshPublicKey, pk=pk, user=request.user)
@@ -70,6 +82,7 @@ def keys_change(request, pk):
         form = SshPublicKeyForm(instance=key)
 
     return render(request, 'accounts/keys_change.html', {'form': form})
+
 
 @login_required
 def keys_delete(request, pk):

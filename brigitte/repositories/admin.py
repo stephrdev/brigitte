@@ -8,8 +8,9 @@ class RepositoryUserInline(admin.TabularInline):
     model = RepositoryUser
     extra = 2
 
+
 class RepositoryAdmin(admin.ModelAdmin):
     list_display = ('title', 'path', 'user')
-    inlines = [RepositoryUserInline,]
+    inlines = [RepositoryUserInline]
 
 admin.site.register(Repository, RepositoryAdmin)

@@ -1,4 +1,4 @@
-## -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import os
 
 from django.conf import settings
@@ -9,12 +9,12 @@ from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
 
-from brigitte.repositories.backends import get_backend
-from brigitte.repositories.choices import REPO_TYPES
+from brigitte.backends import get_backend
+from brigitte.backends import REPO_TYPES
 
 
 BRIGITTE_GIT_BASE_PATH = getattr(settings, 'BRIGITTE_GIT_BASE_PATH',
-    'git_repositories')
+    os.path.join(settings.PROJECT_ROOT, 'git_repositories'))
 
 
 class RepositoryManager(models.Manager):
@@ -59,6 +59,7 @@ class RepositoryManager(models.Manager):
             )
         ).order_by('-last_commit_date')
 
+
 class Repository(models.Model):
     user = models.ForeignKey(User, verbose_name=_('User'))
     slug = models.SlugField(_('Slug'), max_length=80, blank=False)
@@ -75,13 +76,11 @@ class Repository(models.Model):
         return self.title
 
     def get_last_commit(self):
-        '''
-        TODO: cache self.last_commit with git hook ...
-        '''
+        # TODO: cache self.last_commit with git hook ...
         last_commit = self.last_commit
         if not self.last_commit_date and last_commit:
-           self.last_commit_date = last_commit.commit_date
-           self.save()
+            self.last_commit_date = last_commit.commit_date
+            self.save()
         elif self.last_commit_date and last_commit and self.last_commit_date != last_commit.commit_date:
             self.last_commit_date = self.last_commit.commit_date
             self.save()
@@ -96,17 +95,18 @@ class Repository(models.Model):
 
     @property
     def path(self):
-        return os.path.join(
-            BRIGITTE_GIT_BASE_PATH,
-            self.user.username,
-            '%s.git' % self.slug)
+        if self.repo_type == 'git':
+            return os.path.join(BRIGITTE_GIT_BASE_PATH, self.user.username,
+                '%s.git' % self.slug)
+
+        return None
 
     @property
     def short_path(self):
-        return '%s/%s.git' % (
-            self.user.username,
-            self.slug
-        )
+        if self.repo_type == 'git':
+            return '%s/%s.git' % (self.user.username, self.slug)
+
+        return None
 
     @property
     def _repo(self):
@@ -138,16 +138,15 @@ class Repository(models.Model):
     @property
     def rw_url(self):
         if self.repo_type == 'git':
-            return 'git@%s:%s/%s.git' % (
-                Site.objects.get_current(), self.user.username, self.slug)
+            return 'git@%s:%s' % (
+                Site.objects.get_current(), self.short_path)
 
         return None
 
     @property
     def ro_url(self):
         if self.repo_type == 'git':
-            return 'git://%s/%s/%s.git' % (
-                Site.objects.get_current(), self.user.username, self.slug)
+            return 'git://%s/%s' % (Site.objects.get_current(), self.short_path)
 
         return None
 
@@ -175,6 +174,7 @@ class Repository(models.Model):
         unique_together = ('user', 'slug')
         verbose_name = _('Repository')
         verbose_name_plural = _('Repositories')
+
 
 class RepositoryUser(models.Model):
     repo = models.ForeignKey(Repository, verbose_name=_('Repository'))

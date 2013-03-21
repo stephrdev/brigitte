@@ -7,11 +7,11 @@
 <div class="grid_16 content" id="repo-commit">
     <h1><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a> - {{ commit.short_id }} - Blob: /{{ file_path }}</h1>
 
-    {% include "repositories/snippet_commit.html" %}
+    {% include "commits/snippet_commit.html" %}
 
     <h2>/ {% for link in breadcrumb %}
         {% if not forloop.last %}
-        <a href="{% repo_url repositories_commit_tree repository commit.id link.path %}/">{{ link.name }}</a> /
+        <a href="{% repo_url trees_tree repository commit.id link.path %}/">{{ link.name }}</a> /
         {% else %}
         {{ link.name }}
         {% endif %}
