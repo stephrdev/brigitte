@@ -1,66 +1,72 @@
 {% extends "base.html" %}
 {% load gravatar_tags repositories_tags %}
-{% block title %}Repository: {{ repository.title }}{% endblock %}
+
+{% block title %}{{ repository.title }} - {{ branchtag }}{% endblock %}
 
 {% block content %}
-<script type="text/javascript">
-    $(document).ready(function(){
-        var baseurl = "{% repo_url repositories_summary repository %}commits/";
-        $("#tags").change(function(){
-            if (this.value.length > 0) {
-                window.location.href=baseurl+this.value;
-            }
-        });
-        $("#branches").change(function(){
-            if (this.value.length > 0) {
-                window.location.href=baseurl+this.value;
-            }
-        });
-    });
-</script>
-<div class="grid_16 content" id="repo-commits">
-    <h1>{{ repository.title }} - {{ branchtag }}</h1>
-    <div class="grid_8">
-        {% if repository.branches %}
-            <div class="repo-branches">
-                Branches:
-                <select name="branches" id="branches">
-                    <option value="">--------</option>
-                    {% for branch in repository.branches %}
-                    <option value="{{ branch.name }}"{% if branch.name == branchtag %} selected="selected"{% endif %}>{{ branch.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        {% endif %}
-    </div>
-    <div class="grid_8">
-        {% if repository.tags %}
-            <div class="repo-tags">
-                Tags:
-                <select name="branches" id="tags">
-                    <option value="">--------</option>
-                    {% for tag in repository.tags %}
-                    <option value="{{ tag.name }}"{% if tag.name == branchtag %} selected="selected"{% endif %}>{{ tag.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        {% endif %}
-    </div>
-    <div class="pagination">
-        {% if prev_page %}<a class="prev-page" href="?page={{ prev_page }}">prev page</a>{% endif %}
-        <a class="next-page" href="?page={{ next_page }}">next page</a>
-        <div style="clear:both"></div>
-    </div>
+    <h1><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a> - {{ branchtag }}</h1>
 
-    <div class="recent-commits">
+    {% if repository.branches %}
+    <div class="btn-group">
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+            Branches
+            <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu" role="menu" aria-labelledby="branches">
+            {% for branch in repository.branches %}
+                <li{% if branch.name == branchtag %} class="disabled"{% endif %}>
+                    <a tabindex="-1" href="{% repo_url commits_commits repository branch.name %}">{{ branch.name }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if repository.tags %}
+    <div class="btn-group">
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+            Tags
+            <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu" role="menu" aria-labelledby="tags">
+            {% for tag in repository.tags %}
+                <li{% if tag.name == branchtag %} class="disabled"{% endif %}>
+                    <a tabindex="-1" href="{% repo_url commits_commits repository tag.name %}">{{ tag.name }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <ul class="pager">
+        {% if prev_page %}
+            <li class="previous">
+                <a href="?page={{ prev_page }}">&larr; prev page</a>
+            </li>
+        {% endif %}
+
+        {% if next_page %}
+            <li class="next">
+                <a href="?page={{ next_page }}">next page &rarr;</a>
+            </li>
+        {% endif %}
+    </ul>
+
     {% for commit in commits %}
         {% include "commits/snippet_commit.html" %}
     {% endfor %}
-    </div>
-    <div class="pagination">
-        {% if prev_page %}<a class="prev-page" href="?page={{ prev_page }}">prev page</a>{% endif %}
-        <a class="next-page" href="?page={{ next_page }}">next page</a>
-        <div style="clear:both"></div>
-    </div>
-</div>
+
+    <ul class="pager">
+        {% if prev_page %}
+            <li class="previous">
+                <a href="?page={{ prev_page }}">&larr; prev page</a>
+            </li>
+        {% endif %}
+
+        {% if next_page %}
+            <li class="next">
+                <a href="?page={{ next_page }}">next page &rarr;</a>
+            </li>
+        {% endif %}
+    </ul>
 {% endblock %}

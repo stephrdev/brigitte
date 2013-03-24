@@ -17,16 +17,16 @@ def commits(request, repo, branchtag):
     skip = (page * count) - count
     if skip < 0:
         skip = 0
-    commits = repo.get_commits(count=count, skip=skip, head=branchtag)
+    commits = repo.get_commits(count=count + 1, skip=skip, head=branchtag)
     if not commits:
         raise Http404
 
     return render(request, 'commits/commits.html', {
         'repository': repo,
-        'commits': commits,
+        'commits': commits[:count],
         'branchtag': branchtag,
-        'next_page': page + 1,
-        'prev_page': page - 1,
+        'next_page': page + 1 if len(commits) > count else None,
+        'prev_page': page - 1 if page > 1 else None,
     })
 
 
