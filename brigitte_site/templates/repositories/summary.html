@@ -1,107 +1,112 @@
 {% extends "base.html" %}
 {% load repositories_tags %}
-{% block title %}Repository: {{ repository.title }}{% endblock %}
+{% block title %}{{ repository.title }}{% endblock %}
 
 {% block meta_description %}{{ repository.description }}{% endblock %}
 {% block meta_keywords %}{{ repository.title }}, {{ repository.user.username }}, brigitte, git{% endblock %}
 
 {% block content %}
-<div class="grid_16 content" id="repo-summary">
     <h1>{{ repository.title }}</h1>
 
-    <div class="repo-description">{{ repository.description|linebreaks }}</div>
+    <p class="lead">{{ repository.description|linebreaksbr }}</p>
 
-    <ul class="repo-facts">
-        <li><i>Owner:</i> {{ repository.user.username }} ({{ repository.user.email }})</li>
+    <dl class="dl-horizontal">
+        <dt>Repository owner:</dt>
+        <dd><a href="{% url accounts_public_profile repository.user.username %}">{{ repository.user.username }}</a></dd>
+
         {% if repository.last_commit %}
-        <li><i>Last change:</i> <a href="{% repo_url commits_commit repository repository.last_commit.id %}">{{ repository.last_commit.commit_date }}</a></li>
+            <dt>Last change:</dt>
+            <dd><a href="{% repo_url commits_commit repository repository.last_commit.id %}">{{ repository.last_commit.commit_date }}</a></dd>
         {% endif %}
+
         {% if not repository.private %}
-        <li><i>GIT (RO) URL</i> git clone {{ repository.ro_url }}</li>
+            <dt>Read URL (git)</dt>
+            <dd>{{ repository.ro_url }}</dd>
         {% endif %}
-        <li><i>SSH URL</i> git clone {{ repository.rw_url }}</li>
-    </ul>
-    <div style="clear:both"></div>
+
+        <dt>Write URL (ssh)</dt>
+        <dd>{{ repository.rw_url }}</dd>
+    </dl>
 
     {% if repository.last_commit %}
+        {% block commits %}
+            <h2>Recent commits</h2>
 
-    {% block commits %}
-    <h2>Recent commits</h2>
-
-    <div class="recent-commits">
-        <table>
-            <thead>
-                <th>Date</th>
-                <th>Commit</th>
-                <th>Committer</th>
-                <th>&nbsp;</th>
-            </thead>
-            <tbody>
-            {% for commit in repository.recent_commits %}
-                {% include "commits/snippet_short_commit.html" %}
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% endblock %}
-
-    <h2>Heads (<a href="{% repo_url repositories_heads repository %}">Show all</a>)</h2>
-
-    <div class="heads">
-        <div class="grid_8">
-            <h3>Branches</h3>
-            <table>
+            <table class="table table-hover">
                 <thead>
-                    <th>Branch</th>
-                    <th>Last commit</th>
-                    <th>&nbsp;</th>
+                    <tr>
+                        <th>Date</th>
+                        <th>Commit</th>
+                        <th>Committer</th>
+                        <th></th>
+                    </tr>
                 </thead>
                 <tbody>
-                    {% for branch in branches %}
-                    <tr>
-                        <td>
-                            <strong><a href="{% repo_url commits_commits repository branch.name %}">{{ branch.name }}</a></strong>
-                            {% if branch.is_master %}*{% endif %}
-                        </td>
-                        <td>{{ branch.last_commit.commit_date }}</td>
-                        <td>
-                            <a href="{% repo_url commits_commits repository branch.name %}">Commits</a>
-                            <a href="{% repo_url trees_tree_root repository branch.last_commit.id %}">Tree</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
+                {% for commit in repository.recent_commits %}
+                    {% include "commits/snippet_short_commit.html" %}
+                {% endfor %}
                 </tbody>
             </table>
-        </div>
-        <div class="grid_8">
-            <h3>Tags</h3>
-            <table>
-                <thead>
-                    <th>Tag</th>
-                    <th>Last commit</th>
-                    <th>&nbsp;</th>
-                </thead>
-                <tbody>
-                    {% for tag in tags %}
-                        {% if tag.last_commit %}
+        {% endblock %}
+
+        <h2>Heads (<a href="{% repo_url repositories_heads repository %}">Show all</a>)</h2>
+
+        <div class="row">
+            <div class="span6">
+                <h3>Branches</h3>
+                <table class="table table-hover">
+                    <thead>
                         <tr>
-                            <td><strong><a href="{% repo_url commits_commits repository tag.name %}">{{ tag.name }}</a></strong></td>
-                            <td>{{ tag.last_commit.commit_date }}</td>
+                            <th>Branch</th>
+                            <th>Last commit</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for branch in branches %}
+                        <tr>
                             <td>
-                                <a href="{% repo_url commits_commits repository tag.name %}">Commits</a>
-                                <a href="{% repo_url trees_tree_root repository tag.last_commit.id %}">Tree</a>
-                                {# <a href="{% repo_url commits_archive repository tag.last_commit.id %}">Archive</a> #}
+                                <a href="{% repo_url commits_commits repository branch.name %}">{{ branch.name }}</a>
+                                {% if branch.is_master %}*{% endif %}
+                            </td>
+                            <td>{{ branch.last_commit.commit_date }}</td>
+                            <td>
+                                <a href="{% repo_url commits_commits repository branch.name %}" class="btn">Commits</a>
+                                <a href="{% repo_url trees_tree_root repository branch.last_commit.id %}" class="btn">Tree</a>
                             </td>
                         </tr>
-                        {% endif %}
-
-                    {% endfor %}
-                </tbody>
-            </table>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="span6">
+                {% if tags %}
+                    <h3>Tags</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tag</th>
+                                <th>Last commit</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tag in tags %}
+                            <tr>
+                                <td><strong><a href="{% repo_url commits_commits repository tag.name %}">{{ tag.name }}</a></strong></td>
+                                <td>{{ tag.last_commit.commit_date }}</td>
+                                <td>
+                                    <a href="{% repo_url commits_commits repository tag.name %}" class="btn">Commits</a>
+                                    <a href="{% repo_url trees_tree_root repository tag.last_commit.id %}" class="btn">Tree</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            </div>
         </div>
-    </div>
     {% else %}
-    <h2>This repository is empty. Feel free to push some commits.</h2>
+        <p class="lead">This repository is empty. Feel free to push some commits.</p>
     {% endif %}
-</div>
 {% endblock %}

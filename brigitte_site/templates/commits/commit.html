@@ -1,40 +1,49 @@
 {% extends "base.html" %}
 {% load gravatar_tags repositories_tags utils_tags %}
 
-{% block title %}Repository: {{ repository.title }} - {{ commit.id }}{% endblock %}
+{% block title %}{{ repository.title }} - {{ commit.id }}{% endblock %}
 
 {% block content %}
-<div class="grid_16 content" id="repo-commit">
     <h1><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a> - Commit {{ commit.id }}</h1>
 
     {% include "commits/snippet_commit.html" %}
 
-    <div class="changed-files">
+    <table class="table table-hover changed-files">
+        <thead>
+            <tr>
+                <th>File</th>
+                <th><span class="pull-right">Changes</span></th>
+            </tr>
+        </thead>
+        <tbody>
         {% for file in commit.changed_files %}
-        <div>
-            <div class="changed-file"><a href="#{{ file.file }}">{{ file.file }}</a></div>
-            <div class="changed-lines">
-                <span class="added"><strong>{{ file.lines_added }}</strong> added</span>
-                <span class="removed"><strong>{{ file.lines_removed }}</strong> removed</span>
-            </div>
-        </div>
-        <div style="clear:both"></div>
-        {% if not forloop.last %}<hr />{% endif %}
+        <tr>
+            <td><a href="#{{ file.file }}">{{ file.file }}</a></td>
+            <td>
+                <span class="pull-right">
+                    <span class="label label-success">{{ file.lines_added }} added</span>
+                    <span class="label label-important">{{ file.lines_removed }} removed</span>
+                </span>
+            </td>
+        </tr>
         {% endfor %}
-    </div>
-    {% if commit.changed_files|length <= 20 %}
-        {% for diff in commit.file_diffs %}{% with forloop as diffloop %}
-        <a name="{{ diff.file }}"></a>        <h2>{{ diff.file }}</h2>
-        <div class="commit-diff">
-            <pre class="lines">{% for line1, line2 in diff.line_numbers %}<a id="LL{{ diffloop.counter }}-{{ line1 }}" href="#LL{{ diffloop.counter }}-{{ line1 }}">{{ line1 }}</a> 
-{% endfor %}</pre>
-            <pre class="lines">{% for line1, line2 in diff.line_numbers %}<a id="LR{{ diffloop.counter }}-{{ line2 }}" href="#LR{{ diffloop.counter }}-{{ line2 }}">{{ line2 }}</a> 
-{% endfor %}</pre>
-            <pre class="diff">{{ diff.diff|pygmentize_diff }}</pre>
-            <div style="clear:both"></div>
-        </div>
-        {% endwith %}{% endfor %}
-    {% endif %}
-    </div>
-{% endblock %}
+        </tbody>
+    </table>
 
+    {% if commit.changed_files|length <= 20 %}
+        {% for diff in commit.file_diffs %}
+            {% with forloop as diffloop %}
+                <a name="{{ diff.file }}"></a><h3>{{ diff.file }}</h3>
+                {% if diff.line_numbers %}
+                    <pre class="lines linesl">{% for line1, line2 in diff.line_numbers %}<a id="LL{{ diffloop.counter }}-{{ line1 }}" href="#LL{{ diffloop.counter }}-{{ line1 }}">{{ line1 }}</a>
+{% endfor %}</pre>
+                    <pre class="lines linesr">{% for line1, line2 in diff.line_numbers %}<a id="LR{{ diffloop.counter }}-{{ line2 }}" href="#LR{{ diffloop.counter }}-{{ line2 }}">{{ line2 }}</a>
+{% endfor %}</pre>
+                    <pre class="diff no-left-border">{{ diff.diff|pygmentize_diff }}</pre>
+                {% else %}
+                    <pre class="diff"><span class="gd">--- File empty</span></pre>
+                {% endif %}
+            {% endwith %}
+        {% endfor %}
+    {% endif %}
+{% endblock %}

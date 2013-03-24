@@ -65,7 +65,7 @@ def keys_add(request):
     else:
         form = SshPublicKeyForm()
 
-    return render(request, 'accounts/keys_add.html', {'form': form})
+    return render(request, 'accounts/keys_change.html', {'form': form})
 
 
 @login_required
@@ -81,7 +81,7 @@ def keys_change(request, pk):
     else:
         form = SshPublicKeyForm(instance=key)
 
-    return render(request, 'accounts/keys_change.html', {'form': form})
+    return render(request, 'accounts/keys_change.html', {'form': form, 'key': key})
 
 
 @login_required

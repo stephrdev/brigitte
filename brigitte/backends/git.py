@@ -313,7 +313,7 @@ class Commit(BaseCommit):
                 lines_added, lines_removed = self._get_diff_line_numbers(
                     diff, count=True)
                 files.append({
-                    'file': change.new.path,
+                    'file': change.new.path or change.old.path,
                     'lines_added': lines_added,
                     'lines_removed': lines_removed,
                     'change_type': change.type,
@@ -367,9 +367,13 @@ class Commit(BaseCommit):
         if not file_diff:
             files = self.get_tree_changes(True)
             diff = cStringIO.StringIO()
-            write_object_diff(diff, self.repo.git_repo,
-                files[path].old, files[path].new)
-            diff = diff.getvalue()
+            try:
+                write_object_diff(diff, self.repo.git_repo,
+                    files[path].old, files[path].new)
+                diff = diff.getvalue()
+            except KeyError:
+                diff = u''
+
             try:
                 diff = diff.decode('utf-8')
             except UnicodeDecodeError:

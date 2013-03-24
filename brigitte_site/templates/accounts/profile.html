@@ -4,91 +4,82 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="content user">
-    <div class="grid_16">
-        <h2>Your private repositories</h2>
-        <table class="private">
-             <colgroup>
-                 <col style="width:auto" />
-                 <col style="width:130px" />
-                 <col style="width:200px" />
-                 <col style="width:50px;" />
-                 <col style="width:100px" />
-            </colgroup>
-            <thead>
-                <th>Project</th>
-                <th>Owner</th>
-                <th>Last commit</th>
-                <th>Write</th>
-                <th>Admin</th>
-            </thead>
-            <tbody>
-            {% for repository in private_repository_list %}
-                <tr>
-                    {% if repository.last_commit %}
-                        <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
-                        <td>{{ repository.user.username }}</td>
-                        <td><a href="{% repo_url commits_commit repository repository.get_last_commit.id %}">{{ repository.get_last_commit.commit_date }}</a></td>
-                        {% else %}
-                        <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
-                        <td>{{ repository.user.username }}</td>
-                        <td>No commits</td>
-                    {% endif %}
-                    <td>{{ repository.can_write }}</td>
-                    <td>{% if repository.can_admin %}
-                            <a href="{% repo_url repositories_manage_change repository %}">Settings</a>
-                        {% else %}
-                            no rights
-                        {% endif %}
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        <br />
-        <h2>Your public repositories</h2>
-        <table>
-            <colgroup>
-                <col style="width:auto" />
-                <col style="width:130px" />
-                <col style="width:200px" />
-                <col style="width:50px;" />
-                <col style="width:100px" />
-            </colgroup>
-            <thead>
-                <th>Project</th>
-                <th>Owner</th>
-                <th>Last commit</th>
-                <th>Write</th>
-                <th>Admin</th>
-            </thead>
-            <tbody>
-            {% for repository in public_repository_list %}
-                <tr>
-                    {% if repository.last_commit %}
-                    <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
-                    <td>{{ repository.user.username }}</td>
-                    <td><a href="{% repo_url commits_commit repository repository.get_last_commit.id %}">{{ repository.get_last_commit.commit_date }}</a></td>
-                    {% else %}
-                        <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
-                        <td>{{ repository.user.username }}</td>
-                        <td>No commits</td>
-                    {% endif %}
-                    <td>{{ repository.can_write }}</td>
-                    <td>{% if repository.can_admin %}
-                            <a href="{% repo_url repositories_manage_change repository %}">Settings</a>
-                        {% else %}
-                            no rights
-                        {% endif %}
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        <p>
+    <h1>Dashboard</h1>
+    <p>
         <a href="{% url repositories_manage_add %}">Create a new repository</a>
-        </p>
-    </ul>
+    </p>
+    <div class="row">
+        <div class="span6">
+            <h2>Your private repositories</h2>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Last commit</th>
+                        <th>Owner</th>
+                        <th>Write</th>
+                        <th>Manage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for repository in private_repository_list %}
+                    <tr>
+                        <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
+                        {% if repository.last_commit %}
+                            <td><a href="{% repo_url commits_commit repository repository.get_last_commit.id %}">
+                                {{ repository.get_last_commit.commit_date }}</a></td>
+                        {% else %}
+                            <td>&mdash;</td>
+                        {% endif %}
+                        <td>{{ repository.user.username }}</td>
+                        <td>{{ repository.can_write }}</td>
+                        <td>
+                            {% if repository.can_admin %}
+                                <a href="{% repo_url repositories_manage_change repository %}">Manage</a>
+                            {% else %}
+                                &#10005;
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="span6">
+            <h2>Your public repositories</h2>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Last commit</th>
+                        <th>Owner</th>
+                        <th>Write</th>
+                        <th>Manage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for repository in public_repository_list %}
+                    <tr>
+                        <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
+                        {% if repository.last_commit %}
+                            <td><a href="{% repo_url commits_commit repository repository.get_last_commit.id %}">
+                                {{ repository.get_last_commit.commit_date }}</a></td>
+                        {% else %}
+                            <td>&mdash;</td>
+                        {% endif %}
+                        <td>{{ repository.user.username }}</td>
+                        <td>{{ repository.can_write }}</td>
+                        <td>
+                            {% if repository.can_admin %}
+                                <a href="{% repo_url repositories_manage_change repository %}" class="btn">Manage</a>
+                            {% else %}
+                                &#10005;
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 {% endblock %}

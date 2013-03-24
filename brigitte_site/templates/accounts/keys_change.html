@@ -1,19 +1,16 @@
 {% extends "base.html" %}
+{% load floppyforms %}
 
-{% block title %}Change public key{% endblock %}
+{% block title %}{% if key %}Change public key: {{ key.description }}{% else %}Add public key{% endif %}{% endblock %}
 
 {% block content %}
-    <div class="grid_16 content">
-        <h1>Change public key</h1>
+    <h1>{% if key %}Change public key: {{ key.description }}{% else %}Add public key{% endif %}</h1>
 
-        <form action="." method="post" class="form">
-            {% csrf_token %}
-            <fieldset>
-                {{ form.as_p }}
-            </fieldset>
-            <fieldset class="submitrow">
-                <p><label>&nbsp;</label><button type="submit">Save public key</button></p>
-            </fieldset>
-        </form>
-    </div>
+    <form action="." method="post" class="form-horizontal key-change">{% csrf_token %}
+        {% form form %}
+        <div class="form-actions">
+            <button class="btn btn-primary" type="submit">{% if key %}Save public key{% else %}Add public key{% endif %}</button>
+            <button class="btn" type="reset">Reset</button>
+        </div>
+    </form>
 {% endblock %}

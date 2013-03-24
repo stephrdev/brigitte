@@ -129,7 +129,7 @@ def summary(request, repo):
     return render(request, 'repositories/summary.html', {
         'repository': repo,
         'branches': repo.branches[:10],
-        'tags': repo.tags[:10],
+        'tags': [tag for tag in repo.tags[:10] if tag.last_commit],
     })
 
 

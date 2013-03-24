@@ -54,6 +54,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.staticfiles',
+    'floppyforms',
     'south',
     'userprofiles',
     'userprofiles.contrib.accountverification',
@@ -177,6 +178,7 @@ USERPROFILES_DOUBLE_CHECK_EMAIL = True
 USERPROFILES_DOUBLE_CHECK_PASSWORD = True
 USERPROFILES_REGISTRATION_FULLNAME = True
 USERPROFILES_USE_ACCOUNT_VERIFICATION = True
+USERPROFILES_USE_EMAIL_VERIFICATION = True
 USERPROFILES_USE_PROFILE = True
 USERPROFILES_INLINE_PROFILE_ADMIN = True
 USERPROFILES_REGISTRATION_FORM = 'brigitte.accounts.forms.ProfileRegistrationForm'

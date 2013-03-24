@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from subprocess import Popen, PIPE
 
+from django.contrib.auth.models import User
+
 
 class ShellCommandException(Exception):
     pass
@@ -176,6 +178,15 @@ class BaseCommit(ShellMixin):
         {'file': 'myfile.py', 'line_numbers': [], 'diff': '............'}
         """
         raise NotImplementedError
+
+    @property
+    def brigitte_user(self):
+        if not hasattr(self, '_brigitte_user'):
+            try:
+                self._brigitte_user = User.objects.get(email=self.committer_email)
+            except User.DoesNotExist:
+                self._brigitte_user = None
+        return self._brigitte_user
 
 
 class BaseTag(ShellMixin):

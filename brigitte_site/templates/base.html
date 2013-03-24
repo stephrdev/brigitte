@@ -1,61 +1,84 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>brigitte | {% block title %}Home{% endblock %}</title>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>{% block title %}Home{% endblock %} | brigitte</title>
 
-    <meta name="description" content="{% block meta_description %}brigitte - Simple and free private GIT repository hosting.{% endblock %}" />
-    <meta name="keywords" content="{% block meta_keywords %}brigitte, git, repository hosting{% endblock %}" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/reset.css" type="text/css" />
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/960.css" type="text/css" />
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/screen.css" type="text/css" />
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/code_native.css" type="text/css" />
+        <meta name="description" content="{% block meta_description %}brigitte - Simple and free private GIT repository hosting.{% endblock %}" />
+        <meta name="keywords" content="{% block meta_keywords %}brigitte, git, repository hosting{% endblock %}" />
 
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
-    <link href="http://fonts.googleapis.com/css?family=Anonymous+Pro:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css" >
+        <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="{{ STATIC_URL }}css/brigitte.css" type="text/css" />
+        <link rel="stylesheet" href="{{ STATIC_URL }}css/code_friendly.css" type="text/css" />
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
-    {% block extra_head %}{% endblock %}
-</head>
-<body>
-    <div class="container_16" id="container">
-        <div class="grid_6" id="header">
-            <a href="/"><h1>bri<span>git</span>te.io</h1></a>
+        <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+        <!--[if lt IE 9]>
+            <script src="assets/js/html5shiv.js"></script>
+        <![endif]-->
+
+        {% block extra_head %}{% endblock %}
+    </head>
+    <body>
+        <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                    <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="brand" href="/">bri<span>git</span>te.io</a>
+                    <div class="nav-collapse collapse">
+                    {% if request.user.is_authenticated %}
+                        <ul class="nav pull-right">
+                            <li><a href="{% url accounts_profile %}">Dashboard ({{ request.user.username }})</a></li>
+                            <li><a href="{% url userprofiles_profile_change %}">Edit profile</a></li>
+                            <li><a href="{% url accounts_keys_list %}">Manage public keys</a></li>
+                            <li><a href="{% url auth_logout %}">Logout</a></li>
+                        </ul>
+                    {% else %}
+                        <ul class="nav pull-right">
+                            <li><a href="{% url userprofiles_registration %}">Register</a></li>
+                            <li><a href="{% url auth_login %}">Login</a></li>
+                        </ul>
+                    {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="grid_10" id="headernav">
-        {% if request.user.is_authenticated %}
-            <ul>
-                <li><a href="{% url repositories_overview %}">Start</a></li>
-                <li><a href="{% url accounts_profile %}">Dashboard</a></li>
-                <li><a href="{% url accounts_public_profile request.user.username %}">Public profile</a></li>
-                <li><a href="{% url userprofiles_profile_change %}">Edit profile</a></li>
-                <li><a href="{% url accounts_keys_list %}">Manage public keys</a></li>
-                <li><a href="{% url auth_logout %}">Logout</a></li>
-            </ul>
-            <div class="clear"></div>
-            <div>Welcome back, <strong>{{ request.user.username }}</strong></div>
-        {% else %}
-            <ul>
-                <li><a href="{% url userprofiles_registration %}">Register</a></li>
-                <li><a href="{% url auth_login %}">Login</a></li>
-            </ul>
-        {% endif %}
+
+        <div class="container">
+            {% include "snippets/messages.html" %}
+
+            {% block content %}
+            {% endblock %}
         </div>
-        <div class="clear"></div>
-        <div class="grid_16" id="headerdelim"></div>
-        {% include "snippets/messages.html" %}
-        {% block content %}
-        {% endblock %}
-        <div class="clear"></div>
-        {% block footer %}
-        {% endblock %}
-        <div class="grid_16" style="padding-top:20px;color:#666666">
-            <p>
-                <strong>This project is currenty <em>beta</em>.</strong> We don't guarantee anything at the moment, especially no data availability (no backups) and no data security. But we try our best! ;-)<br />
-                For more information visit <a href="http://brigittehq.com/">brigittehq.com</a>.
-            </p>
-        </div>
-    </div>
-</body>
+
+        <footer class="footer">
+            {% block footer %}
+            {% endblock %}
+
+            <div class="container">
+                <div class="row">
+                    <div class="span8">
+                        <p><strong>This project is currenty <em>beta</em>.</strong> We don't guarantee anything at the moment,
+                        especially no data availability (no backups) and no data security. But we try our best! ;-)</p>
+                    </div>
+                    <div class="span4">
+                        <p>For more information visit <a href="http://brigittehq.com/">brigittehq.com</a></p>
+                        <p><a href="http://glyphicons.com">Glyphicons Free</a> licensed under
+                        <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a></p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script src="{{ STATIC_URL }}js/bootstrap.min.js"></script>
+        <script src="{{ STATIC_URL }}js/bootbox.min.js"></script>
+
+        {% block extra_body %}{% endblock %}
+    </body>
 </html>

@@ -3,35 +3,51 @@
 {% block title %}Manage public keys{% endblock %}
 
 {% block content %}
-    <div class="grid_16 content">
-        <h1>Manage public keys</h1>
-        <p style="margin-bottom:10px">
-            <a href="{% url accounts_keys_add %}">To add a new public key, click here.</a>
-        </p>
-        <table>
-            <thead>
+    <h1>Manage public keys</h1>
+    <p>
+        <a href="{% url accounts_keys_add %}">To add a new public key, click here</a>
+    </p>
+    <table class="table table-hover">
+        <thead>
             <tr>
                 <th>Description</th>
                 <th>Key</td>
                 <th>Read access</th>
                 <th>Write access</th>
-                <th>&nbsp;</th>
+                <th>Manage</th>
             </tr>
-            </thead>
-            <tbody>
-                {% for key in keys %}
-                <tr>
-                    <td>{{ key.description }}</td>
-                    <td>{{ key.short_key }}</td>
-                    <td>{{ key.can_read_html }}</td>
-                    <td>{{ key.can_write_html }}</td>
-                    <td>
-                        <a href="{% url accounts_keys_change key.pk %}">Edit</a>
-                        <a href="{% url accounts_keys_delete key.pk %}">Delete</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        </thead>
+        <tbody>
+            {% for key in keys %}
+            <tr>
+                <td class="key-description">{{ key.description }}</td>
+                <td>{{ key.short_key }}</td>
+                <td>{{ key.can_read_html }}</td>
+                <td>{{ key.can_write_html }}</td>
+                <td>
+                    <a href="{% url accounts_keys_change key.pk %}" class="btn">Edit</a>
+                    <a href="{% url accounts_keys_delete key.pk %}" class="btn btn-danger key-delete">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     </div>
+{% endblock %}
+
+{% block extra_body %}
+    <script type="text/javascript">
+        $('a.key-delete').click(function(e) {
+            e.preventDefault();
+
+            var $that = $(this);
+            var key_name = $that.parent().parent().find('td.key-description').text();
+
+            bootbox.confirm('Do you want to delete the key "' + key_name + '"?', function(result) {
+                if (result === true) {
+                    window.location.href=$that.attr('href');
+                };
+            });
+        });
+    </script>
 {% endblock %}

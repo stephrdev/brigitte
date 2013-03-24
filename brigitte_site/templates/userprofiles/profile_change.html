@@ -1,27 +1,28 @@
 {% extends "base.html" %}
+{% load floppyforms %}
 
 {% block title %}Change profile{% endblock %}
 
 {% block content %}
-    <div class="grid_16 content">
-        <h1>Change your profile</h1>
-
-        <form action="." method="post" class="form">
-            {% csrf_token %}
-            <fieldset>
-                <p>
-                    Your current E-Mail is {{ request.user.email }},
-                    <a href="{% url userprofiles_email_change %}">click here to change the address</a>.
-                </p>
-                <p>
-                    To change your password, <a href="{% url auth_password_change %}">click here</a>.
-                </p>
-                <br />
-                {{ form.as_p }}
-            </fieldset>
-            <fieldset class="submitrow">
-                <p><label>&nbsp;</label><button type="submit">Save changes</button></p>
-            </fieldset>
-        </form>
+    <h1>Change your profile</h1>
+    <div class="row">
+        <div class="span8">
+            <form action="." method="post" class="form-horizontal">{% csrf_token %}
+                {% form form %}
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit">Save changes</button>
+                    <button class="btn" type="reset">Reset</button>
+                </div>
+            </form>
+        </div>
+        <div class="span4">
+            <p>
+                Your current E-Mail is <em>{{ request.user.email }}</em>,<br />
+                <a href="{% url userprofiles_email_change %}">click here to change the address</a>.
+            </p>
+            <p>
+                To change your password, <a href="{% url auth_password_change %}">click here</a>.
+            </p>
+        </div>
     </div>
 {% endblock %}

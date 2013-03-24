@@ -1,0 +1,90 @@
+body {
+     padding-top: 60px;
+}
+
+h1 {
+    font-size: 24.5px; /* 31.5px */
+}
+h2 {
+  font-size: 17.5px;
+  line-height: 20px;
+}
+
+h3 {
+  font-size: 17.5px;
+  line-height: 20px;
+}
+
+div.navbar span.welcome { padding-left: 20px; }
+div.navbar a.brand { color: #ffffff; }
+
+footer {
+    margin-top: 60px;
+}
+
+input[type="text"], input[type="password"], textarea {
+    width: 350px;
+}
+
+form.key-change input[type="text"], form.key-change textarea {
+    width: 700px;
+}
+form.registration input[type="text"], form.registration input[type="password"] {
+    width: 250px;
+}
+form.registration textarea {
+    width: 730px;
+    height: 90px;
+}
+div.commit, table.changed-files {
+    border: 1px solid #dddddd;
+    padding: 0 10px;
+    margin-bottom: 20px;
+    border-collapse: separate;
+    *border-collapse: collapse;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+div.commit hr {
+    margin: 10px 0px;
+}
+div.commit img {
+    float: left;
+    margin-right: 10px;
+}
+div.commit dl {
+    margin-top: 10px;
+    margin-bottom: 14px;
+}
+pre.lines {
+    float: left;
+    margin-right: 0px;
+}
+pre.linesl {
+    -webkit-border-top-right-radius: 0px;
+    -webkit-border-bottom-right-radius: 0px;
+    -moz-border-radius-topright: 0px;
+    -moz-border-radius-bottomright: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border-right: 0;
+}
+pre.linesr {
+    border-radius: 0;
+    -moz-border-radius: 0;
+    -webkit-border-radius: 0;
+    border-right: 0;
+}
+pre.diff {
+    overflow-x: auto;
+    white-space: pre;
+}
+pre.no-left-border {
+    -webkit-border-top-left-radius: 0px;
+    -webkit-border-bottom-left-radius: 0px;
+    -moz-border-radius-topleft: 0px;
+    -moz-border-radius-bottomleft: 0px;
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+}

@@ -1,10 +1,6 @@
-{% if messages %}
-    <div class="grid_16" id="messages">
-        {% for message in messages %}
-        <div id="message_{{ forloop.counter }}" class="message{% if message.tags %} {{ message.tags }}{% endif %}">
-            <a href="#" onclick="$('#message_{{ forloop.counter }}').fadeOut();" class="close">[close]</a>
-            <p>{{ message }}</p>
-        </div>
-        {% endfor %}
+{% for message in messages %}
+    <div class="alert {% if message.tags %} alert-{{ message.tags }}{% endif %}" data-dismiss="alert">
+        <a class="close" data-dismiss="alert" href="#">&times;</a>
+        {{ message }}
     </div>
-{% endif %}
+{% endfor %}

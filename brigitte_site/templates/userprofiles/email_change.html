@@ -1,18 +1,15 @@
 {% extends "base.html" %}
+{% load floppyforms %}
 
 {% block title %}Change e-mail address{% endblock %}
 
 {% block content %}
-    <div class="grid_16 content">
-        <h1>Change your e-mail address</h1>
+    <h1>Change e-mail address</h1>
 
-        <form action="." method="post" class="form">
-            {% csrf_token %}
-            <fieldset>
-                {{ form.as_p }}
-            </fieldset>
-            <fieldset class="submitrow">
-                <p><label>&nbsp;</label><button type="submit">change e-mail address</button></p>
-            </fieldset>
-        </form>
+    <form action="." method="post" class="form-horizontal">{% csrf_token %}
+        {% form form %}
+        <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Change e-mail address</button>
+        </div>
+    </form>
 {% endblock %}

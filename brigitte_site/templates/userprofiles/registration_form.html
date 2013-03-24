@@ -1,0 +1,39 @@
+{% extends "floppyforms/layouts/default.html" %}
+{% load floppyforms %}
+
+{% block rows %}
+    <fieldset>
+        <legend>Account</legend>
+        <div class="row">
+            <div class="span6">
+                {% formrow form.username %}
+            </div>
+        </div>
+    </fieldset>
+    <fieldset>
+        <legend>E-mail and password</legend>
+        <div class="row">
+            <div class="span6">
+                {% formrow form.email %}
+                {% formrow form.password %}
+            </div>
+            <div class="span6">
+                {% formrow form.email_repeat %}
+                {% formrow form.password_repeat %}
+            </div>
+        </div>
+    </fieldset>
+    <fieldset>
+        <legend>Personal information</legend>
+        <div class="row">
+            <div class="span6">
+                {% formrow form.first_name %}
+            </div>
+            <div class="span6">
+                {% formrow form.last_name %}
+            </div>
+        </div>
+        {% formrow form.short_info %}
+    </fieldset>
+    {% formconfig row with hidden_fields=form.hidden_fields %}
+{% endblock %}

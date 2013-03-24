@@ -6,45 +6,41 @@
 {% block meta_keywords %}{{ user.username }}, {% for repository in repository_list %}{{ repository.title }}, {% endfor %}brigitte{% endblock %}
 
 {% block content %}
-<div class="content user">
-    <div class="grid_16">
-        <a href="{% url accounts_public_profile user.username %}"><h1>{{ user.username }}</h1></a>
-    </div>
-    <div class="grid_6">
-        <h2>Public repositories</h2>
-        <table>
-            <thead>
-                <th>Project</th>
-                <th>Last commit</th>
-            </thead>
-            <tbody>
-            {% for repository in repository_list %}
-                {% if repository.last_commit %}
-                <tr>
-                    <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
-                    <td><a href="{% repo_url commits_commit repository repository.last_commit.id %}">{{ repository.last_commit.commit_date }}</a></td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
-                    <td>No commits</td>
-                </tr>
-                {% endif %}
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <div class="grid_9 push_1">
-        <div class="short_info">
-            <h2>{{ user.username }} {% if user.first_name %}({{ user.first_name }} {{ user.last_name }}){% endif %}</h2>
-            <p>{{ user.get_profile.short_info }}</p>
+    <h1>{{ user.username }}</h1>
+    <div class="row">
+        <div class="span8">
+            <h2>Public repositories</h2>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Last commit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for repository in repository_list %}
+                    <tr>
+                        <td><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a></td>
+                        {% if repository.last_commit %}
+                        <td>
+                            <a href="{% repo_url commits_commit repository repository.last_commit.id %}">
+                                {{ repository.get_last_commit.short_message }} (by {{ repository.get_last_commit.author }})
+                            </a>
+                        </td>
+                        <td><a href="{% repo_url commits_commit repository repository.last_commit.id %}">
+                            {{ repository.last_commit.commit_date }}</a></td>
+                        {% else %}
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
-
-        <div class="timeline">
-            <h2>Timeline:</h2>
-            <p>
-                TBD
-             </p>
+        <div class="span4">
+            <h2>About {{ user.username }} {% if user.first_name %}({{ user.first_name }} {{ user.last_name }}){% endif %}</h2>
+            <p>{{ user.get_profile.short_info }}</p>
         </div>
     </div>
 </div>
