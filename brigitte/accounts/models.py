@@ -30,8 +30,8 @@ class SshPublicKey(models.Model):
     description = models.CharField(_('Description'), max_length=250, blank=True)
     can_read = models.BooleanField(_('Can read'), default=True)
     can_write = models.BooleanField(_('Can write'), default=False)
-    key = models.TextField(_('Key'), blank=False)
-    key_parsed = models.TextField(_('Key (parsed)'), blank=True, editable=False)
+    key = models.TextField(_('Key'), blank=False, unique=True)
+    key_parsed = models.TextField(_('Key (parsed)'), blank=True, unique=True, editable=False)
 
     def __unicode__(self):
         if self.description:
