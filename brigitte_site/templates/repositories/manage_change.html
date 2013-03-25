@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load floppyforms %}
+{% load floppyforms repositories_tags %}
 
 {% block title %}Change repository: {{ repo.title }}{% endblock %}
 
@@ -58,15 +58,26 @@
             <button class="btn" type="reset">Reset</button>
         </div>
     </form>
+
+    <div class="pull-right">
+        <button class="btn btn-danger repo-delete" name="repo-delete">Delete this repository!</button>
+    </div>
 {% endblock %}
 
 {% block extra_body %}
     <script type="text/javascript">
-        //function repouser_error(msg) {
-        //    $('#repouser_error li').text(msg);
-        //    $('#repouser_error').fadeIn();
-        //    return false;
-        //}
+        $('button.repo-delete').click(function(e) {
+            e.preventDefault();
+            var repo_title = '{{ repo.title }}';
+
+            bootbox.prompt('Do you want to delete the repository?', 'Cancel', 'Delete repository', function(result){
+                if (result === repo_title) {
+                    window.location.href='{% repo_url repositories_manage_delete repo %}?magic=' + result;
+                };
+            }).find('form').prepend($('<p />').html('<span class="label label-important">WARNING!</span> ' +
+                'This will delete the repository "<strong>' + repo_title + '</strong>" permanently.<br />' +
+                'To confirm, please type in the repository name here:'));
+        });
 
         $(document).ready(function() {
             $('table.users').delegate('input.username', 'keydown', function (e) {
@@ -148,26 +159,3 @@
         });
     </script>
 {% endblock %}
-
-    </div>
-    <div class="grid_4 push_12">
-        <form class="form extra" action="{% url repositories_manage_delete repo.user repo.slug %}" method="post">
-            <fieldset>
-                {% csrf_token %}
-                <script>
-                    $(document).ready(function() {
-                        $('#delete_button').attr("disabled", "true").css("color", "grey");
-                        $(function() {
-                            $('#id_statisfied').click(function() {
-                                var satisfied = $('#id_statisfied:checked').val();
-                                if (satisfied != undefined) $('#delete_button').removeAttr('disabled').css("color", "red");
-                                else $('#delete_button').attr('disabled', 'disabled').css("color", "grey");
-                            });
-                        });
-                    });
-                </script>
-                <label>I want to delete this repository:</label>{{ delete_form.statisfied }}
-                <label>&nbsp;</label><button id="delete_button">proceed deletion.</button>
-            </fieldset>
-        </form>
-    </div>

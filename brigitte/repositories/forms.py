@@ -6,10 +6,6 @@ from django.template.defaultfilters import slugify
 from brigitte.repositories.models import Repository, RepositoryUser
 
 
-class RepositoryDeleteForm(forms.Form):
-    statisfied = forms.BooleanField('I want to delete this repository!')
-
-
 class RepositoryForm(forms.ModelForm):
     class Meta:
         model = Repository

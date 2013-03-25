@@ -12,8 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 
 from brigitte.repositories.decorators import repository_view
-from brigitte.repositories.forms import (RepositoryForm, RepositoryUserFormSet,
-    RepositoryDeleteForm)
+from brigitte.repositories.forms import RepositoryForm, RepositoryUserFormSet
 from brigitte.repositories.models import Repository
 
 
@@ -28,15 +27,13 @@ def manage_list(request):
 @login_required
 @repository_view(can_admin=True)
 def manage_delete(request, repo):
+    if 'magic' in request.GET and request.GET['magic'] == repo.title:
+        repo.delete()
+        messages.success(request, _('Repository "%s" deleted.') % repo.title)
 
-    if request.method == 'POST':
-        delete_form = RepositoryDeleteForm(request.POST)
-        if delete_form.is_valid():
-            messages.success(request, _('Repository deleted.'))
-            repo.delete()
-            return redirect('accounts_profile')
-        else:
-            raise Http404
+        return redirect('accounts_profile')
+
+    raise Http404
 
 
 @csrf_exempt
@@ -86,7 +83,6 @@ def manage_change(request, repo):
     return render(request, 'repositories/manage_change.html', {
         'repo': repo,
         'form': repo_form,
-        'delete_form': RepositoryDeleteForm(),
         'users': users_formset,
     })
 
