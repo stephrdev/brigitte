@@ -31,12 +31,17 @@ class SshPublicKey(models.Model):
     can_read = models.BooleanField(_('Can read'), default=True)
     can_write = models.BooleanField(_('Can write'), default=False)
     key = models.TextField(_('Key'), blank=False)
+    key_parsed = models.TextField(_('Key (parsed)'), blank=True, editable=False)
 
     def __unicode__(self):
         if self.description:
             return self.description
         else:
             return self.short_key
+
+    def save(self, *args, **kwargs):
+        self.key_parsed = self.key.split()[1]
+        super(SshPublicKey, self).save(*args, **kwargs)
 
     @property
     def short_key(self):

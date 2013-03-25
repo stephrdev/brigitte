@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import base64
 import os
 import shlex
 import sys
@@ -125,19 +126,21 @@ class GitSession(object):
 
 
 class GitPubKeyChecker(SSHPublicKeyDatabase):
-    def get_pub_keys(self):
-        log.msg('loading availble public keys')
-        return list(SshPublicKey.objects.values_list('user__username', 'key'))
-
     def checkKey(self, credentials):
         log.msg('checking key..')
-        for username, user_key in self.get_pub_keys():
-            log.msg('testing key from user %s' % username)
-            if Key.fromString(user_key).blob() == credentials.blob:
-                log.msg('found key for user %s' % username)
-                credentials.username = username
-                return True
-        return False
+        try:
+            # prepare key for database lookup.
+            encoded_key = ''.join(base64.encodestring(credentials.blob).split('\n'))
+
+            # try to fetch key..
+            public_key = SshPublicKey.objects.get(key_parsed=encoded_key)
+
+            log.msg('found key for user %s' % public_key.user.username)
+            credentials.username = public_key.user.username
+
+            return True
+        except (SshPublicKey.DoesNotExist, SshPublicKey.MultipleObjectsReturned):
+            return False
 
 
 # Backport: http://twistedmatrix.com/trac/ticket/5142

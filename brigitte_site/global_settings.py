@@ -61,6 +61,7 @@ INSTALLED_APPS = (
     'userprofiles.contrib.emailverification',
     'userprofiles.contrib.profiles',
     'brigitte.accounts',
+    'brigitte.gitserver',
     'brigitte.repositories',
     'brigitte.utils',
 )
