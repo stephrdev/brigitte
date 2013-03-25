@@ -15,7 +15,9 @@ from twisted.internet import reactor
 from twisted.python import log
 from zope import interface
 
+from django import db
 from django.contrib.auth.models import User
+from django.db.utils import DatabaseError
 
 from brigitte.accounts.models import SshPublicKey
 from brigitte.repositories.models import Repository, RepositoryUser
@@ -127,7 +129,16 @@ class GitSession(object):
 
 class GitPubKeyChecker(SSHPublicKeyDatabase):
     def checkKey(self, credentials):
-        log.msg('checking key..')
+        log.msg('checking credentials..')
+
+        try:
+            return self._checkKey(credentials)
+        except DatabaseError:
+            log.msg('Database connection resetted. Retrying..')
+            db.close_connection()
+            return self._checkKey(credentials)
+
+    def _checkKey(self, credentials):
         try:
             # prepare key for database lookup.
             encoded_key = ''.join(base64.encodestring(credentials.blob).split('\n'))
@@ -135,11 +146,12 @@ class GitPubKeyChecker(SSHPublicKeyDatabase):
             # try to fetch key..
             public_key = SshPublicKey.objects.get(key_parsed=encoded_key)
 
-            log.msg('found key for user %s' % public_key.user.username)
+            log.msg('found key for user %s (%s)' % (public_key.user.username, public_key.description))
             credentials.username = public_key.user.username
 
             return True
         except (SshPublicKey.DoesNotExist, SshPublicKey.MultipleObjectsReturned):
+            log.msg('key/user not found')
             return False
 
 
