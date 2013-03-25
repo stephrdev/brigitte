@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+import json
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.db.models import Q
 from django.http import Http404, HttpResponse
 from django.shortcuts import render, redirect
 from django.template.defaultfilters import slugify
@@ -41,25 +44,22 @@ def manage_delete(request, repo):
 @repository_view(can_admin=True)
 def manage_change(request, repo):
     if request.method == 'POST':
-        if request.POST.get('method', None) == 'add_repouser':
-            result = False
-            error_msg = 'No error message'
+        if 'lookup_username' in request.POST:
+            username = request.POST['lookup_username']
+            result = {'error': False}
 
             try:
-                user = User.objects.get(email=request.POST.get('email', None))
-                if repo.user == user:
-                    error_msg = 'You cannot re-add the repository owner.'
-                elif user.repositoryuser_set.filter(repo=repo).exists():
-                    error_msg = 'User already added to repository'
-                else:
-                    repo.repositoryuser_set.create(user=user)
-                    result = True
-            except User.DoesNotExist:
-                error_msg = 'Invalid email address'
+                user = User.objects.get(Q(Q(email=username) | Q(username=username)))
 
-            return HttpResponse('{"result": "%s", "error_msg": "%s"}' % (
-                int(result), error_msg)
-            )
+                if user.repositoryuser_set.filter(repo=repo).exists():
+                    result['error'] = 'User has already access to this repository.'
+                else:
+                    result['username'] = user.username
+                    result['id'] = user.pk
+            except User.DoesNotExist:
+                result['error'] = 'Username or e-mail address not found.'
+
+            return HttpResponse(json.dumps(result), mimetype='application/json')
 
         repo_form = RepositoryForm(
             request.user, request.POST, instance=repo, prefix='repository')

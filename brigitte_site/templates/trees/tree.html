@@ -3,37 +3,29 @@
 
 {% block title %}{{ repository.title }} - {{ commit.short_id }} - /{{ tree.path }}{% endblock %}
 
-{% block extra_head %}
-    <script type="text/javascript">
-        $(document).ready(function(){
-            $.getJSON('?commits=1', function(tree) {
-                var repo_url = '{% repo_url commits_commit repository "__sha__" %}';
-                $.each(tree, function(i, entry) {
-                    var td = $('td#tree-row-'+entry.tree_id);
-                    td.text(entry.author);
-                    td.after($('<td />').append($('<a />').attr('href', repo_url.replace('__sha__', entry.id)).text(entry.since)));
-                });
-            });
-        });
-    </script>
-{% endblock %}
-
 {% block content %}
-<div class="grid_16 content" id="repo-commit">
     <h1><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a> - {{ commit.short_id }} - /{{ tree.path }}</h1>
 
     {% include "commits/snippet_commit.html" %}
 
-    {% if not tree %}
-        <h2>Tree is empty.</h2>
-    {% else %}
-    <h2>/ {% for link in breadcrumb %}<a href="{% repo_url trees_tree repository commit.id link.path %}/">{{ link.name }}</a>{% if not forloop.last %} / {% endif %}{% endfor %}</h2>
-        <table>
+    <ul class="breadcrumb">
+        <li><a href="{% repo_url trees_tree_root repository commit.id %}">{{ repository.title }}</a> <span class="divider">/</span></li>
+        {% for link in breadcrumb %}
+            {% if not forloop.last %}
+                <li><a href="{% repo_url trees_tree repository commit.id link.path %}/">{{ link.name }}</a> <span class="divider">/</span></li>
+            {% else %}
+                <li class="active">{{ link.name }}</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+
+    <table class="table table-hover">
+        <tbody>
             {% if tree.path %}
             <tr>
-                <td onclick="window.location.href='../'">
-                    <span class="folder">+</span>
-                    <a href="../" class="backlink">..</a>
+                <td class="tree-entry">
+                    <img src="{{ STATIC_URL }}img/fileicons/folder.gif" />
+                    <a href="../">..</a>
                 </td>
                 <td></td>
                 <td></td>
@@ -42,23 +34,49 @@
             {% endif %}
             {% for entry in tree.tree %}
             <tr>
-                <td onclick="window.location.href='{% repo_url trees_tree repository commit.id entry.path %}'">
-                    {% if entry.type == 'blob' %}
-                        <img src="{{ STATIC_URL }}images/fileicons/{{ entry.mime_image }}" />
-                    {% else %}
-                        <span class="folder">+</span>
-                    {% endif %}
+                <td class="tree-entry">
+                    <img src="{{ STATIC_URL }}img/fileicons/{{ entry.mime_image }}" />
                     <a href="{% repo_url trees_tree repository commit.id entry.path %}">{{ entry.name }}</a>
                 </td>
-                <td id="tree-row-{{ entry.id }}">{% if forloop.first %}<img src="{{ STATIC_URL }}images/ajaxload.gif" />{% endif %}</td>
+                <td id="tree-entry-author-{{ entry.id }}">
+                    {% if forloop.first %}
+                        <div class="progress progress-striped active tree-indicator">
+                            <div class="bar" style="width: 100%;"></div>
+                        </div>
+                        <span class="pull-left">Loading commit dates...</span>
+                    {% endif %}
+                </td>
+                <td id="tree-entry-date-{{ entry.id }}"></td>
                 <td>
                     {% if entry.size %}
                         {{ entry.size|filesizeformat }}
-                    {% else %}-{% endif %}
+                    {% else %}
+                        &mdash;
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
-        </table>
-    {% endif %}
-</div>
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block extra_body %}
+    <script type="text/javascript">
+        $('td.tree-entry').click(function() {
+            window.location.href=$(this).find('a:first').attr('href');
+        });
+
+        $(document).ready(function(){
+            $.getJSON('?commits=1', function(tree) {
+                var repo_url = '{% repo_url commits_commit repository "__sha__" %}';
+                $.each(tree, function(i, entry) {
+                    $('td#tree-entry-author-'+entry.tree_id).text(entry.author);
+                    $('td#tree-entry-date-'+entry.tree_id)
+                        .append($('<a />')
+                        .attr('href', repo_url.replace('__sha__', entry.id))
+                        .text(entry.since));
+                });
+            });
+        });
+    </script>
 {% endblock %}

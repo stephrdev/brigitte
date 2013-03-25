@@ -4,24 +4,22 @@
 {% block title %}{{ repository.title }} - {{ commit.short_id }} - Blob: /{{ file_path }}{% endblock %}
 
 {% block content %}
-<div class="grid_16 content" id="repo-commit">
     <h1><a href="{% repo_url repositories_summary repository %}">{{ repository.title }}</a> - {{ commit.short_id }} - Blob: /{{ file_path }}</h1>
 
     {% include "commits/snippet_commit.html" %}
 
-    <h2>/ {% for link in breadcrumb %}
-        {% if not forloop.last %}
-        <a href="{% repo_url trees_tree repository commit.id link.path %}/">{{ link.name }}</a> /
-        {% else %}
-        {{ link.name }}
-        {% endif %}
-    {% endfor %}</h2>
+    <ul class="breadcrumb">
+        <li><a href="{% repo_url trees_tree_root repository commit.id %}">{{ repository.title }}</a> <span class="divider">/</span></li>
+        {% for link in breadcrumb %}
+            {% if not forloop.last %}
+                <li><a href="{% repo_url trees_tree repository commit.id link.path %}/">{{ link.name }}</a> <span class="divider">/</span></li>
+            {% else %}
+                <li class="active">{{ link.name }}</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
 
-    <div class="commit-diff">
-        <pre class="lines">{% for line in file_lines %}<a id="L{{ line }}" href="#L{{ line }}">{{ line }}</a>
+    <pre class="lines linesl">{% for line in file_lines %}<a id="L{{ line }}" href="#L{{ line }}">{{ line }}</a>
 {% endfor %}</pre>
-        <pre class="diff">{{ file_blob_pygmentized }}</pre>
-        <div style="clear:both"></div>
-    </div>
-</div>
+    <pre class="diff no-left-border">{{ file_blob_pygmentized }}</pre>
 {% endblock %}

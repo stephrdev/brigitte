@@ -90,6 +90,7 @@ LOGIN_REDIRECT_URL = '/accounts/profile/'
 
 FILETYPE_MAP = {
     'default': 'file.png',
+    'folder': 'folder.gif',
     '7z': '7z.png',
     'ai': 'ai.png',
     'asc': 'asc.png',

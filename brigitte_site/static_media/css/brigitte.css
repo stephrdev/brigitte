@@ -88,3 +88,16 @@ pre.no-left-border {
     border-top-left-radius: 0px;
     border-bottom-left-radius: 0px;
 }
+div.progress.tree-indicator {
+    width: 24px;
+    margin-bottom: 0;
+    margin-right: 10px;
+    float: left;
+}
+
+td.commit-date, td.commit-author {
+    white-space: nowrap;
+}
+textarea#id_description, textarea#id_repository-description {
+    height: 120px;
+}

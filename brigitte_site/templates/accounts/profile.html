@@ -6,7 +6,7 @@
 {% block content %}
     <h1>Dashboard</h1>
     <p>
-        <a href="{% url repositories_manage_add %}">Create a new repository</a>
+        <a href="{% url repositories_manage_add %}" class="btn">Create a new repository</a>
     </p>
     <div class="row">
         <div class="span6">
@@ -35,7 +35,7 @@
                         <td>{{ repository.can_write }}</td>
                         <td>
                             {% if repository.can_admin %}
-                                <a href="{% repo_url repositories_manage_change repository %}">Manage</a>
+                                <a href="{% repo_url repositories_manage_change repository %}" class="btn">Manage</a>
                             {% else %}
                                 &#10005;
                             {% endif %}

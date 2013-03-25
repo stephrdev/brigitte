@@ -1,21 +1,22 @@
 {% extends "base.html" %}
+{% load floppyforms %}
 
 {% block title %}Change repository: {{ repo.title }}{% endblock %}
 
 {% block content %}
-    <div class="grid_16 content">
-        <h1>Change repository: {{ repo.title }}</h1>
+    <h1>Change repository: {{ repo.title }}</h1>
 
-        <form action="." method="post" class="form">
-            {% csrf_token %}
-            <fieldset>
-                {{ form.as_p }}
-            </fieldset>
-            <fieldset>
-                {{ users.management_form }}
-                <label>Access rules:</label>
-                <table class="users">
-                    <thead>
+    <form action="." method="post" class="form-horizontal repository-change">{% csrf_token %}
+        <fieldset>
+            <legend>Repository settings</legend>
+            {% form form %}
+        </fieldset>
+
+        <fieldset>
+            <legend>Access rules:</legend>
+            {{ users.management_form }}
+            <table class="table table-hover users">
+                <thead>
                     <tr>
                         <th>User</th>
                         <th>Read access</th>
@@ -23,61 +24,131 @@
                         <th>Admin access</th>
                         <th>&nbsp;</th>
                     </tr>
-                    </thead>
-                    <tbody>
-                    {% for form in users %}
-                        {{ form.id }}
-                        <tr>
-                            <td><strong>{{ form.instance.user }} ({{ form.instance.user.email }})</strong></td>
-                            <td>{{ form.can_read }}</td>
-                            <td>{{ form.can_write }}</td>
-                            <td>{{ form.can_admin }}</td>
-                            <td>{{ form.DELETE }} Delete</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                <div style="clear:both"></div>
-                <div>
-                    <script type="text/javascript">
-                        function repouser_error(msg) {
-                            $('#repouser_error li').text(msg);
-                            $('#repouser_error').fadeIn();
+                </thead>
+                <tbody>
+                {% for form in users %}
+                    <tr>
+                        <td>
+                            {% if form.instance.pk %}
+                                {{ form.id }}
+                                <input type="hidden" class="userid" name="{{ form.user.html_name }}" value="{{ form.instance.user.pk }}" />
+                                {{ form.instance.user }}
+                            {% else %}
+                                <input type="text" class="username" name="{{ form.prefix }}-username" placeholder="Username or e-mail address" />
+                            {% endif %}
+                        </td>
+                        <td>{{ form.can_read }}</td>
+                        <td>{{ form.can_write }}</td>
+                        <td>{{ form.can_admin }}</td>
+                        <td>
+                            {% if form.instance.pk %}
+                                <label class="checkbox">{{ form.DELETE }} Delete</label>
+                            {% else %}
+                                <button class="btn adduser" name="{{ form.prefix }}-submit" type="button">Add user</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </fieldset>
+
+        <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Change repository</button>
+            <button class="btn" type="reset">Reset</button>
+        </div>
+    </form>
+{% endblock %}
+
+{% block extra_body %}
+    <script type="text/javascript">
+        //function repouser_error(msg) {
+        //    $('#repouser_error li').text(msg);
+        //    $('#repouser_error').fadeIn();
+        //    return false;
+        //}
+
+        $(document).ready(function() {
+            $('table.users').delegate('input.username', 'keydown', function (e) {
+                if (e.keyCode == 13) {
+                    e.preventDefault();
+                    $(this).parent().parent().find('button.adduser').click();
+                }
+            });
+
+            $('table.users').delegate('button.adduser', 'click', function() {
+                // get form prefix from button
+                var form_prefix = $(this).attr('name').split('-', 2).join('-');
+
+                var username = $('input[name="'+form_prefix+'-username"]').val();
+
+                if(username.length < 3) {
+                    bootbox.alert('Username or e-mail address is to short.');
+                    return false;
+                }
+
+                $.post('.', {'lookup_username': username}, function(data) {
+                    // ajax request return's a json blob. key error is set to something != false if there is a problem
+                    if(data.error !== false) {
+                        bootbox.alert(data.error);
+                        return false;
+                    } else {
+                        // because the backend doesn't know the added users if not saved, double check this
+                        existing_userids = $('table.users input.userid').map(function(){
+                            return this.value;
+                        }).get();
+
+                        // check if the userid to add is already in the formset
+                        if(existing_userids.indexOf(data.id.toString()) >= 0) {
+                            bootbox.alert('User has already access to this repository.');
                             return false;
                         }
 
-                        $(document).ready(function() {
-                            $('#repouser_add').click(function() {
-                                var email = $('#repouser_email').val();
-                                if(email.length < 3) {
-                                    return repouser_error('Invalid email address');
-                                }
-                                $.post('.', {
-                                    'method': 'add_repouser',
-                                    'email': email,
-                                    }, function(data) {
-                                        if(data.result != true) {
-                                            return repouser_error(data.error_msg);
-                                        } else {
-                                            window.location=window.location;
-                                        }
-                                    },
-                                    'json'
-                                );
-                                return false;
+                        var $row = $('table.users tr:last');
+
+                        // clone row before removing the inputs, set default values
+                        $addrow = $row.clone().insertAfter($row);
+                        $addrow.find('input[name="'+form_prefix+'-username"]').val('');
+                        $addrow.find('input[name="'+form_prefix+'-can_read"]').prop('checked', true);
+                        $addrow.find('input[name="'+form_prefix+'-can_write"]').prop('checked', false);
+                        $addrow.find('input[name="'+form_prefix+'-can_admin"]').prop('checked', false);
+
+                        // remove the input field and add a hidden field with the userid
+                        $row.find('td:first').empty()
+                            .append($('<input />').attr('type', 'hidden').addClass('userid').attr('name', form_prefix+'-user').val(data.id))
+                            .append(data.username);
+
+                        // add a delete button to allow removal of added users
+                        $row.find('td:last').empty()
+                            .append($('<label />').addClass('checkbox')
+                                .append($('<input />').attr('type', 'checkbox').attr('name', form_prefix+'-DELETE'))
+                                .append('Delete'));
+
+                        // update the number of forms
+                        $('input[name="users-TOTAL_FORMS"]').val($('table.users tbody tr').length);
+                        // renumber the form prefixes (name and id fields)
+                        $('table.users tbody tr').each(function(i, row) {
+                            $(row).find('input, button').each(function() {
+                                var $this = $(this);
+                                var name = $this.attr('name');
+                                var id = $this.attr('id');
+                                if(name !== undefined) {
+                                    $this.attr('name', name.replace(/^users-\d+/, 'users-'+i));
+                                };
+                                if(id !== undefined) {
+                                    $this.attr('id', id.replace(/^id_users-\d+/, 'id_users-'+i));
+                                };
                             });
                         });
-                    </script>
-                    <ul class="errorlist" id="repouser_error" style="display:none"><li></li></ul>
-                    <label>Add another user:</label>
-                    <input type="text" name="repouser_email" id="repouser_email" />
-                    <button id="repouser_add">Add</button>
-                </div>
-            </fieldset>
-            <fieldset class="submitrow">
-                <p><label>&nbsp;</label><button type="submit">Save changes</button></p>
-            </fieldset>
-        </form>
+                    };
+                }, 'json');
+
+                return false;
+            });
+        });
+    </script>
+{% endblock %}
+
     </div>
     <div class="grid_4 push_12">
         <form class="form extra" action="{% url repositories_manage_delete repo.user repo.slug %}" method="post">
@@ -100,4 +171,3 @@
             </fieldset>
         </form>
     </div>
-{% endblock %}

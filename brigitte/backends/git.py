@@ -217,6 +217,7 @@ class Commit(BaseCommit):
                     if entry_object.type_name == 'tree':
                         parsed_entry['size'] = None
                         parsed_entry['path'] += '/'
+                        parsed_entry['mime_image'] = FILETYPE_MAP['folder']
                     else:
                         parsed_entry['size'] = float(entry_object.raw_length())
                         # We skip dot-files at the moment.
