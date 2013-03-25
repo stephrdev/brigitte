@@ -2,7 +2,7 @@
 <div class="row">
     <div class="span9">
         <div class="commit">
-        <h4><a href="{% repo_url commits_commit repository commit.id %}">{{ commit.short_message }}</a></h4>
+        <h3><a href="{% repo_url commits_commit repository commit.id %}">{{ commit.short_message }}</a></h3>
         <hr />
         {{ commit.message|linebreaks }}
         <hr />
