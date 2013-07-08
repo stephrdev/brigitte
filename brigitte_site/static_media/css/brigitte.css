@@ -61,6 +61,7 @@ div.commit dl {
 pre, code {
     border-color: #222222;
     font-family: 'Source Code Pro', Monaco, Menlo, Consolas, 'Courier New', monospace;
+    word-wrap: normal;
 }
 
 pre.lines {
