@@ -1,4 +1,4 @@
-Django==1.4.5
+Django==1.11.23
 South==0.7.6
 redis==2.7.2
 django-redis-cache==0.9.5
