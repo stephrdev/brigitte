@@ -3,7 +3,7 @@ South==0.7.6
 redis==2.7.2
 django-redis-cache==0.9.5
 django-userprofiles==0.4
-Pygments==1.6rc1
+Pygments==2.7.4
 dulwich==0.8.7
 Twisted==12.3.0
 pyasn1==0.1.4
